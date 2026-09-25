@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Headers, HttpException, HttpStatus } from '@nestjs/common';
+import { verifyJwt } from './jwt.util';
 
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
 const USER_SVC     = process.env.USER_SERVICE_URL     ?? 'http://localhost:3001';
@@ -55,6 +56,74 @@ export class AppController {
         HttpStatus.UNAUTHORIZED,
       );
     }
+  }
+
+  @Post('register')
+  async register(@Body() body: any) {
+    try {
+      const res = await fetch(`${USER_SVC}/users/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new HttpException(
+          data.message || 'Error al registrar usuario',
+          res.status || HttpStatus.BAD_REQUEST,
+        );
+      }
+      return data;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error de conexión con el servicio de usuarios para registro',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  @Post('users/seed')
+  async seedUsers() {
+    try {
+      const res = await fetch(`${USER_SVC}/users/seed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      throw new HttpException(
+        'Error al conectar con user-service para ejecutar seed',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+  }
+
+  // --- RUTAS DE AUTENTICACIÓN Y SEGURIDAD JWT ---
+  @Post('auth/verify')
+  async verifyAuthToken(@Body() body: { token?: string }, @Headers('authorization') authHeader?: string) {
+    const token = body?.token || authHeader?.replace(/^Bearer\s+/i, '');
+    if (!token) {
+      throw new HttpException('Token no proporcionado en el cuerpo o encabezado Authorization', HttpStatus.BAD_REQUEST);
+    }
+    const payload = verifyJwt(token);
+    return {
+      valid: true,
+      user: payload,
+    };
+  }
+
+  @Get('auth/me')
+  async getAuthMe(@Headers('authorization') authHeader?: string) {
+    const token = authHeader?.replace(/^Bearer\s+/i, '');
+    if (!token) {
+      throw new HttpException('Encabezado Authorization: Bearer <token> requerido', HttpStatus.UNAUTHORIZED);
+    }
+    const payload = verifyJwt(token);
+    return payload;
   }
 
   // --- RUTAS DE PROPIEDADES ---

@@ -11,7 +11,7 @@ import { PrismaService } from './prisma.service';
         name: 'RABBITMQ_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: ['amqp://localhost:5672'],
+          urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: 'users_queue', // Debe ser la misma cola que escucha Property Service
           queueOptions: {
             durable: false
