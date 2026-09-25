@@ -1,0 +1,89 @@
+version: '3.8'
+services:
+  user_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_user_db
+    ports:
+      - "5432:5432"
+
+  property_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_property_db
+    ports:
+      # Exponemos esta BD en el puerto 5433 para que no choque con la de usuarios (5432)
+      - "5433:5432"
+  lead_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_lead_db
+    ports:
+      - "5434:5432" # Puerto 5434 para Leads
+  contract_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_contract_db
+    ports:
+      - "5436:5432"
+
+  commission_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_commission_db
+    ports:
+      - "5437:5432"
+
+  analytics_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_analytics_db
+    ports:
+      - "5438:5432"
+
+  viewing_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_viewing_db
+    ports:
+      - "5435:5432" # Puerto 5435 para Viewings
+      
+  notification_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_notification_db
+    ports:
+      - "5439:5432"
+  # Nuevo motor para comunicación asíncrona
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: always
+    ports:
+      # Puerto para la comunicación entre microservicios
+      - "5672:5672"
+      # Puerto para el panel de administración web (interfaz gráfica)
+      - "15672:15672"

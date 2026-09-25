@@ -1,0 +1,30 @@
+{
+  "name": "realtyhub-monorepo",
+  "version": "1.0.0",
+  "description": "Orquestador maestro del ecosistema RealtyHub: API Gateway + 8 microservicios NestJS + Frontend Next.js",
+  "private": true,
+  "scripts": {
+    "clean": "rimraf api-gateway/dist user-service/dist property-service/dist lead-service/dist viewing-service/dist contract-service/dist commission-service/dist notification-service/dist analytics-service/dist",
+
+    "install:all": "cd frontend && npm install && cd ../api-gateway && npm install && cd ../user-service && npm install && cd ../property-service && npm install && cd ../lead-service && npm install && cd ../viewing-service && npm install && cd ../contract-service && npm install && cd ../commission-service && npm install && cd ../notification-service && npm install && cd ../analytics-service && npm install",
+
+    "prisma:generate": "cd user-service && npx prisma generate && cd ../property-service && npx prisma generate && cd ../lead-service && npx prisma generate && cd ../viewing-service && npx prisma generate && cd ../contract-service && npx prisma generate && cd ../commission-service && npx prisma generate && cd ../notification-service && npx prisma generate && cd ../analytics-service && npx prisma generate",
+
+    "start:gateway":      "cd api-gateway && npm run start:dev",
+    "start:frontend":     "cd frontend && npm run dev",
+    "start:user":         "cd user-service && npm run start:dev",
+    "start:property":     "cd property-service && npm run start:dev",
+    "start:lead":         "cd lead-service && npm run start:dev",
+    "start:viewing":      "cd viewing-service && npm run start:dev",
+    "start:contract":     "cd contract-service && npm run start:dev",
+    "start:commission":   "cd commission-service && npm run start:dev",
+    "start:notification": "cd notification-service && npm run start:dev",
+    "start:analytics":    "cd analytics-service && npm run start:dev",
+
+    "dev": "npm run clean && docker-compose up -d && concurrently --kill-others-on-fail -c \"cyan.bold,magenta.bold,yellow.bold,blue.bold,green.bold,red.bold,gray.bold,white.bold,yellowBright.bold,cyanBright.bold\" -n \"GATEWAY,FRONTEND,USER,PROP,LEAD,VIEW,CONTR,COMM,NOTIF,ANALY\" \"npm run start:gateway\" \"npm run start:frontend\" \"npm run start:user\" \"npm run start:property\" \"npm run start:lead\" \"npm run start:viewing\" \"npm run start:contract\" \"npm run start:commission\" \"npm run start:notification\" \"npm run start:analytics\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "rimraf": "^6.0.1"
+  }
+}

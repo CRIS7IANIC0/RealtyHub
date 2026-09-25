@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Metric {
+  id            String   @id @default(uuid())
+  event_type    String
+  revenue_value Float
+  created_at    DateTime @default(now())
+
+  @@map("metrics")
+}
+
+model ConversionByAgent {
+  id              String   @id @default(uuid())
+  agent_id        String   @unique
+  conversion_rate Float
+  updated_at      DateTime @default(now()) @updatedAt
+
+  @@map("conversion_by_agent")
+}
+
+model AvgClosingTime {
+  id            String   @id @default(uuid())
+  office_id     String   @unique
+  avg_time_days Float
+  updated_at    DateTime @default(now()) @updatedAt
+
+  @@map("avg_closing_time")
+}
+
+model LeadsBySource {
+  id         String   @id @default(uuid())
+  source     String   @unique
+  lead_count Int      @default(0)
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("leads_by_source")
+}

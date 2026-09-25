@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Contract {
+  id          String     @id @default(uuid())
+  property_id String
+  lead_id     String
+  agent_id    String
+  price       Float
+  type           String
+  operation_type String     @default("Venta")
+  status         String
+  signed_at      DateTime?
+  created_at     DateTime   @default(now())
+  documents      Document[]
+
+  @@map("contracts")
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  contract_id String
+  file_url    String
+  version     Int
+  contract    Contract @relation(fields: [contract_id], references: [id])
+
+  @@map("documents")
+}

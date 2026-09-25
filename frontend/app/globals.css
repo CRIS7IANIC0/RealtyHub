@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────
+   RealtyHub — Strict Corporate Design System
+   ───────────────────────────────────────────── */
+
+:root {
+  /* Brand Palette */
+  --rh-rausch: #ff385c;         /* Accent / Brand red-coral */
+  --rh-hof: #222222;            /* Primary text */
+  --rh-foggy: #6a6a6a;          /* Secondary text */
+  --rh-bebe: #ebebeb;           /* Subtle borders */
+  --rh-canvas: #f7f7f7;         /* Page background */
+  --rh-white: #ffffff;           /* Card / surface */
+
+  /* Spacing tokens */
+  --rh-section-gap: 48px;
+  --rh-nav-height: 80px;
+
+  /* Radii */
+  --rh-radius-card: 12px;
+  --rh-radius-pill: 9999px;
+}
+
+/* Tailwind v4 — register design-system colours */
+@theme inline {
+  --color-rausch: var(--rh-rausch);
+  --color-hof: var(--rh-hof);
+  --color-foggy: var(--rh-foggy);
+  --color-bebe: var(--rh-bebe);
+  --color-canvas: var(--rh-canvas);
+  --color-surface: var(--rh-white);
+
+  --color-background: var(--rh-canvas);
+  --color-foreground: var(--rh-hof);
+
+  --font-sans: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base resets ─────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--rh-canvas);
+  color: var(--rh-hof);
+  font-family: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Utility: hide scrollbar but keep scroll ── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Smooth image loading ────────────────────── */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}

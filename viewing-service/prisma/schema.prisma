@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Viewing {
+  id           String   @id @default(uuid())
+  property_id  String
+  lead_id      String
+  agent_id     String?
+  scheduled_at DateTime
+  status       String   @default("Pendiente")
+
+  @@map("viewings")
+}

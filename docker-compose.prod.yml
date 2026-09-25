@@ -1,0 +1,268 @@
+version: '3.8'
+
+services:
+
+  # ─────────────────────────────────────────
+  # BASES DE DATOS
+  # ─────────────────────────────────────────
+
+  user_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_user_db
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  property_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_property_db
+    volumes:
+      - property_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  lead_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_lead_db
+    volumes:
+      - lead_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  viewing_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_viewing_db
+    volumes:
+      - viewing_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  contract_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_contract_db
+    volumes:
+      - contract_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  commission_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_commission_db
+    volumes:
+      - commission_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  notification_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_notification_db
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  analytics_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: realtyhub_analytics_db
+    volumes:
+      - analytics_db_data:/var/lib/postgresql/data
+    networks:
+      - realtyhub_net
+
+  # ─────────────────────────────────────────
+  # MESSAGE BROKER
+  # ─────────────────────────────────────────
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    restart: always
+    networks:
+      - realtyhub_net
+
+  # ─────────────────────────────────────────
+  # API GATEWAY  (único punto de entrada externo)
+  # ─────────────────────────────────────────
+
+  api-gateway:
+    build: ./api-gateway
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - rabbitmq
+      - user-service
+      - property-service
+      - lead-service
+      - viewing-service
+      - contract-service
+      - commission-service
+      - notification-service
+      - analytics-service
+    networks:
+      - realtyhub_net
+
+  # ─────────────────────────────────────────
+  # MICROSERVICIOS  (sin puertos externos)
+  # ─────────────────────────────────────────
+
+  user-service:
+    build: ./user-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@user_db:5432/realtyhub_user_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - user_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  property-service:
+    build: ./property-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@property_db:5432/realtyhub_property_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - property_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  lead-service:
+    build: ./lead-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@lead_db:5432/realtyhub_lead_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - lead_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  viewing-service:
+    build: ./viewing-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@viewing_db:5432/realtyhub_viewing_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - viewing_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  contract-service:
+    build: ./contract-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@contract_db:5432/realtyhub_contract_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - contract_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  commission-service:
+    build: ./commission-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@commission_db:5432/realtyhub_commission_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - commission_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  notification-service:
+    build: ./notification-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@notification_db:5432/realtyhub_notification_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - notification_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+  analytics-service:
+    build: ./analytics-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://root:rootpassword@analytics_db:5432/realtyhub_analytics_db?schema=public
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - analytics_db
+      - rabbitmq
+    networks:
+      - realtyhub_net
+
+# ─────────────────────────────────────────
+# VOLÚMENES PERSISTENTES
+# ─────────────────────────────────────────
+
+volumes:
+  user_db_data:
+  property_db_data:
+  lead_db_data:
+  viewing_db_data:
+  contract_db_data:
+  commission_db_data:
+  notification_db_data:
+  analytics_db_data:
+
+# ─────────────────────────────────────────
+# RED INTERNA
+# ─────────────────────────────────────────
+
+networks:
+  realtyhub_net:
+    driver: bridge
