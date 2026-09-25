@@ -1,18 +1,28 @@
 import { Controller, Get, Post, Patch, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
 
+// ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
+const USER_SVC     = process.env.USER_SERVICE_URL     ?? 'http://localhost:3001';
+const PROPERTY_SVC = process.env.PROPERTY_SERVICE_URL ?? 'http://localhost:3003';
+const LEAD_SVC     = process.env.LEAD_SERVICE_URL     ?? 'http://localhost:3004';
+const VIEWING_SVC  = process.env.VIEWING_SERVICE_URL  ?? 'http://localhost:3005';
+const CONTRACT_SVC = process.env.CONTRACT_SERVICE_URL ?? 'http://localhost:3006';
+const COMMISSION_SVC = process.env.COMMISSION_SERVICE_URL ?? 'http://localhost:3007';
+const NOTIFICATION_SVC = process.env.NOTIFICATION_SERVICE_URL ?? 'http://localhost:3009';
+const ANALYTICS_SVC = process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3010';
+
 @Controller()
 export class AppController {
 
   // --- RUTAS DE USUARIOS ---
   @Get('users')
   async getUsers() {
-    const res = await fetch('http://localhost:3001/users');
+    const res = await fetch(`${USER_SVC}/users`);
     return res.json();
   }
 
   @Post('users')
   async createUser(@Body() body: any) {
-    const res = await fetch('http://localhost:3001/users', {
+    const res = await fetch(`${USER_SVC}/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -23,7 +33,7 @@ export class AppController {
   @Post('login')
   async login(@Body() body: any) {
     try {
-      const res = await fetch('http://localhost:3001/users/login', {
+      const res = await fetch(`${USER_SVC}/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -51,7 +61,7 @@ export class AppController {
   @Get('properties')
   async getProperties() {
     try {
-      const res = await fetch('http://localhost:3003/properties');
+      const res = await fetch(`${PROPERTY_SVC}/properties`);
       return res.json();
     } catch {
       return [];
@@ -61,7 +71,7 @@ export class AppController {
   @Get('properties/:id')
   async getPropertyById(@Param('id') id: string) {
     try {
-      const res = await fetch(`http://localhost:3003/properties/${id}`);
+      const res = await fetch(`${PROPERTY_SVC}/properties/${id}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -85,7 +95,7 @@ export class AppController {
 
   @Post('properties')
   async createProperty(@Body() body: any) {
-    const res = await fetch('http://localhost:3003/properties', {
+    const res = await fetch(`${PROPERTY_SVC}/properties`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -95,7 +105,7 @@ export class AppController {
 
   @Patch('properties/:id/status')
   async updatePropertyStatus(@Param('id') id: string, @Body() body: any) {
-    const res = await fetch(`http://localhost:3003/properties/${id}/status`, {
+    const res = await fetch(`${PROPERTY_SVC}/properties/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -107,7 +117,7 @@ export class AppController {
   @Get('leads')
   async getLeads() {
     try {
-      const res = await fetch('http://localhost:3004/leads');
+      const res = await fetch(`${LEAD_SVC}/leads`);
       return res.json();
     } catch {
       return [];
@@ -116,7 +126,7 @@ export class AppController {
 
   @Post('leads')
   async createLead(@Body() body: any) {
-    const res = await fetch('http://localhost:3004/leads', {
+    const res = await fetch(`${LEAD_SVC}/leads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -128,7 +138,7 @@ export class AppController {
   @Get('viewings')
   async getViewings() {
     try {
-      const res = await fetch('http://localhost:3005/viewings');
+      const res = await fetch(`${VIEWING_SVC}/viewings`);
       return res.json();
     } catch {
       return [];
@@ -138,7 +148,7 @@ export class AppController {
   @Post('viewings')
   async createViewing(@Body() body: any) {
     try {
-      const res = await fetch('http://localhost:3005/viewings', {
+      const res = await fetch(`${VIEWING_SVC}/viewings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -168,7 +178,7 @@ export class AppController {
   @Patch('viewings/:id/take')
   async takeViewing(@Param('id') id: string, @Body() body: any) {
     try {
-      const res = await fetch(`http://localhost:3005/viewings/${id}/take`, {
+      const res = await fetch(`${VIEWING_SVC}/viewings/${id}/take`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -199,7 +209,7 @@ export class AppController {
   @Get('contracts')
   async getContracts() {
     try {
-      const res = await fetch('http://localhost:3006/contracts');
+      const res = await fetch(`${CONTRACT_SVC}/contracts`);
       return res.json();
     } catch {
       return [];
@@ -209,7 +219,7 @@ export class AppController {
   @Post('contracts')
   async createContract(@Body() body: any) {
     try {
-      const res = await fetch('http://localhost:3006/contracts', {
+      const res = await fetch(`${CONTRACT_SVC}/contracts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -240,7 +250,7 @@ export class AppController {
   @Get('commissions')
   async getCommissions() {
     try {
-      const res = await fetch('http://localhost:3007/commissions');
+      const res = await fetch(`${COMMISSION_SVC}/commissions`);
       return res.json();
     } catch {
       return [];
@@ -251,7 +261,7 @@ export class AppController {
   @Get('notifications')
   async getNotifications() {
     try {
-      const response = await fetch('http://localhost:3009/notifications');
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications`);
       return response.json();
     } catch {
       return [];
@@ -261,7 +271,7 @@ export class AppController {
   @Patch('notifications/:id/read')
   async markNotificationAsRead(@Param('id') id: string) {
     try {
-      const response = await fetch(`http://localhost:3009/notifications/${id}/read`, {
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications/${id}/read`, {
         method: 'PATCH',
       });
       return response.json();
@@ -277,7 +287,7 @@ export class AppController {
   @Get('analytics')
   async getAnalytics() {
     try {
-      const res = await fetch('http://localhost:3010/analytics');
+      const res = await fetch(`${ANALYTICS_SVC}/analytics`);
       return res.json();
     } catch {
       return { total_revenue: 0, total_sales: 0 };
