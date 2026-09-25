@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1');
 
   // Configuración dinámica y robusta de CORS para producción (Vercel) y herramientas de desarrollo (Postman)
   const configuredFrontend = process.env.FRONTEND_URL?.trim();

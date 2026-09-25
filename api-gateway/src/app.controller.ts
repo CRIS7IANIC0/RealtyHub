@@ -1,15 +1,22 @@
 import { Controller, Get, Post, Patch, Body, Param, Headers, HttpException, HttpStatus } from '@nestjs/common';
 import { verifyJwt } from './jwt.util';
 
+// ─── Helper: garantiza que la URL de un microservicio siempre tenga protocolo ───
+// Railway a veces omite "https://" en las variables de entorno (solo el hostname).
+function withProtocol(url: string | undefined, fallback: string): string {
+  if (!url) return fallback;
+  return url.startsWith('http') ? url : `https://${url}`;
+}
+
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
-const USER_SVC     = process.env.USER_SERVICE_URL     ?? 'http://localhost:3001';
-const PROPERTY_SVC = process.env.PROPERTY_SERVICE_URL ?? 'http://localhost:3003';
-const LEAD_SVC     = process.env.LEAD_SERVICE_URL     ?? 'http://localhost:3004';
-const VIEWING_SVC  = process.env.VIEWING_SERVICE_URL  ?? 'http://localhost:3005';
-const CONTRACT_SVC = process.env.CONTRACT_SERVICE_URL ?? 'http://localhost:3006';
-const COMMISSION_SVC = process.env.COMMISSION_SERVICE_URL ?? 'http://localhost:3007';
-const NOTIFICATION_SVC = process.env.NOTIFICATION_SERVICE_URL ?? 'http://localhost:3009';
-const ANALYTICS_SVC = process.env.ANALYTICS_SERVICE_URL ?? 'http://localhost:3010';
+const USER_SVC       = withProtocol(process.env.USER_SERVICE_URL,       'http://localhost:3001');
+const PROPERTY_SVC   = withProtocol(process.env.PROPERTY_SERVICE_URL,   'http://localhost:3003');
+const LEAD_SVC       = withProtocol(process.env.LEAD_SERVICE_URL,       'http://localhost:3004');
+const VIEWING_SVC    = withProtocol(process.env.VIEWING_SERVICE_URL,    'http://localhost:3005');
+const CONTRACT_SVC   = withProtocol(process.env.CONTRACT_SERVICE_URL,   'http://localhost:3006');
+const COMMISSION_SVC = withProtocol(process.env.COMMISSION_SERVICE_URL, 'http://localhost:3007');
+const NOTIFICATION_SVC = withProtocol(process.env.NOTIFICATION_SERVICE_URL, 'http://localhost:3009');
+const ANALYTICS_SVC  = withProtocol(process.env.ANALYTICS_SERVICE_URL,  'http://localhost:3010');
 
 @Controller()
 export class AppController {
