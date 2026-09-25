@@ -5,6 +5,7 @@
 import type { Metadata } from 'next';
 import NotificationsClient from './NotificationsClient';
 import Navbar from '@/components/Navbar';
+import { GATEWAY } from '@/lib/config';
 
 export const metadata: Metadata = {
   title: 'RealtyHub — Centro de Notificaciones',
@@ -24,7 +25,7 @@ export interface Notification {
 
 async function fetchNotifications(): Promise<Notification[]> {
   try {
-    const res = await fetch('http://localhost:3000/notifications', {
+    const res = await fetch(`${GATEWAY}/notifications`, {
       cache: 'no-store',
     });
     if (!res.ok) return [];

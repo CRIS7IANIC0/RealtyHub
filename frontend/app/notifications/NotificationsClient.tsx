@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { Notification } from './page';
+import { GATEWAY } from '@/lib/config';
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ export default function NotificationsClient({ notifications }: Props) {
     if (loadingId) return;
     setLoadingId(id);
     try {
-      await fetch(`http://localhost:3000/notifications/${id}/read`, {
+      await fetch(`${GATEWAY}/notifications/${id}/read`, {
         method: 'PATCH',
       });
       router.refresh();

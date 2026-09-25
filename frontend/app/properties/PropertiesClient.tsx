@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CreatePropertyModal from "@/components/properties/CreatePropertyModal";
 import Navbar from "@/components/Navbar";
+import { GATEWAY } from "@/lib/config";
 
 // ─── Types ──────────────────────────────────────────────────
 interface AuthUser {
@@ -145,7 +146,7 @@ function PropertyCard({
     setCurrentStatus(newStatus);
 
     try {
-      const res = await fetch(`http://localhost:3000/properties/${property.id}/status`, {
+      const res = await fetch(`${GATEWAY}/properties/${property.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

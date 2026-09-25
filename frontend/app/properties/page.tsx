@@ -20,7 +20,7 @@ export interface Property {
 }
 
 // ─── Data fetcher ───────────────────────────────────────────
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 async function fetchProperties(): Promise<Property[]> {
   try {

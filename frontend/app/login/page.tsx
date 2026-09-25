@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 function IconLoader() {
   return (

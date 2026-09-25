@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
    Formulario para registrar nuevos prospectos (CRM).
    ───────────────────────────────────────────────────────────── */
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 const SOURCES = [
   { value: "Web", label: "Web" },

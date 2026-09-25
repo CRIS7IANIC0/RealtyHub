@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
    La visita se crea en estado 'Pendiente' en el Pool de Visitas.
    ───────────────────────────────────────────────────────────── */
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 /* ── SVG Icons ────────────────────────────────────────────── */
 

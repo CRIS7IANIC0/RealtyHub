@@ -27,7 +27,7 @@ export interface UserSnippet {
 }
 
 // ─── Data fetchers ───────────────────────────────────────────
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 async function fetchCommissions(): Promise<Commission[]> {
   try {

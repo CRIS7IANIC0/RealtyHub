@@ -20,7 +20,7 @@ export interface Lead {
 }
 
 // ─── Data fetcher ───────────────────────────────────────────
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 async function fetchLeads(): Promise<Lead[]> {
   try {

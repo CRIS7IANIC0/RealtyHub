@@ -17,7 +17,7 @@ export interface User {
 }
 
 // ─── Data fetcher ───────────────────────────────────────────
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 async function fetchUsers(): Promise<User[]> {
   try {

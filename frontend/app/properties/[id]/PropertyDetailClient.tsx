@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import type { Property } from "../page";
+import { GATEWAY } from "@/lib/config";
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -203,7 +204,7 @@ export default function PropertyDetailClient({
     setLoading(true);
     setFetchError(null);
 
-    fetch(`http://localhost:3000/properties/${propertyId}`)
+    fetch(`${GATEWAY}/properties/${propertyId}`)
       .then(async (res) => {
         if (!res.ok) {
           const errData = await res.json().catch(() => null);
@@ -247,7 +248,7 @@ export default function PropertyDetailClient({
 
     try {
       // 1. POST /leads con datos del cliente y propiedad
-      const leadRes = await fetch("http://localhost:3000/leads", {
+      const leadRes = await fetch(`${GATEWAY}/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -274,7 +275,7 @@ export default function PropertyDetailClient({
 
       // 2. POST /viewings con property_id, lead_id y scheduled_at (sin agent_id -> 'Pendiente')
       const isoDate = new Date(scheduledAt).toISOString();
-      const viewingRes = await fetch("http://localhost:3000/viewings", {
+      const viewingRes = await fetch(`${GATEWAY}/viewings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

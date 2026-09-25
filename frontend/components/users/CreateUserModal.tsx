@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
    Formulario interactivo para registrar nuevos miembros.
    ───────────────────────────────────────────────────────────── */
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 /* Oficinas disponibles (hardcoded para esta fase) */
 const OFFICES = [

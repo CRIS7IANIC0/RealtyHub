@@ -30,7 +30,7 @@ export interface LeadSnippet {
 }
 
 // ─── Data fetchers ───────────────────────────────────────────
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 async function fetchViewings(): Promise<Viewing[]> {
   try {

@@ -18,7 +18,7 @@ export interface AnalyticsData {
   total_sales: number;
 }
 
-const GATEWAY = 'http://localhost:3000';
+import { GATEWAY } from '@/lib/config';
 
 async function fetchAnalytics(): Promise<AnalyticsData> {
   try {

@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
    price, select de type y select de status.
    ───────────────────────────────────────────────────────────── */
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 export const OPERATION_TYPE_OPTIONS = [
   { value: "Venta", label: "Venta" },

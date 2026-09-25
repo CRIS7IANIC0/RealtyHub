@@ -8,6 +8,7 @@
    - Estado 'Asignada' con identificación del agente
    - Airbnb / SaaS Corporate Design System
    ───────────────────────────────────────────────────────────── */
+import { GATEWAY } from "@/lib/config";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -441,7 +442,7 @@ export default function ViewingsClient({
     setTakingId(viewingId);
 
     try {
-      const res = await fetch(`http://localhost:3000/viewings/${viewingId}/take`, {
+      const res = await fetch(`${GATEWAY}/viewings/${viewingId}/take`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agent_id: currentUser.id }),

@@ -53,7 +53,7 @@ interface User {
   office_id: string | number;
 }
 
-const GATEWAY = "http://localhost:3000";
+import { GATEWAY } from "@/lib/config";
 
 // ─── Helpers de Formato y Estilo ─────────────────────────────
 
