@@ -10,7 +10,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   });
 
-  await app.listen(3000);
-  console.log('🚀 API Gateway corriendo en el puerto 3000 (CORS Habilitado globalmente)');
+  await app.listen(process.env.PORT ?? 3000);
+  console.log(`🚀 API Gateway corriendo en el puerto ${process.env.PORT ?? 3000} (CORS Habilitado globalmente)`);
+
 }
 bootstrap();
