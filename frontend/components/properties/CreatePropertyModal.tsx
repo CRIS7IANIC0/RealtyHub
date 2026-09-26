@@ -8,6 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 
 import { GATEWAY } from "@/lib/config";
 
@@ -161,8 +162,22 @@ export default function CreatePropertyModal({
     try {
       let uploadedImages: string[] = [];
 
-      // 1. Si hay archivos seleccionados, hacer POST con FormData a /api/upload
-      if (selectedFiles.length > 0) {
+      // 1. Si hay archivos seleccionados, subirlos (Vercel Blob en producción, disco en local)
+      const uploadMode = selectedFiles.length > 0
+        ? await fetch("/api/upload").then((r) => r.json()).then((d) => d.mode).catch(() => "local")
+        : null;
+
+      if (uploadMode === "blob") {
+        const blobs = await Promise.all(
+          selectedFiles.map((file) =>
+            upload(`properties/${file.name}`, file, {
+              access: "public",
+              handleUploadUrl: "/api/upload",
+            })
+          )
+        );
+        uploadedImages = blobs.map((b) => b.url);
+      } else if (selectedFiles.length > 0) {
         const formData = new FormData();
         selectedFiles.forEach((file) => {
           formData.append("files", file);
