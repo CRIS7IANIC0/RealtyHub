@@ -24,6 +24,37 @@ const ANALYTICS_SVC  = withProtocol(process.env.ANALYTICS_SERVICE_URL,  'http://
 @Controller()
 export class AppController {
 
+  // --- DIAGNÓSTICO: verifica que el gateway alcance a cada microservicio ---
+  @Get('health')
+  async health() {
+    const services: Record<string, string> = {
+      user: `${USER_SVC}/users`,
+      property: `${PROPERTY_SVC}/properties`,
+      lead: `${LEAD_SVC}/leads`,
+      viewing: `${VIEWING_SVC}/viewings`,
+      contract: `${CONTRACT_SVC}/contracts`,
+      commission: `${COMMISSION_SVC}/commissions`,
+      notification: `${NOTIFICATION_SVC}/notifications`,
+      analytics: `${ANALYTICS_SVC}/analytics`,
+    };
+
+    const entries = await Promise.all(
+      Object.entries(services).map(async ([name, url]) => {
+        const target = new URL(url).origin;
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+          return [name, { ok: res.ok, status: res.status, target }] as const;
+        } catch (error) {
+          const cause = (error as any)?.cause?.code ?? (error as Error).message;
+          return [name, { ok: false, error: cause, target }] as const;
+        }
+      }),
+    );
+
+    const result = Object.fromEntries(entries);
+    return { ok: entries.every(([, r]) => r.ok), services: result };
+  }
+
   // --- RUTAS DE USUARIOS ---
   @Get('users')
   async getUsers() {
