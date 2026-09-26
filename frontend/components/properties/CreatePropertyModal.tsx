@@ -8,7 +8,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 
 import { GATEWAY } from "@/lib/config";
 
@@ -77,6 +77,16 @@ function IconLoader() {
 }
 
 /* ── Component ────────────────────────────────────────────── */
+
+// Nombre único y seguro para el blob (el token prefirmado queda limitado a esta ruta)
+function uniqueBlobName(fileName: string): string {
+  const dot = fileName.lastIndexOf(".");
+  const ext = dot > 0 ? fileName.slice(dot).toLowerCase() : ".jpg";
+  const base = (dot > 0 ? fileName.slice(0, dot) : fileName)
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .slice(0, 40);
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}${ext}`;
+}
 
 export default function CreatePropertyModal({
   isOpen,
@@ -170,7 +180,7 @@ export default function CreatePropertyModal({
       if (uploadMode === "blob") {
         const blobs = await Promise.all(
           selectedFiles.map((file) =>
-            upload(`properties/${file.name}`, file, {
+            uploadPresigned(`properties/${uniqueBlobName(file.name)}`, file, {
               access: "public",
               handleUploadUrl: "/api/upload",
             })

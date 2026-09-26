@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { issueSignedToken } from "@vercel/blob";
+import {
+  handleUploadPresigned,
+  type HandleUploadPresignedBody,
+} from "@vercel/blob/client";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
 /* ─────────────────────────────────────────────────────────────
    Next.js API Route: /api/upload
 
-   - Producción (Vercel): si existe BLOB_READ_WRITE_TOKEN, las fotos se suben
-     directamente desde el navegador a Vercel Blob. Esta ruta solo emite el
-     token de subida (el filesystem de Vercel es de solo lectura).
+   - Producción (Vercel): con un Blob Store conectado (BLOB_STORE_ID vía OIDC,
+     o BLOB_READ_WRITE_TOKEN), las fotos se suben directamente desde el
+     navegador a Vercel Blob. Esta ruta solo emite la URL prefirmada
+     (el filesystem de Vercel es de solo lectura).
    - Desarrollo local: sin token, guarda los archivos en public/uploads/.
    ───────────────────────────────────────────────────────────── */
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB por foto
 
-const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const useBlob = () =>
+  Boolean(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
 
 // Indica al cliente qué modo de subida usar
 export async function GET() {
@@ -24,22 +30,29 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") ?? "";
 
-  // ── Modo Vercel Blob: generación del token para la subida desde el cliente ──
+  // ── Modo Vercel Blob: emisión de la URL prefirmada para la subida desde el cliente ──
   if (contentType.includes("application/json")) {
     try {
-      const body = (await request.json()) as HandleUploadBody;
-      const result = await handleUpload({
+      const body = (await request.json()) as HandleUploadPresignedBody;
+      const result = await handleUploadPresigned({
         body,
         request,
-        onBeforeGenerateToken: async () => ({
-          allowedContentTypes: ["image/*"],
-          maximumSizeInBytes: MAX_IMAGE_BYTES,
-          addRandomSuffix: true,
+        getSignedToken: async (pathname) => ({
+          token: await issueSignedToken({
+            pathname,
+            operations: ["put"],
+            allowedContentTypes: ["image/*"],
+            maximumSizeInBytes: MAX_IMAGE_BYTES,
+          }),
+          urlOptions: {
+            allowedContentTypes: ["image/*"],
+            maximumSizeInBytes: MAX_IMAGE_BYTES,
+          },
         }),
       });
       return NextResponse.json(result);
     } catch (error) {
-      console.error("Error al generar token de Vercel Blob:", error);
+      console.error("Error al autorizar la subida a Vercel Blob:", error);
       return NextResponse.json(
         { error: (error as Error).message || "No se pudo autorizar la subida" },
         { status: 400 }
@@ -52,7 +65,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "La subida local no está disponible en Vercel. Conecta un Blob Store al proyecto (BLOB_READ_WRITE_TOKEN).",
+          "La subida local no está disponible en Vercel. Conecta un Blob Store al proyecto en Vercel → Storage.",
       },
       { status: 500 }
     );
