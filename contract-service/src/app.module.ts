@@ -16,7 +16,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: 'realtyhub_sales_queue',
           queueOptions: {
-            durable: false,
+            durable: true,
           },
         },
       },
@@ -28,7 +28,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: 'realtyhub_notifications_queue',
           queueOptions: {
-            durable: false,
+            durable: true,
           },
         },
       },
@@ -40,7 +40,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: 'realtyhub_analytics_queue',
           queueOptions: {
-            durable: false,
+            durable: true,
           },
         },
       },
@@ -52,7 +52,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
           queue: 'realtyhub_property_queue',
           queueOptions: {
-            durable: false,
+            durable: true,
           },
         },
       },
