@@ -3,9 +3,12 @@ import { verifyJwt } from './jwt.util';
 
 // ─── Helper: garantiza que la URL de un microservicio siempre tenga protocolo ───
 // Railway a veces omite "https://" en las variables de entorno (solo el hostname).
+// La red privada de Railway (*.railway.internal) solo habla HTTP plano.
 function withProtocol(url: string | undefined, fallback: string): string {
-  if (!url) return fallback;
-  return url.startsWith('http') ? url : `https://${url}`;
+  const clean = url?.trim().replace(/\/+$/, '');
+  if (!clean) return fallback;
+  if (clean.startsWith('http')) return clean;
+  return clean.includes('.railway.internal') ? `http://${clean}` : `https://${clean}`;
 }
 
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───

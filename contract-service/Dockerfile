@@ -7,4 +7,5 @@ RUN npm install -g @nestjs/cli
 COPY . .
 RUN npx prisma generate || true
 RUN npm run build
-CMD ["npm", "run", "start:prod"]
+# Sincroniza el esquema de Prisma con la BD (no hay carpeta migrations) y arranca
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npm run start:prod"]
