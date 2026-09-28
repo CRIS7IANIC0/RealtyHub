@@ -1,0 +1,198 @@
+/* ─────────────────────────────────────────────
+   WelcomeDoor — puertas 3D oscuras con detalles dorados
+   ───────────────────────────────────────────── */
+
+.overlay {
+  --wd-gold: #c9a24d;
+  --wd-gold-soft: rgba(201, 162, 77, 0.35);
+  --wd-door-a: #1c1c1f;
+  --wd-door-b: #0f0f11;
+  --wd-open-ms: 1500ms;
+  --wd-fade-ms: 500ms;
+
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a0a0b;
+  opacity: 1;
+  transition:
+    background-color var(--wd-open-ms) ease,
+    opacity var(--wd-fade-ms) ease;
+}
+
+/* Al abrir, el fondo se aclara para dejar ver la página a través de las puertas */
+.overlay.open {
+  background-color: rgba(10, 10, 11, 0);
+}
+
+/* Desvanecimiento final: deja de bloquear clics inmediatamente */
+.overlay.fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Escenario 3D ─────────────────────────────── */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+}
+
+.door {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--wd-door-a), var(--wd-door-b));
+  box-shadow: inset 0 0 0 1px var(--wd-gold-soft);
+  backface-visibility: hidden;
+  transition: transform var(--wd-open-ms) cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+
+.left {
+  transform-origin: left center;
+  border-right: 2px solid var(--wd-gold);
+}
+
+.right {
+  transform-origin: right center;
+  border-left: 2px solid var(--wd-gold);
+}
+
+.open .left {
+  transform: rotateY(-110deg);
+}
+
+.open .right {
+  transform: rotateY(110deg);
+}
+
+/* Paneles decorativos con filete dorado */
+.panelTop,
+.panelBottom {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  border: 1px solid var(--wd-gold-soft);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 6px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 7px var(--wd-gold-soft);
+}
+
+.panelTop {
+  top: 8%;
+  height: 38%;
+}
+
+.panelBottom {
+  bottom: 8%;
+  height: 38%;
+}
+
+/* Tirador dorado junto a la línea central */
+.handle {
+  position: absolute;
+  top: 68%;
+  width: 6px;
+  height: 72px;
+  margin-top: -36px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #e7c77a, var(--wd-gold) 50%, #8a6a2a);
+  box-shadow: 0 0 12px rgba(201, 162, 77, 0.45);
+}
+
+.left .handle {
+  right: 18px;
+}
+
+.right .handle {
+  left: 18px;
+}
+
+/* ── Contenido central ────────────────────────── */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 0 16px;
+  pointer-events: none;
+  transition:
+    opacity 300ms ease,
+    transform 300ms ease;
+}
+
+.open .center {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+.brand {
+  margin: 0;
+  color: var(--wd-gold);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6);
+}
+
+.cta {
+  pointer-events: auto;
+  padding: 16px 32px;
+  border: 1px solid var(--wd-gold);
+  border-radius: 9999px;
+  background: rgba(10, 10, 11, 0.85);
+  color: var(--wd-gold);
+  font-size: clamp(0.8rem, 2.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(201, 162, 77, 0.5);
+  animation: wd-pulse 2.4s ease-in-out infinite;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.cta:hover,
+.cta:focus-visible {
+  background: var(--wd-gold);
+  color: #0a0a0b;
+  outline: none;
+}
+
+.cta:disabled {
+  cursor: default;
+  animation: none;
+}
+
+@keyframes wd-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 162, 77, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(201, 162, 77, 0);
+  }
+}
+
+/* Accesibilidad: con "reducir movimiento" las puertas se desvanecen en vez de girar */
+@media (prefers-reduced-motion: reduce) {
+  .door {
+    transition: opacity 600ms ease;
+  }
+  .open .left,
+  .open .right {
+    transform: none;
+    opacity: 0;
+  }
+  .cta {
+    animation: none;
+  }
+}

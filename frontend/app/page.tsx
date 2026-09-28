@@ -12,6 +12,7 @@
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
+import WelcomeDoor from "@/components/WelcomeDoor";
 
 // ─── Tipos de Datos ──────────────────────────────────────────
 export interface AuthUser {
@@ -1334,28 +1335,36 @@ export default function HomePage() {
     };
   }, [user, isAuthLoading]);
 
-  // 3. Manejo de estado de carga para evitar hydration mismatch y parpadeos
+  // 3. Contenido según estado: carga → landing pública → dashboard interno con RBAC
+  let content: React.ReactNode;
   if (isAuthLoading) {
-    return <LoadingSkeleton />;
-  }
-
-  // 4. Renderizado Condicional: Pública vs Dashboard Interno con RBAC
-  if (!user) {
-    return (
+    // Manejo de estado de carga para evitar hydration mismatch y parpadeos
+    content = <LoadingSkeleton />;
+  } else if (!user) {
+    content = (
       <PublicLandingView
         properties={properties}
         isLoading={isDataLoading}
       />
     );
+  } else {
+    content = (
+      <InternalDashboardView
+        user={user}
+        properties={properties}
+        leads={leads}
+        viewings={viewings}
+        users={users}
+      />
+    );
   }
 
+  // 4. WelcomeDoor se mantiene en la misma posición del árbol para que la
+  //    animación no se reinicie al pasar de "cargando" al contenido real.
   return (
-    <InternalDashboardView
-      user={user}
-      properties={properties}
-      leads={leads}
-      viewings={viewings}
-      users={users}
-    />
+    <>
+      <WelcomeDoor />
+      {content}
+    </>
   );
 }
