@@ -2,10 +2,11 @@
 
 /* ─────────────────────────────────────────────────────────────
    RealtyHub — WelcomeDoor
-   Overlay de bienvenida a pantalla completa con dos puertas 3D.
-   Al pulsar 'CONOCE TU NUEVO HOGAR' las puertas se abren hacia
-   afuera (perspective + rotateY), el overlay se desvanece y el
-   componente se desmonta para no bloquear la página de abajo.
+   Overlay de bienvenida a pantalla completa: portón de madera con
+   herrajes de hierro, enmarcado en un arco de piedra. Al pulsar
+   'CONOCE TU NUEVO HOGAR' las dos hojas se abren hacia afuera
+   (perspective + rotateY), entra la luz, la escena "cruza" la
+   puerta desvaneciéndose y el componente se desmonta del DOM.
    ───────────────────────────────────────────────────────────── */
 
 import { useEffect, useState } from "react";
@@ -13,13 +14,61 @@ import styles from "./WelcomeDoor.module.css";
 
 type Phase = "closed" | "opening" | "fading" | "done";
 
-const OPEN_MS = 1500; // duración de la apertura de las puertas
-const FADE_MS = 500; // duración del desvanecimiento final
+const OPEN_MS = 1500; // apertura de las puertas
+const FADE_MS = 700; // acercamiento + desvanecimiento final
 
+// La bienvenida se muestra una sola vez por sesión del navegador
+const SEEN_KEY = "rh_welcome_seen";
+
+function alreadySeen(): boolean {
+  try {
+    return sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSeen() {
+  try {
+    sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    /* almacenamiento no disponible: la puerta volverá a mostrarse */
+  }
+}
+
+// Posición vertical (% de la hoja) de las bandas de hierro, como en un portón clásico
+const BANDS = [13, 32, 64, 82];
+
+function DoorLeaf({ side }: { side: "left" | "right" }) {
+  return (
+    <div className={`${styles.door} ${styles[side]}`} aria-hidden="true">
+      {/* Los herrajes de la hoja derecha son el espejo de la izquierda */}
+      <div className={styles.hardware}>
+        {BANDS.map((top) => (
+          <div key={top} className={styles.band} style={{ top: `${top}%` }}>
+            <span className={`${styles.strap} ${styles.strapOuter}`} />
+            <span className={`${styles.strap} ${styles.strapInner}`} />
+          </div>
+        ))}
+        <span className={styles.plate} style={{ top: "47%" }} />
+        <span className={styles.plate} style={{ top: "71%" }} />
+        <span className={styles.stud} style={{ top: "47%" }} />
+        <span className={styles.stud} style={{ top: "53%" }} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Montar solo en el cliente (p. ej. tras leer la sesión en un efecto):
+ * el estado inicial lee sessionStorage para no mostrar la puerta de nuevo.
+ */
 export default function WelcomeDoor() {
-  const [phase, setPhase] = useState<Phase>("closed");
+  const [phase, setPhase] = useState<Phase>(() =>
+    alreadySeen() ? "done" : "closed"
+  );
 
-  // Bloquea el scroll de la página mientras las puertas estén cerradas
+  // Bloquea el scroll de la página mientras el overlay esté presente
   useEffect(() => {
     if (phase === "done") return;
     const html = document.documentElement;
@@ -32,7 +81,7 @@ export default function WelcomeDoor() {
     };
   }, [phase]);
 
-  // Secuencia: opening (1.5 s) → fading (0.5 s) → done (desmontado)
+  // Secuencia: opening (1.5 s) → fading (0.7 s) → done (desmontado)
   useEffect(() => {
     if (phase === "opening") {
       const t = setTimeout(() => setPhase("fading"), OPEN_MS);
@@ -59,26 +108,32 @@ export default function WelcomeDoor() {
       aria-modal={!isOpen}
       aria-label="Bienvenida a RealtyHub"
     >
-      <div className={styles.stage}>
-        <div className={`${styles.door} ${styles.left}`} aria-hidden="true">
-          <span className={styles.panelTop} />
-          <span className={styles.panelBottom} />
-          <span className={styles.handle} />
-        </div>
+      <div className={styles.scene}>
+        <div className={styles.wall} />
+        <span className={`${styles.corbel} ${styles.corbelLeft}`} />
+        <span className={`${styles.corbel} ${styles.corbelRight}`} />
+        <div className={styles.floor} />
 
-        <div className={`${styles.door} ${styles.right}`} aria-hidden="true">
-          <span className={styles.panelTop} />
-          <span className={styles.panelBottom} />
-          <span className={styles.handle} />
+        <div className={styles.portal}>
+          <div className={styles.doorway}>
+            <div className={styles.light} />
+            <DoorLeaf side="left" />
+            <DoorLeaf side="right" />
+          </div>
         </div>
       </div>
 
       <div className={styles.center}>
-        <p className={styles.brand}>RealtyHub</p>
+        <p className={styles.brand}>
+          Realty<span>Hub</span>
+        </p>
         <button
           type="button"
           className={styles.cta}
-          onClick={() => setPhase("opening")}
+          onClick={() => {
+            markSeen();
+            setPhase("opening");
+          }}
           disabled={isOpen}
           autoFocus
         >

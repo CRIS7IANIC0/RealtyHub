@@ -1359,11 +1359,13 @@ export default function HomePage() {
     );
   }
 
-  // 4. WelcomeDoor se mantiene en la misma posición del árbol para que la
-  //    animación no se reinicie al pasar de "cargando" al contenido real.
+  // 4. La puerta de bienvenida es solo para visitantes: se monta cuando ya se
+  //    leyó la sesión y no hay usuario (tras el login no vuelve a aparecer).
+  const showWelcomeDoor = !isAuthLoading && !user;
+
   return (
     <>
-      <WelcomeDoor />
+      {showWelcomeDoor && <WelcomeDoor />}
       {content}
     </>
   );
