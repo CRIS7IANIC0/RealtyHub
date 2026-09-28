@@ -40,7 +40,12 @@ export class AppController {
 
     const entries = await Promise.all(
       Object.entries(services).map(async ([name, url]) => {
-        const target = new URL(url).origin;
+        let target: string;
+        try {
+          target = new URL(url).origin;
+        } catch {
+          return [name, { ok: false, error: 'URL inválida (revisa la variable)', target: url }] as const;
+        }
         try {
           const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
           return [name, { ok: res.ok, status: res.status, target }] as const;
