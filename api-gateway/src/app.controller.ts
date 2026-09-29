@@ -11,6 +11,16 @@ function withProtocol(url: string | undefined, fallback: string): string {
   return clean.includes('.railway.internal') ? `http://${clean}` : `https://${clean}`;
 }
 
+// ─── Helper: reenvía el cuerpo y, si el microservicio falló, también su código HTTP ───
+// Sin esto, un 400 de validación del servicio llegaba al frontend como 201.
+async function propagate(res: Response): Promise<unknown> {
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new HttpException(data ?? { message: 'Error en el microservicio' }, res.status);
+  }
+  return data;
+}
+
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
 const USER_SVC       = withProtocol(process.env.USER_SERVICE_URL,       'http://localhost:3001');
 const PROPERTY_SVC   = withProtocol(process.env.PROPERTY_SERVICE_URL,   'http://localhost:3003');
@@ -215,7 +225,7 @@ export class AppController {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    return res.json();
+    return propagate(res);
   }
 
   @Patch('properties/:id/status')
@@ -225,7 +235,17 @@ export class AppController {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    return res.json();
+    return propagate(res);
+  }
+
+  @Patch('properties/:id')
+  async updateProperty(@Param('id') id: string, @Body() body: any) {
+    const res = await fetch(`${PROPERTY_SVC}/properties/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return propagate(res);
   }
 
   // --- RUTAS DE LEADS ---
