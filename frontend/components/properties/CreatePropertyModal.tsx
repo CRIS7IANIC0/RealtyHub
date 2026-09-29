@@ -2,8 +2,10 @@
 
 /* ─────────────────────────────────────────────────────────────
    CreatePropertyModal — Client Component
-   Formulario con subida local de múltiples imágenes (/api/upload)
-   y persistencia en el backend a través del API Gateway.
+   Formulario con subida de múltiples imágenes (/api/upload) y
+   persistencia en el property-service a través del API Gateway.
+   Envía operación (Venta/Alquiler), tipo y ciudad, que el catálogo
+   y la página de inicio usan para clasificar los inmuebles.
    ───────────────────────────────────────────────────────────── */
 
 import { useState, useTransition } from "react";
@@ -11,12 +13,12 @@ import { useRouter } from "next/navigation";
 import { uploadPresigned } from "@vercel/blob/client";
 
 import { GATEWAY } from "@/lib/config";
+import { OPERATIONS, PROPERTY_TYPES, type PublicProperty } from "@/lib/property";
 
-const STATUSES = [
-  { value: "disponible", label: "Disponible" },
-  { value: "reservada", label: "Reservada" },
-  { value: "vendida", label: "Vendida" },
-];
+// Al crear sólo tienen sentido estos estados; Vendida/Alquilada llegan al firmar contrato
+const INITIAL_STATUSES = ["Disponible", "Reservada"] as const;
+
+type Operation = (typeof OPERATIONS)[number];
 
 /* ── Inline SVG Icons ─────────────────────────────────────── */
 
@@ -91,9 +93,12 @@ function uniqueBlobName(fileName: string): string {
 export default function CreatePropertyModal({
   isOpen,
   setIsOpen,
+  onCreated,
 }: {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  /** Recibe la propiedad recién creada para mostrarla sin recargar. */
+  onCreated?: (property: PublicProperty) => void;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -103,7 +108,10 @@ export default function CreatePropertyModal({
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [price, setPrice] = useState("");
-  const [status, setStatus] = useState("disponible");
+  const [status, setStatus] = useState<string>("Disponible");
+  const [operation, setOperation] = useState<Operation>("Venta");
+  const [propertyType, setPropertyType] = useState("");
+  const [city, setCity] = useState("");
 
   /* Archivos e imágenes */
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -119,8 +127,12 @@ export default function CreatePropertyModal({
     setDescription("");
     setAddress("");
     setPrice("");
-    setStatus("disponible");
+    setStatus("Disponible");
+    setOperation("Venta");
+    setPropertyType("");
+    setCity("");
     setSelectedFiles([]);
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
     setPreviewUrls([]);
     setError(null);
   }
@@ -143,6 +155,7 @@ export default function CreatePropertyModal({
   }
 
   function handleRemoveFile(index: number) {
+    URL.revokeObjectURL(previewUrls[index]);
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
   }
@@ -159,6 +172,10 @@ export default function CreatePropertyModal({
     }
     if (!address.trim()) {
       setError("La dirección es obligatoria.");
+      return;
+    }
+    if (!city.trim()) {
+      setError("La ciudad es obligatoria.");
       return;
     }
     const numPrice = parseFloat(price);
@@ -219,8 +236,10 @@ export default function CreatePropertyModal({
           address: address.trim(),
           price: numPrice,
           status,
+          operation,
+          property_type: propertyType || undefined,
+          city: city.trim(),
           images: uploadedImages,
-          image_url: uploadedImages[0] || "",
         }),
       });
 
@@ -232,6 +251,8 @@ export default function CreatePropertyModal({
       }
 
       /* Success */
+      const created: PublicProperty = await res.json();
+      onCreated?.(created);
       resetForm();
       setIsOpen(false);
       startTransition(() => {
@@ -277,7 +298,7 @@ export default function CreatePropertyModal({
               Nueva propiedad
             </h2>
             <p className="text-[13px] text-[#6a6a6a] mt-0.5">
-              Registra un nuevo inmueble en el catálogo con fotos locales.
+              Registra un inmueble en venta o en alquiler con sus fotos.
             </p>
           </div>
           <button
@@ -298,6 +319,35 @@ export default function CreatePropertyModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Operación: Venta / Alquiler */}
+          <div>
+            <span className={labelClass}>
+              Operación <span className="text-[#ff385c]">*</span>
+            </span>
+            <div
+              role="radiogroup"
+              aria-label="Operación"
+              className="grid grid-cols-2 gap-1 p-1 rounded-full bg-[#f7f7f7] border border-[#ebebeb]"
+            >
+              {OPERATIONS.map((op) => (
+                <button
+                  key={op}
+                  type="button"
+                  role="radio"
+                  aria-checked={operation === op}
+                  onClick={() => setOperation(op)}
+                  className={`rounded-full py-2 text-[14px] font-semibold transition-all cursor-pointer ${
+                    operation === op
+                      ? "bg-white text-[#222222] shadow-sm"
+                      : "text-[#6a6a6a] hover:text-[#222222]"
+                  }`}
+                >
+                  {op === "Venta" ? "En venta" : "En alquiler"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Title */}
           <div>
             <label htmlFor="prop-title" className={labelClass}>
@@ -307,12 +357,52 @@ export default function CreatePropertyModal({
               id="prop-title"
               type="text"
               required
-              placeholder="Ej: Apartamento Exclusivo en El Poblado"
+              placeholder={
+                operation === "Alquiler"
+                  ? "Ej: Apartaestudio amoblado cerca a la universidad"
+                  : "Ej: Apartamento exclusivo en El Poblado"
+              }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={inputClass}
               autoFocus
             />
+          </div>
+
+          {/* Type + City row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="prop-type" className={labelClass}>
+                Tipo de inmueble
+              </label>
+              <select
+                id="prop-type"
+                value={propertyType}
+                onChange={(e) => setPropertyType(e.target.value)}
+                className={inputClass + " appearance-none cursor-pointer"}
+              >
+                <option value="">Selecciona un tipo</option>
+                {PROPERTY_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="prop-city" className={labelClass}>
+                Ciudad <span className="text-[#ff385c]">*</span>
+              </label>
+              <input
+                id="prop-city"
+                type="text"
+                required
+                placeholder="Montería"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className={inputClass}
+              />
+            </div>
           </div>
 
           {/* Address */}
@@ -324,7 +414,7 @@ export default function CreatePropertyModal({
               id="prop-address"
               type="text"
               required
-              placeholder="Cra 43A #1-50, Medellín"
+              placeholder="Cra 43A #1-50, barrio El Poblado"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               className={inputClass}
@@ -350,7 +440,8 @@ export default function CreatePropertyModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="prop-price" className={labelClass}>
-                Precio (COP) <span className="text-[#ff385c]">*</span>
+                {operation === "Alquiler" ? "Canon mensual (COP)" : "Precio (COP)"}{" "}
+                <span className="text-[#ff385c]">*</span>
               </label>
               <input
                 id="prop-price"
@@ -358,7 +449,7 @@ export default function CreatePropertyModal({
                 min="0"
                 step="any"
                 required
-                placeholder="350000000"
+                placeholder={operation === "Alquiler" ? "1800000" : "350000000"}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 className={inputClass}
@@ -374,9 +465,9 @@ export default function CreatePropertyModal({
                 onChange={(e) => setStatus(e.target.value)}
                 className={inputClass + " appearance-none cursor-pointer"}
               >
-                {STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
+                {INITIAL_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
                   </option>
                 ))}
               </select>
@@ -386,7 +477,7 @@ export default function CreatePropertyModal({
           {/* Subida de Múltiples Imágenes Locales */}
           <div>
             <label className={labelClass}>
-              Fotografías del Inmueble (Múltiples archivos locales)
+              Fotografías del inmueble
             </label>
             <label
               htmlFor="prop-files-input"
@@ -397,7 +488,8 @@ export default function CreatePropertyModal({
                 Haz clic para seleccionar fotos locales
               </p>
               <p className="text-[11px] text-gray-400 mt-0.5">
-                PNG, JPG o WEBP. Puedes seleccionar múltiples archivos a la vez.
+                PNG, JPG o WEBP. La primera foto será la portada; en las
+                tarjetas se muestran una a una cada 5 segundos.
               </p>
               <input
                 id="prop-files-input"
@@ -427,6 +519,11 @@ export default function CreatePropertyModal({
                         alt={`Vista previa ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
+                      {index === 0 && (
+                        <span className="absolute bottom-1 left-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/90 text-[#222222]">
+                          Portada
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(index)}

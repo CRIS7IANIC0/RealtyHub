@@ -69,8 +69,11 @@ body {
 }
 
 /* ── Smooth image loading ────────────────────── */
-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
+/* En @layer base para que utilidades como h-full / object-cover puedan sobrescribirlo */
+@layer base {
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
 }

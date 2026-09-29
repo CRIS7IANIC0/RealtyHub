@@ -10,10 +10,12 @@
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
+import ImageSlider from "@/components/ImageSlider";
 import type { Property } from "../page";
 import { GATEWAY } from "@/lib/config";
+import { getPropertyImages, inferCity, inferType, isRental } from "@/lib/property";
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -54,6 +56,15 @@ function statusBadge(status: string): { bg: string; text: string; label: string;
         border: "border-rose-200",
         label: "Vendida",
         dot: "bg-rose-500",
+      };
+    case "rented":
+    case "alquilada":
+      return {
+        bg: "bg-sky-50",
+        text: "text-sky-800",
+        border: "border-sky-200",
+        label: "Alquilada",
+        dot: "bg-sky-500",
       };
     default:
       return {
@@ -309,6 +320,12 @@ export default function PropertyDetailClient({
     }
   }
 
+  // Memorizado: el slider reinicia su temporizador si la lista cambia de referencia
+  const imageList = useMemo(
+    () => (property ? getPropertyImages(property) : []),
+    [property]
+  );
+
   const inputClass =
     "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-gray-400 outline-none transition-colors focus:border-[#222222]";
 
@@ -359,12 +376,9 @@ export default function PropertyDetailClient({
   }
 
   const badge = statusBadge(property.status);
-  const imageList: string[] =
-    property.images && property.images.length > 0
-      ? property.images
-      : property.image_url
-      ? [property.image_url]
-      : [];
+  const rental = isRental(property);
+  const propertyType = inferType(property);
+  const city = inferCity(property);
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
@@ -409,89 +423,17 @@ export default function PropertyDetailClient({
               <IconImagePlaceholder />
               <p className="text-sm font-medium mt-2">Fotografía no disponible</p>
             </div>
-          ) : imageList.length === 1 ? (
-            /* 1 Imagen: 100% de Ancho */
-            <div
-              className="relative w-full h-full cursor-pointer group"
-              onClick={() => {
-                setSelectedImageIndex(0);
+          ) : (
+            /* Una foto a la vez; avanza sola cada 5 s. Clic → galería en esa foto */
+            <ImageSlider
+              images={imageList}
+              alt={property.title}
+              controls="full"
+              onImageClick={(i) => {
+                setSelectedImageIndex(i);
                 setGalleryOpen(true);
               }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageList[0]}
-                alt={property.title}
-                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = "none";
-                  target.parentElement?.classList.add("flex", "items-center", "justify-center");
-                }}
-              />
-            </div>
-          ) : (
-            /* >1 Imágenes: Layout de Grid Estilo Airbnb (50% Principal + 50% Secundarias 2x2) */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-full w-full">
-              {/* Lado Izquierdo (50%): Imagen Principal Grande */}
-              <div
-                className="relative w-full h-full overflow-hidden bg-gray-200 cursor-pointer group"
-                onClick={() => {
-                  setSelectedImageIndex(0);
-                  setGalleryOpen(true);
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageList[0]}
-                  alt={`${property.title} - Principal`}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                />
-              </div>
-
-              {/* Lado Derecho (50%): Grid 2x2 de Imágenes Secundarias (hasta 4 adicionales) */}
-              <div className="hidden md:grid grid-cols-2 grid-rows-2 gap-2 h-full w-full">
-                {imageList.slice(1, 5).map((img, idx) => {
-                  const imageIdx = idx + 1;
-                  const isFourthSlot = idx === 3;
-                  const extraCount = imageList.length - 5;
-                  const showMoreOverlay = isFourthSlot && extraCount > 0;
-
-                  // Ajuste de span si hay menos de 4 fotos secundarias
-                  let cellSpan = "";
-                  if (imageList.length === 2) {
-                    cellSpan = "col-span-2 row-span-2";
-                  } else if (imageList.length === 3) {
-                    cellSpan = "col-span-2 row-span-1";
-                  } else if (imageList.length === 4 && idx === 0) {
-                    cellSpan = "col-span-2 row-span-1";
-                  }
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`relative w-full h-full overflow-hidden bg-gray-200 cursor-pointer group ${cellSpan}`}
-                      onClick={() => {
-                        setSelectedImageIndex(imageIdx);
-                        setGalleryOpen(true);
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img}
-                        alt={`${property.title} - Foto ${imageIdx + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {showMoreOverlay && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center text-white font-bold text-base cursor-pointer hover:bg-black/70 transition-colors">
-                          +{extraCount + 1} fotos
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            />
           )}
 
           {/* Badge Flotante de Disponibilidad sobre la Imagen */}
@@ -558,7 +500,7 @@ export default function PropertyDetailClient({
                   {fmtPrice(property.price)}
                 </span>
                 <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                  COP · Precio Oficial
+                  {rental ? "COP / mes · Canon de arriendo" : "COP · Precio Oficial"}
                 </span>
               </div>
             </div>
@@ -629,15 +571,21 @@ export default function PropertyDetailClient({
             <div className="rounded-2xl bg-white border border-gray-200 p-6 grid grid-cols-2 sm:grid-cols-3 gap-6 shadow-2xs">
               <div>
                 <p className="text-xs uppercase font-bold text-gray-400">Tipo</p>
-                <p className="text-[14px] font-semibold text-gray-900 mt-1">Residencial</p>
+                <p className="text-[14px] font-semibold text-gray-900 mt-1">
+                  {propertyType ?? "Inmueble"}
+                </p>
               </div>
               <div>
-                <p className="text-xs uppercase font-bold text-gray-400">Disponibilidad</p>
-                <p className="text-[14px] font-semibold text-emerald-700 mt-1">Inmediata</p>
+                <p className="text-xs uppercase font-bold text-gray-400">Operación</p>
+                <p className="text-[14px] font-semibold text-gray-900 mt-1">
+                  {rental ? "Alquiler" : "Venta"}
+                </p>
               </div>
               <div>
-                <p className="text-xs uppercase font-bold text-gray-400">Gestión</p>
-                <p className="text-[14px] font-semibold text-gray-900 mt-1">Exclusiva RealtyHub</p>
+                <p className="text-xs uppercase font-bold text-gray-400">Ciudad</p>
+                <p className="text-[14px] font-semibold text-gray-900 mt-1">
+                  {city ?? "—"}
+                </p>
               </div>
             </div>
           </div>
@@ -654,7 +602,7 @@ export default function PropertyDetailClient({
                     {fmtPrice(property.price)}
                   </span>
                   <span className="text-xs text-gray-500 font-medium block">
-                    Valor total de publicación
+                    {rental ? "Canon mensual" : "Valor total de publicación"}
                   </span>
                 </div>
                 <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${badge.bg} ${badge.text}`}>

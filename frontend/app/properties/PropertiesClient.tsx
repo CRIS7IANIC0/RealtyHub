@@ -16,7 +16,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CreatePropertyModal from "@/components/properties/CreatePropertyModal";
 import Navbar from "@/components/Navbar";
+import ImageSlider from "@/components/ImageSlider";
 import { GATEWAY } from "@/lib/config";
+import { STATUSES, getPropertyImages, isRental } from "@/lib/property";
 
 // ─── Types ──────────────────────────────────────────────────
 interface AuthUser {
@@ -36,6 +38,9 @@ interface Property {
   status: string;
   images?: string[];
   image_url?: string;
+  operation?: string | null;
+  property_type?: string | null;
+  city?: string | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -60,6 +65,9 @@ function statusStyle(status: string): { bg: string; text: string; label: string;
     case "sold":
     case "vendida":
       return { bg: "bg-rose-50", text: "text-rose-700", label: "Vendida", dot: "bg-rose-500" };
+    case "rented":
+    case "alquilada":
+      return { bg: "bg-sky-50", text: "text-sky-700", label: "Alquilada", dot: "bg-sky-500" };
     default:
       return { bg: "bg-[#f7f7f7]", text: "text-[#6a6a6a]", label: status || "—", dot: "bg-[#b0b0b0]" };
   }
@@ -103,16 +111,6 @@ function IconBuilding() {
   );
 }
 
-function IconImage() {
-  return (
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d1d1" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  );
-}
-
 function IconMapPin() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
@@ -138,6 +136,7 @@ function PropertyCard({
   const router = useRouter();
 
   const badge = statusStyle(currentStatus);
+  const rental = isRental(property);
 
   async function handleStatusChange(newStatus: string) {
     if (newStatus === currentStatus || isUpdating || !isAuth) return;
@@ -169,23 +168,11 @@ function PropertyCard({
       <Link href={`/properties/${property.id}`} className="block no-underline flex-1">
         {/* Image (4:3 aspect ratio) */}
         <div className="relative aspect-4/3 bg-[#ebebeb] overflow-hidden">
-          {(property.images && property.images.length > 0) || property.image_url ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={property.images && property.images.length > 0 ? property.images[0] : property.image_url}
-              alt={property.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
-                target.parentElement?.classList.add("flex", "items-center", "justify-center");
-              }}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <IconImage />
-            </div>
-          )}
+          <ImageSlider
+            images={getPropertyImages(property)}
+            alt={property.title}
+            imgClassName="group-hover:scale-105 transition-transform duration-500"
+          />
 
           {/* Status pill badge with dot */}
           <span
@@ -193,6 +180,11 @@ function PropertyCard({
           >
             <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
             {badge.label}
+          </span>
+
+          {/* Operación: Venta / Alquiler */}
+          <span className="absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/95 text-[#222222] shadow-xs">
+            {rental ? "Alquiler" : "Venta"}
           </span>
         </div>
 
@@ -221,10 +213,11 @@ function PropertyCard({
       <div className="px-4 pb-4 pt-3 border-t border-[#f0f0f0] flex items-center justify-between gap-2">
         <div>
           <span className="text-[11px] text-[#888888] block uppercase tracking-wider font-medium">
-            Precio
+            {rental ? "Canon mensual" : "Precio"}
           </span>
           <p className="text-[15px] font-bold text-[#222222]">
             {fmtPrice(property.price)}
+            {rental && <span className="text-[12px] font-medium text-[#6a6a6a]"> / mes</span>}
           </p>
         </div>
 
@@ -238,9 +231,11 @@ function PropertyCard({
               className="text-[12px] font-medium rounded-full border border-[#ebebeb] px-3 py-1 bg-white text-[#222222] hover:border-[#222222] transition-colors cursor-pointer outline-none focus:border-[#222222] disabled:opacity-50"
               title="Cambiar estado de la propiedad"
             >
-              <option value="Disponible">Disponible</option>
-              <option value="Reservada">Reservada</option>
-              <option value="Vendida">Vendida</option>
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
             </select>
           </div>
         ) : (
@@ -445,6 +440,7 @@ export default function PropertiesClient({
               { value: "disponible", label: "Disponibles" },
               { value: "reservada", label: "Reservadas" },
               { value: "vendida", label: "Vendidas" },
+              { value: "alquilada", label: "Alquiladas" },
             ].map((f) => (
               <button
                 key={f.value}
@@ -525,7 +521,13 @@ export default function PropertiesClient({
 
       {/* ── Modal (Solo activo si está logueado) ──────── */}
       {user && (
-        <CreatePropertyModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
+        <CreatePropertyModal
+          isOpen={isModalOpen}
+          setIsOpen={setIsModalOpen}
+          onCreated={(created) =>
+            setPropertiesList((prev) => [created as Property, ...prev])
+          }
+        />
       )}
     </div>
   );

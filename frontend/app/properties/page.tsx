@@ -17,6 +17,10 @@ export interface Property {
   status: string;
   images?: string[];
   image_url?: string;
+  operation?: string | null;
+  property_type?: string | null;
+  city?: string | null;
+  created_at?: string;
 }
 
 // ─── Data fetcher ───────────────────────────────────────────

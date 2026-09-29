@@ -73,6 +73,40 @@ function IconLogOut() {
   );
 }
 
+/** Logo corporativo, compartido con el CompactHeader de la landing. */
+export function BrandLogo({ compactOnMobile = false }: { compactOnMobile?: boolean }) {
+  return (
+    <Link
+      href="/"
+      className="flex items-center gap-2.5 no-underline group transition-transform duration-200 hover:scale-[1.02]"
+      aria-label="RealtyHub, ir al inicio"
+    >
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff385c] to-[#ff5a5f] flex items-center justify-center text-white shadow-xs group-hover:shadow-md transition-shadow shrink-0">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      </div>
+      <span
+        className={`text-[23px] font-extrabold tracking-[-0.6px] text-[#ff385c] ${
+          compactOnMobile ? "hidden lg:inline" : ""
+        }`}
+      >
+        Realty<span className="text-gray-900 font-black">Hub</span>
+      </span>
+    </Link>
+  );
+}
+
 export default function Navbar({ activeTab }: { activeTab?: NavTab }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -174,29 +208,7 @@ export default function Navbar({ activeTab }: { activeTab?: NavTab }) {
       <div className="w-full max-w-[1400px] h-full mx-auto px-6 md:px-10 flex items-center justify-between">
         {/* ─── Bloque Izquierdo: Logo Corporativo ─── */}
         <div className="flex-1 flex justify-start">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 no-underline group transition-transform duration-200 hover:scale-[1.02]"
-          >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff385c] to-[#ff5a5f] flex items-center justify-center text-white shadow-xs group-hover:shadow-md transition-shadow">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <span className="text-[23px] font-extrabold tracking-[-0.6px] text-[#ff385c]">
-              Realty<span className="text-gray-900 font-black">Hub</span>
-            </span>
-          </Link>
+          <BrandLogo />
         </div>
 
         {/* ─── Bloque Central: Enlaces de Navegación ─── */}

@@ -4,7 +4,7 @@
    RealtyHub — Página de Inicio / Dashboard Principal
    Renderizado condicional basado en estado de autenticación:
    - Invitado (user === null): Landing Comercial público estilo Airbnb
-     (Hero Banner + Grid de Propiedades Destacadas 'Disponibles')
+     (CompactHeader con búsqueda + Carrusel + Grid de venta + Grid de alquiler)
    - Autenticado (user !== null): Dashboard Operativo Integral
      (KPIs + Propiedades + Leads + Visitas + Personal con RBAC)
    ───────────────────────────────────────────────────────────── */
@@ -13,6 +13,18 @@ import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import WelcomeDoor from "@/components/WelcomeDoor";
+import CompactHeader from "@/components/home/CompactHeader";
+import PropertyCarousel from "@/components/home/PropertyCarousel";
+import PropertyGrid from "@/components/home/PropertyGrid";
+import ImageSlider from "@/components/ImageSlider";
+import { useFavorites } from "@/lib/useFavorites";
+import {
+  getPropertyImage,
+  getPropertyImages,
+  inferType,
+  isAvailable,
+  isRental,
+} from "@/lib/property";
 
 // ─── Tipos de Datos ──────────────────────────────────────────
 export interface AuthUser {
@@ -30,7 +42,11 @@ interface Property {
   address: string;
   price: number;
   status: string;
+  images?: string[];
   image_url?: string;
+  operation?: string | null;
+  property_type?: string | null;
+  city?: string | null;
 }
 
 interface Lead {
@@ -110,6 +126,9 @@ function statusStyle(status: string): string {
     case "sold":
     case "vendida":
       return "bg-[#ff385c]/10 text-[#ff385c]";
+    case "rented":
+    case "alquilada":
+      return "bg-sky-50 text-sky-700";
     default:
       return "bg-[#f7f7f7] text-[#6a6a6a]";
   }
@@ -197,25 +216,6 @@ function sourceIcon(source: string): string {
 }
 
 // ─── Iconos SVG ──────────────────────────────────────────────
-
-function IconSearch() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-white"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
 
 function IconBuilding() {
   return (
@@ -317,102 +317,6 @@ function IconChevronRight() {
   );
 }
 
-function IconMapPin() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#6a6a6a] shrink-0"
-    >
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
-
-function IconSparkles() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#ff385c]"
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-    </svg>
-  );
-}
-
-function IconCheckShield() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#ff385c]"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function IconClock() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#ff385c]"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function IconHandshake() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-[#ff385c]"
-    >
-      <path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-4 4" />
-      <path d="m18 10 1-1a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0l-1 1" />
-      <path d="M7 10.8 11.2 15" />
-      <path d="m2 14 5.3-5.3a2 2 0 0 1 2.8 0l1.2 1.2a2 2 0 0 1 0 2.8L6 18" />
-    </svg>
-  );
-}
-
 // ─── Sub-componentes del Dashboard ───────────────────────────
 
 function SectionHeader({
@@ -473,36 +377,11 @@ function PropertyCard({ p }: { p: Property }) {
   return (
     <div className="shrink-0 w-[280px] rounded-[12px] bg-white overflow-hidden group cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#ebebeb]">
       <div className="relative aspect-square bg-[#f0f0f0] overflow-hidden">
-        {p.image_url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={p.image_url}
-            alt={p.title || p.address}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              target.parentElement?.classList.add("flex", "items-center", "justify-center");
-            }}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#d1d1d1"
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-          </div>
-        )}
+        <ImageSlider
+          images={getPropertyImages(p)}
+          alt={p.title || p.address}
+          imgClassName="group-hover:scale-105 transition-transform duration-300"
+        />
         <span
           className={`absolute top-3 left-3 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-xs ${badge}`}
         >
@@ -646,6 +525,8 @@ function LoadingSkeleton() {
 
 // ─── VISTA PÚBLICA: Landing Comercial Estilo Airbnb ───────────
 
+const CAROUSEL_MAX = 6;
+
 function PublicLandingView({
   properties,
   isLoading,
@@ -653,332 +534,131 @@ function PublicLandingView({
   properties: Property[];
   isLoading: boolean;
 }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState("");
+  const [propertyType, setPropertyType] = useState("");
+  const { isFavorite, toggle } = useFavorites();
 
-  // Filtrar estrictamente solo propiedades Disponibles
-  const availableProperties = useMemo(() => {
-    return properties.filter((p) => {
-      const st = p.status?.toLowerCase();
-      return st === "disponible" || st === "available";
+  // Sólo se muestran al público los inmuebles Disponibles
+  const availableProperties = useMemo(
+    () => properties.filter(isAvailable),
+    [properties]
+  );
+
+  // Carrusel: destacados con foto primero, luego el resto
+  const featured = useMemo(
+    () =>
+      [...availableProperties]
+        .sort((a, b) => Number(!!getPropertyImage(b)) - Number(!!getPropertyImage(a)))
+        .slice(0, CAROUSEL_MAX),
+    [availableProperties]
+  );
+
+  // Filtros de la barra de búsqueda (Dónde + Tipo), aplicados en tiempo real
+  const filtered = useMemo(() => {
+    const term = location.trim().toLowerCase();
+    return availableProperties.filter((p) => {
+      if (propertyType && inferType(p) !== propertyType) return false;
+      if (!term) return true;
+      return [p.title, p.address, p.description].some((f) =>
+        f?.toLowerCase().includes(term)
+      );
     });
-  }, [properties]);
+  }, [availableProperties, location, propertyType]);
 
-  // Filtro de búsqueda en tiempo real
-  const filteredProperties = useMemo(() => {
-    if (!searchTerm.trim()) return availableProperties;
-    const term = searchTerm.toLowerCase();
-    return availableProperties.filter(
-      (p) =>
-        (p.title && p.title.toLowerCase().includes(term)) ||
-        (p.address && p.address.toLowerCase().includes(term)) ||
-        (p.description && p.description.toLowerCase().includes(term))
-    );
-  }, [availableProperties, searchTerm]);
+  const forSale = useMemo(() => filtered.filter((p) => !isRental(p)), [filtered]);
+  const forRent = useMemo(() => filtered.filter(isRental), [filtered]);
+
+  const hasFilters = location.trim() !== "" || propertyType !== "";
+
+  function scrollToResults() {
+    document
+      .getElementById("resultados")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
-      <Navbar activeTab="inicio" />
+      <CompactHeader
+        location={location}
+        onLocationChange={setLocation}
+        propertyType={propertyType}
+        onPropertyTypeChange={setPropertyType}
+        onSearch={scrollToResults}
+      />
 
-      <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8">
-        {/* ══════════════════════════════════════════════
-            HERO BANNER COMERCIAL ESTILO AIRBNB
-            ══════════════════════════════════════════════ */}
-        <section className="relative rounded-[24px] bg-gradient-to-b from-white via-white to-[#fbfbfb] border border-[#ebebeb] px-6 py-14 sm:py-20 md:py-24 text-center overflow-hidden mb-16 shadow-xs">
-          {/* Acento estético sutil de fondo */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-[#ff385c]/10 to-transparent blur-3xl pointer-events-none" />
+      <main className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pt-6 pb-8 space-y-14">
+        {/* ── Carrusel principal ─────────────────────── */}
+        <PropertyCarousel properties={featured} isLoading={isLoading} />
 
-          {/* Badge comercial de confianza */}
-          <div className="relative inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#ff385c]/10 text-[#ff385c] text-[13px] font-semibold mb-6">
-            <IconSparkles />
-            <span>Portal Inmobiliario Exclusivo</span>
-          </div>
-
-          {/* Título de gran impacto */}
-          <h1 className="relative text-[34px] sm:text-[46px] md:text-[56px] font-bold tracking-[-1px] text-[#222222] max-w-[800px] mx-auto leading-[1.12]">
-            Encuentra tu próximo hogar
-          </h1>
-
-          {/* Subtítulo persuasivo */}
-          <p className="relative text-[16px] sm:text-[18px] text-[#6a6a6a] max-w-[620px] mx-auto mt-4 mb-10 leading-relaxed font-normal">
-            Explora las mejores casas, apartamentos y propiedades exclusivas
-            verificadas, con disponibilidad inmediata para compra o alquiler.
-          </p>
-
-          {/* Barra de Búsqueda Flotante estilo Airbnb */}
-          <div className="relative max-w-[700px] mx-auto bg-white rounded-full p-2 border border-[#ebebeb] shadow-lg flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-3 pl-4 pr-2">
-              <IconMapPin />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Busca por ciudad, barrio o dirección..."
-                className="w-full text-[14px] text-[#222222] bg-transparent outline-none placeholder:text-[#999999]"
-              />
-            </div>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-semibold px-6 py-3 rounded-full transition-colors cursor-pointer shadow-sm"
-              title="Buscar propiedades disponibles"
-            >
-              <IconSearch />
-              <span className="hidden sm:inline">Buscar</span>
-            </button>
-          </div>
-
-          {/* Micro métricas de garantía */}
-          <div className="relative flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-10 text-[13px] text-[#6a6a6a] font-medium">
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              100% Inmuebles verificados
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Atención personalizada
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Sin comisiones ocultas
-            </span>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════
-            SECCIÓN: PROPIEDADES DESTACADAS (DISPONIBLES)
-            ══════════════════════════════════════════════ */}
-        <section style={{ marginBottom: "var(--rh-section-gap)" }}>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-[24px] sm:text-[28px] font-semibold tracking-[-0.5px] text-[#222222]">
-                  Propiedades Destacadas
-                </h2>
-                <span className="text-[13px] font-semibold text-[#ff385c] bg-[#ff385c]/10 rounded-full px-3 py-1">
-                  {filteredProperties.length} disponibles
-                </span>
-              </div>
-              <p className="text-[14px] text-[#6a6a6a]">
-                Inmuebles listos para visitar y escriturar de inmediato.
-              </p>
-            </div>
-
-            <Link
-              href="/properties"
-              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#222222] hover:text-[#ff385c] transition-colors no-underline cursor-pointer"
-            >
-              Ver catálogo completo
-              <IconChevronRight />
-            </Link>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((n) => (
-                <div
-                  key={n}
-                  className="rounded-[16px] bg-white border border-[#ebebeb] p-4 h-80 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : filteredProperties.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[20px] bg-white border border-[#ebebeb] py-20 px-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mb-4 text-2xl">
-                🏠
-              </div>
-              <h3 className="text-[18px] font-medium text-[#222222] mb-1">
-                No encontramos propiedades con ese criterio
-              </h3>
-              <p className="text-[14px] text-[#6a6a6a] max-w-[400px]">
-                {searchTerm
-                  ? "Prueba buscando con otra palabra clave o revisa nuestro catálogo completo."
-                  : "Actualmente todas nuestras propiedades se encuentran en proceso o reservadas. Vuelve pronto."}
-              </p>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="mt-4 text-[13px] font-semibold text-[#ff385c] hover:underline cursor-pointer"
-                >
-                  Limpiar búsqueda
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProperties.map((p) => (
-                <div
-                  key={p.id}
-                  className="group rounded-[16px] bg-white border border-[#ebebeb] overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 flex flex-col justify-between"
-                >
-                  <Link href={`/properties/${p.id}`} className="block no-underline flex-1">
-                    {/* Imagen de la propiedad */}
-                    <div className="relative aspect-4/3 bg-[#f0f0f0] overflow-hidden">
-                      {p.image_url ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={p.image_url}
-                          alt={p.title || p.address}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            target.parentElement?.classList.add(
-                              "flex",
-                              "items-center",
-                              "justify-center"
-                            );
-                          }}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-[#f7f7f7]">
-                          <svg
-                            width="48"
-                            height="48"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#d1d1d1"
-                            strokeWidth="1"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <rect
-                              x="3"
-                              y="3"
-                              width="18"
-                              height="18"
-                              rx="2"
-                              ry="2"
-                            />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <polyline points="21 15 16 10 5 21" />
-                          </svg>
-                        </div>
-                      )}
-
-                      {/* Badge 'Disponible' con punto verde */}
-                      <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 shadow-xs border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Disponible
-                      </span>
-                    </div>
-
-                    {/* Contenido textual */}
-                    <div className="p-5">
-                      <h3 className="text-[16px] font-semibold text-[#222222] truncate group-hover:text-[#ff385c] transition-colors">
-                        {p.title || p.address}
-                      </h3>
-                      <div className="flex items-center gap-1.5 mt-1 text-[#6a6a6a]">
-                        <IconMapPin />
-                        <p className="text-[13px] truncate">{p.address}</p>
-                      </div>
-                      {p.description && (
-                        <p className="text-[13px] text-[#6a6a6a] line-clamp-2 mt-2 leading-snug">
-                          {p.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-
-                  {/* Pie de tarjeta con precio y acción */}
-                  <div className="px-5 pb-5 pt-3 border-t border-[#f7f7f7] flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] font-medium text-[#6a6a6a] uppercase tracking-wider block">
-                        Precio
-                      </span>
-                      <p className="text-[16px] font-bold text-[#222222]">
-                        {fmtPrice(p.price)}
-                      </p>
-                    </div>
-
-                    <Link
-                      href={`/properties/${p.id}`}
-                      className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#ff385c] hover:underline no-underline"
-                    >
-                      Ver Detalle
-                      <IconChevronRight />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+        <div id="resultados" className="space-y-4 scroll-mt-40 md:scroll-mt-28">
+          {hasFilters && !isLoading && (
+            <div className="flex flex-wrap items-center gap-3 text-[14px] text-[#6a6a6a]">
+              <span>
+                {filtered.length}{" "}
+                {filtered.length === 1 ? "resultado" : "resultados"} para tu búsqueda
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setLocation("");
+                  setPropertyType("");
+                }}
+                className="font-semibold text-[#222222] underline underline-offset-4 hover:text-[#ff385c] cursor-pointer"
+              >
+                Limpiar filtros
+              </button>
             </div>
           )}
-        </section>
 
-        {/* ══════════════════════════════════════════════
-            SECCIÓN DE BENEFICIOS Y PROPUESTA DE VALOR
-            ══════════════════════════════════════════════ */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <div className="rounded-[16px] bg-white border border-[#ebebeb] p-6">
-            <div className="w-12 h-12 rounded-[12px] bg-[#ff385c]/10 flex items-center justify-center mb-4">
-              <IconCheckShield />
-            </div>
-            <h3 className="text-[16px] font-semibold text-[#222222] mb-1">
-              Transparencia Absoluta
-            </h3>
-            <p className="text-[13px] text-[#6a6a6a] leading-relaxed">
-              Cada propiedad publicada cuenta con validación legal previa,
-              títulos claros y precio justo avalado por profesionales.
-            </p>
-          </div>
+          {/* ── Sección 1: Propiedades disponibles (venta) ── */}
+          <PropertyGrid
+            id="propiedades-disponibles"
+            title="Propiedades disponibles"
+            subtitle="Inmuebles listos para visitar y escriturar."
+            properties={forSale}
+            isLoading={isLoading}
+            emptyMessage={
+              hasFilters
+                ? "Ninguna propiedad en venta coincide con tu búsqueda."
+                : "Por ahora no hay propiedades en venta disponibles. Vuelve pronto."
+            }
+            isFavorite={isFavorite}
+            onToggleFavorite={toggle}
+            viewAllHref="/properties"
+          />
+        </div>
 
-          <div className="rounded-[16px] bg-white border border-[#ebebeb] p-6">
-            <div className="w-12 h-12 rounded-[12px] bg-[#ff385c]/10 flex items-center justify-center mb-4">
-              <IconClock />
-            </div>
-            <h3 className="text-[16px] font-semibold text-[#222222] mb-1">
-              Agilidad en Visitas
-            </h3>
-            <p className="text-[13px] text-[#6a6a6a] leading-relaxed">
-              Programa tu recorrido en minutos. Asignamos un agente dedicado
-              para resolver todas tus dudas en el lugar.
-            </p>
-          </div>
-
-          <div className="rounded-[16px] bg-white border border-[#ebebeb] p-6">
-            <div className="w-12 h-12 rounded-[12px] bg-[#ff385c]/10 flex items-center justify-center mb-4">
-              <IconHandshake />
-            </div>
-            <h3 className="text-[16px] font-semibold text-[#222222] mb-1">
-              Acompañamiento Integral
-            </h3>
-            <p className="text-[13px] text-[#6a6a6a] leading-relaxed">
-              Te guiamos desde la negociación hasta la firma de escrituras o
-              contratos de arrendamiento con total seguridad.
-            </p>
-          </div>
-        </section>
-
-        {/* ══════════════════════════════════════════════
-            CALL TO ACTION INMOBILIARIO
-            ══════════════════════════════════════════════ */}
-        <section className="rounded-[20px] bg-[#222222] text-white p-8 sm:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <h3 className="text-[22px] sm:text-[26px] font-bold tracking-tight mb-2">
-              ¿Formas parte del equipo RealtyHub?
-            </h3>
-            <p className="text-[14px] text-gray-400 max-w-[500px]">
-              Accede a tu panel administrativo para gestionar leads, visitas,
-              contratos y comisiones en tiempo real.
-            </p>
-          </div>
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center px-7 py-3 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-semibold transition-colors no-underline cursor-pointer shrink-0"
-          >
-            Ingresar al Dashboard
-          </Link>
-        </section>
+        {/* ── Sección 2: Propiedades para alquiler ────── */}
+        <PropertyGrid
+          id="propiedades-alquiler"
+          title="Propiedades disponibles para alquiler"
+          subtitle="Arriendos con disponibilidad inmediata."
+          properties={forRent}
+          isLoading={isLoading}
+          emptyMessage={
+            hasFilters
+              ? "Ningún alquiler coincide con tu búsqueda."
+              : "Por ahora no hay propiedades en alquiler disponibles. Vuelve pronto."
+          }
+          isFavorite={isFavorite}
+          onToggleFavorite={toggle}
+          priceSuffix="/ mes"
+        />
 
         {/* ── Footer ────────────────────────────────── */}
-        <footer className="py-10 border-t border-[#ebebeb]">
+        <footer className="pt-10 border-t border-[#ebebeb]">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-[13px] text-[#6a6a6a]">
               © {new Date().getFullYear()} RealtyHub. Todos los derechos
               reservados.
             </p>
             <div className="flex items-center gap-6">
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Soporte
-              </span>
+              <Link
+                href="/login"
+                className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline"
+              >
+                Acceso para agentes
+              </Link>
               <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
                 Privacidad
               </span>
