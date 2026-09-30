@@ -2,8 +2,9 @@
 
 /* ─────────────────────────────────────────────────────────────
    RealtyHub — WelcomeDoor
-   Overlay de bienvenida a pantalla completa: portón de madera con
-   herrajes de hierro, enmarcado en un arco de piedra. Al pulsar
+   Overlay de bienvenida a pantalla completa: fachada contemporánea con
+   puerta doble de nogal listonado, marco de acero negro y apliques de
+   luz cálida sobre muro de concreto. Al pulsar
    'CONOCE TU NUEVO HOGAR' las dos hojas se abren hacia afuera
    (perspective + rotateY), entra la luz, la escena "cruza" la
    puerta desvaneciéndose y el componente se desmonta del DOM.
@@ -36,25 +37,11 @@ function markSeen() {
   }
 }
 
-// Posición vertical (% de la hoja) de las bandas de hierro, como en un portón clásico
-const BANDS = [13, 32, 64, 82];
-
 function DoorLeaf({ side }: { side: "left" | "right" }) {
   return (
     <div className={`${styles.door} ${styles[side]}`} aria-hidden="true">
-      {/* Los herrajes de la hoja derecha son el espejo de la izquierda */}
-      <div className={styles.hardware}>
-        {BANDS.map((top) => (
-          <div key={top} className={styles.band} style={{ top: `${top}%` }}>
-            <span className={`${styles.strap} ${styles.strapOuter}`} />
-            <span className={`${styles.strap} ${styles.strapInner}`} />
-          </div>
-        ))}
-        <span className={styles.plate} style={{ top: "47%" }} />
-        <span className={styles.plate} style={{ top: "71%" }} />
-        <span className={styles.stud} style={{ top: "47%" }} />
-        <span className={styles.stud} style={{ top: "53%" }} />
-      </div>
+      <span className={styles.handle} />
+      <span className={styles.kick} />
     </div>
   );
 }
@@ -110,11 +97,12 @@ export default function WelcomeDoor() {
     >
       <div className={styles.scene}>
         <div className={styles.wall} />
-        <span className={`${styles.corbel} ${styles.corbelLeft}`} />
-        <span className={`${styles.corbel} ${styles.corbelRight}`} />
+        <span className={`${styles.sconce} ${styles.sconceLeft}`} />
+        <span className={`${styles.sconce} ${styles.sconceRight}`} />
         <div className={styles.floor} />
 
         <div className={styles.portal}>
+          <div className={styles.canopy} />
           <div className={styles.doorway}>
             <div className={styles.light} />
             <DoorLeaf side="left" />

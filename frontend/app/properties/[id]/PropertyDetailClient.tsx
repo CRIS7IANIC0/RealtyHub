@@ -200,6 +200,8 @@ export default function PropertyDetailClient({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
 
   // Estados de la Galería de Imágenes
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -250,6 +252,11 @@ export default function PropertyDetailClient({
 
     if (!name.trim() || !email.trim() || !phone.trim() || !scheduledAt) {
       setError("Por favor completa todos los campos del formulario.");
+      return;
+    }
+
+    if (!acceptedPolicy) {
+      setError("Debes aceptar la Política de Tratamiento de Datos Personales para agendar tu visita.");
       return;
     }
 
@@ -313,6 +320,8 @@ export default function PropertyDetailClient({
       setEmail("");
       setPhone("");
       setScheduledAt("");
+      setAcceptedPolicy(false);
+      setPolicyOpen(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Ocurrió un error inesperado al solicitar tu visita.");
     } finally {
@@ -694,10 +703,63 @@ export default function PropertyDetailClient({
                   />
                 </div>
 
+                {/* Autorización de tratamiento de datos personales (Ley 1581 de 2012) */}
+                <div className="text-left rounded-[12px] border border-gray-200 bg-gray-50 p-3.5">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={acceptedPolicy}
+                      onChange={(e) => setAcceptedPolicy(e.target.checked)}
+                      disabled={submitting}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#ff385c] cursor-pointer"
+                    />
+                    <span className="text-[12px] leading-snug text-gray-700">
+                      Autorizo a RealtyHub el tratamiento de mis datos personales para gestionar esta visita, según la{" "}
+                      <button
+                        type="button"
+                        onClick={() => setPolicyOpen((v) => !v)}
+                        className="font-semibold text-[#ff385c] underline underline-offset-2 cursor-pointer"
+                        aria-expanded={policyOpen}
+                      >
+                        Política de Protección de Datos
+                      </button>
+                      . <span className="text-[#ff385c]">*</span>
+                    </span>
+                  </label>
+
+                  {policyOpen && (
+                    <div className="mt-3 max-h-56 overflow-y-auto border-t border-gray-200 pt-3 text-[12px] leading-relaxed text-gray-600 space-y-2">
+                      <p>
+                        <strong className="text-gray-800">Responsable:</strong> RealtyHub, plataforma de agendamiento de visitas a inmuebles.
+                      </p>
+                      <p>
+                        <strong className="text-gray-800">Datos que recolectamos:</strong> nombre completo, correo electrónico, teléfono/WhatsApp y la fecha y hora que elijas para la visita.
+                      </p>
+                      <p>
+                        <strong className="text-gray-800">Para qué los usamos:</strong> (1) registrar tu solicitud de visita, (2) asignar un asesor que te contacte, (3) confirmar, reprogramar o cancelar la cita y (4) darte información sobre el inmueble que te interesa. No usamos tus datos para fines distintos sin tu autorización.
+                      </p>
+                      <p>
+                        <strong className="text-gray-800">Con quién los compartimos:</strong> solo con el asesor asignado y el propietario o administrador del inmueble, en lo necesario para la visita. No vendemos tus datos a terceros.
+                      </p>
+                      <p>
+                        <strong className="text-gray-800">Tus derechos:</strong> conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013, puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar esta autorización, escribiéndonos a{" "}
+                        <a href="mailto:privacidad@realtyhub.com" className="underline text-[#ff385c]">
+                          privacidad@realtyhub.com
+                        </a>
+                        . Es opcional responder preguntas sobre datos sensibles y no te solicitamos ninguno.
+                      </p>
+                      <p>
+                        <strong className="text-gray-800">Conservación:</strong> conservamos tus datos mientras dure la gestión comercial y el tiempo que exija la ley.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Botón de Envío Prominente Estilo Airbnb */}
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !acceptedPolicy}
                   className="w-full mt-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] text-white py-3.5 px-6 font-bold text-[15px] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? (

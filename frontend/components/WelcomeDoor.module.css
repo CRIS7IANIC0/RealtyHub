@@ -1,49 +1,36 @@
 /* ─────────────────────────────────────────────
-   WelcomeDoor — portón de madera con herrajes de hierro
-   en un arco de piedra. Acentos con la paleta RealtyHub:
-   rausch (#ff385c) para la llamada a la acción, hof (#222)
-   para el hierro y canvas (#f7f7f7) para la luz interior.
+   WelcomeDoor — fachada contemporánea: puerta doble de nogal
+   listonado, marco de acero negro, muro de concreto y apliques
+   de luz cálida. CTA con la paleta RealtyHub (rausch #ff385c).
    ───────────────────────────────────────────────────────────── */
 
 .overlay {
   --wd-open-ms: 1500ms;
   --wd-fade-ms: 700ms;
 
-  /* Hierro forjado sobre el tono hof del sistema de diseño */
-  --wd-iron: var(--rh-hof, #222222);
-  --wd-iron-dark: #151515;
-  --wd-iron-light: #3a3a3a;
+  --wd-steel: #161617;
+  --wd-steel-light: #3b3b3e;
+  --wd-warm: 255, 196, 128;
 
-  /* Madera */
-  --wd-wood-1: #6b4428;
-  --wd-wood-2: #7d5334;
-  --wd-wood-3: #4e311d;
-
-  /* Piedra */
-  --wd-mortar: #7a6d5c;
-
-  /* Grano de madera: ruido vertical (feTurbulence) */
-  --wd-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7 0.004' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-
-  /* Sillares de piedra con tonos variados + textura */
-  --wd-stones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.08' numOctaves='3' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0.35 0'/%3E%3C/filter%3E%3Cg stroke='%237a6d5c' stroke-width='4'%3E%3Crect x='0' y='0' width='120' height='64' fill='%23b3a38a'/%3E%3Crect x='120' y='0' width='100' height='64' fill='%23a4937a'/%3E%3Crect x='-50' y='64' width='110' height='64' fill='%23a99980'/%3E%3Crect x='60' y='64' width='100' height='64' fill='%23bcae96'/%3E%3Crect x='160' y='64' width='110' height='64' fill='%23a99980'/%3E%3C/g%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Ruido fino: textura de concreto / grano de madera */
+  --wd-concrete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --wd-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='800' preserveAspectRatio='none'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.006' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.75 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 
   position: fixed;
   inset: 0;
   z-index: 9999;
   overflow: hidden;
-  background: #2b241d;
+  background: #1d1c1b;
   opacity: 1;
   transition: opacity var(--wd-fade-ms) ease-in;
 }
 
-/* Desvanecimiento final: deja de bloquear clics de inmediato */
 .overlay.fading {
   opacity: 0;
   pointer-events: none;
 }
 
-/* ── Escena (muro + suelo + portal) ─────────────────────────── */
+/* ── Escena ─────────────────────────────────────────────────── */
 .scene {
   position: absolute;
   inset: 0;
@@ -51,69 +38,107 @@
   transition: transform var(--wd-fade-ms) ease-in;
 }
 
-/* "Cruzar" la puerta: la cámara avanza hacia el umbral */
 .fading .scene {
   transform: scale(2.2);
 }
 
+/* Muro de concreto en paneles grandes con juntas finas */
 .wall {
   position: absolute;
   inset: 0 0 12% 0;
   background:
-    radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(0, 0, 0, 0.45) 100%),
-    var(--wd-stones) 0 0 / 220px 128px;
+    radial-gradient(ellipse at 50% 38%, rgba(var(--wd-warm), 0.16), transparent 55%),
+    radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(90deg, transparent calc(100% - 2px), rgba(0, 0, 0, 0.4) calc(100% - 2px) calc(100% - 1px), rgba(255, 255, 255, 0.06) 0) 0 0 / 300px 100%,
+    linear-gradient(180deg, transparent calc(100% - 2px), rgba(0, 0, 0, 0.35) calc(100% - 2px) calc(100% - 1px), rgba(255, 255, 255, 0.05) 0) 0 0 / 100% 300px,
+    var(--wd-concrete) 0 0 / 300px 300px,
+    #55524d;
 }
 
+/* Porche de hormigón pulido con reflejo de la luz */
 .floor {
   position: absolute;
   inset: 88% 0 0 0;
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 35%),
-    linear-gradient(transparent calc(100% - 2px), rgba(0, 0, 0, 0.18) 0) 0 0 / 100% 34%,
-    linear-gradient(90deg, transparent calc(100% - 2px), rgba(0, 0, 0, 0.15) 0) 0 0 / 180px 100%,
-    #b8ad9c;
+    radial-gradient(ellipse at 50% 0%, rgba(var(--wd-warm), 0.28), transparent 60%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 40%),
+    var(--wd-concrete) 0 0 / 300px 300px,
+    #3d3b38;
+  border-top: 2px solid rgba(255, 255, 255, 0.07);
 }
 
-/* Ménsulas de piedra a los lados del portal */
-.corbel {
+/* Apliques de pared: luz cálida hacia arriba y hacia abajo */
+.sconce {
   position: absolute;
-  top: 34%;
-  width: clamp(40px, 6vw, 90px);
-  aspect-ratio: 1 / 1.1;
+  top: 36%;
+  width: 14px;
+  height: 58px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #0d0d0e, var(--wd-steel-light) 45%, #0d0d0e);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.sconce::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  height: 340px;
+  translate: -50% -50%;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.35)),
-    var(--wd-stones) 30px 10px / 220px 128px;
-  border-radius: 8px 8px 45% 45%;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
+    radial-gradient(ellipse 50% 22% at 50% 0%, rgba(var(--wd-warm), 0.75), transparent 100%),
+    radial-gradient(ellipse 50% 22% at 50% 100%, rgba(var(--wd-warm), 0.6), transparent 100%),
+    radial-gradient(ellipse at 50% 50%, rgba(var(--wd-warm), 0.14), transparent 65%);
+  pointer-events: none;
 }
 
-.corbelLeft {
-  left: 6%;
+.sconce::after {
+  content: "";
+  position: absolute;
+  inset: 3px 2px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgb(var(--wd-warm)), transparent 22%, transparent 78%, rgb(var(--wd-warm)));
+  opacity: 0.9;
 }
 
-.corbelRight {
-  right: 6%;
+.sconceLeft {
+  left: 12%;
 }
 
-/* ── Portal: arco de piedra alrededor del vano ──────────────── */
+.sconceRight {
+  right: 12%;
+}
+
+/* ── Portal: marco de acero negro ───────────────────────────── */
 .portal {
   position: absolute;
   left: 50%;
   bottom: 12%;
   translate: -50% 0;
-  width: min(80vw, 760px);
-  height: min(76vh, 640px);
-  padding: clamp(14px, 2.4vw, 30px) clamp(14px, 2.4vw, 30px) 0;
-  border-radius: 50% 50% 0 0 / 12% 12% 0 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.15)),
-    var(--wd-stones) 40px 20px / 160px 93px;
+  width: min(66vw, 600px);
+  height: min(72vh, 620px);
+  padding: 12px 12px 0;
+  background: linear-gradient(90deg, #0d0d0e, var(--wd-steel-light) 4%, var(--wd-steel) 10%, var(--wd-steel) 90%, var(--wd-steel-light) 96%, #0d0d0e);
+  border-radius: 2px 2px 0 0;
   box-shadow:
-    0 0 0 3px var(--wd-mortar),
-    0 20px 40px rgba(0, 0, 0, 0.5);
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 30px 60px rgba(0, 0, 0, 0.65),
+    0 0 90px rgba(var(--wd-warm), 0.14);
 }
 
-/* Vano de la puerta: aquí vive la perspectiva 3D */
+/* Marquesina de acero sobre la puerta */
+.canopy {
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  top: -14px;
+  height: 14px;
+  background: linear-gradient(180deg, var(--wd-steel-light), var(--wd-steel) 40%, #050505);
+  border-radius: 2px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+
 .doorway {
   position: relative;
   display: flex;
@@ -121,16 +146,13 @@
   height: 100%;
   perspective: 1400px;
   perspective-origin: 50% 45%;
-  border-radius: 50% 50% 0 0 / 10% 10% 0 0;
-  background: #120d09; /* sombra del vano mientras está cerrado */
-  box-shadow: inset 0 12px 24px rgba(0, 0, 0, 0.8);
+  background: #0c0908;
+  box-shadow: inset 0 10px 22px rgba(0, 0, 0, 0.8);
 }
 
-/* Luz del interior (canvas de la app con un leve tinte rausch) */
 .light {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
   background: radial-gradient(
     ellipse at 50% 60%,
     #ffffff 0%,
@@ -145,24 +167,24 @@
   opacity: 1;
 }
 
-/* ── Hojas del portón ───────────────────────────────────────── */
+/* ── Hojas: nogal listonado ─────────────────────────────────── */
 .door {
   position: relative;
   width: 50%;
   height: 100%;
   background:
-    /* desgaste inferior */
-    linear-gradient(180deg, transparent 80%, rgba(40, 30, 20, 0.35) 92%, rgba(90, 80, 70, 0.35)),
-    /* juntas entre tablones */
-    linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0 2px, rgba(255, 255, 255, 0.06) 2px 3px, transparent 3px) 0 0 / calc(100% / 5) 100%,
+    /* luz cálida de la marquesina */
+    linear-gradient(180deg, rgba(var(--wd-warm), 0.22), transparent 22%),
+    /* pérdida de luz hacia el suelo */
+    linear-gradient(180deg, transparent 70%, rgba(0, 0, 0, 0.45)),
+    /* separación entre listones */
+    linear-gradient(90deg, rgba(0, 0, 0, 0.75) 0 2px, rgba(255, 255, 255, 0.07) 2px 3px, transparent 3px) 0 0 / calc(100% / 6) 100%,
     /* grano */
-    var(--wd-grain) 0 0 / 100% 100% no-repeat,
-    /* variación de tono entre tablones */
-    linear-gradient(90deg, var(--wd-wood-1), var(--wd-wood-2) 20%, var(--wd-wood-3) 40%, var(--wd-wood-2) 60%, var(--wd-wood-1) 80%, var(--wd-wood-3));
-  background-blend-mode: normal, normal, multiply, normal;
-  box-shadow:
-    inset 0 0 0 2px rgba(0, 0, 0, 0.6),
-    inset 0 0 40px rgba(0, 0, 0, 0.45);
+    var(--wd-grain) 0 0 / 100% 100%,
+    /* tono por listón */
+    linear-gradient(90deg, #6a4327 0 16.6%, #5b3920 16.6% 33.3%, #714a2d 33.3% 50%, #603c22 50% 66.6%, #6d4629 66.6% 83.3%, #593820 83.3%);
+  background-blend-mode: normal, normal, normal, multiply, normal;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.7), inset 0 0 30px rgba(0, 0, 0, 0.35);
   transition:
     transform var(--wd-open-ms) cubic-bezier(0.6, 0.05, 0.3, 1),
     filter var(--wd-open-ms) ease;
@@ -171,15 +193,12 @@
 
 .left {
   transform-origin: left center;
-  border-top-left-radius: 100% 10%;
 }
 
 .right {
   transform-origin: right center;
-  border-top-right-radius: 100% 10%;
 }
 
-/* Apertura hacia afuera (hacia el espectador) */
 .open .left {
   transform: rotateY(-105deg);
   filter: brightness(0.65);
@@ -190,93 +209,34 @@
   filter: brightness(0.65);
 }
 
-/* Herrajes: la hoja derecha usa el espejo de la izquierda */
-.hardware {
+/* Tirador vertical de acero inoxidable junto a la juntura */
+.handle {
   position: absolute;
-  inset: 0;
+  bottom: 22%;
+  width: 10px;
+  height: 26%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #6f7275, #e4e6e8 45%, #8d9093 60%, #4c4e50);
+  box-shadow: 4px 6px 10px rgba(0, 0, 0, 0.55);
 }
 
-.right .hardware {
-  transform: scaleX(-1);
+.left .handle {
+  right: 7%;
 }
 
-/* Bandas de hierro con dos filas de remaches */
-.band {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 4.2%;
-  background:
-    radial-gradient(circle at 50% 50%, #8a8a8a 0 1.2px, var(--wd-iron-dark) 2.2px, transparent 2.8px) 6px 0 / 18px 50% repeat-x,
-    radial-gradient(circle at 50% 50%, #8a8a8a 0 1.2px, var(--wd-iron-dark) 2.2px, transparent 2.8px) 6px 100% / 18px 50% repeat-x,
-    linear-gradient(180deg, var(--wd-iron-light), var(--wd-iron) 35%, var(--wd-iron-dark));
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.55);
-}
-
-/* Tiradores de barra sobre cada banda */
-.strap {
-  position: absolute;
-  top: 28%;
-  width: 17%;
-  height: 44%;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #4a4a4a, var(--wd-iron-dark));
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
-}
-
-.strap::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 28%;
-  aspect-ratio: 1;
-  translate: 0 -50%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #6d6d6d, var(--wd-iron-dark) 70%);
-}
-
-.strapOuter {
+.right .handle {
   left: 7%;
 }
 
-.strapOuter::before {
-  left: -8%;
-}
-
-.strapInner {
-  right: 9%;
-}
-
-.strapInner::before {
-  right: -8%;
-}
-
-/* Placas ornamentales */
-.plate {
+/* Zócalo de acero cepillado */
+.kick {
   position: absolute;
-  left: 42%;
-  width: 20%;
-  aspect-ratio: 1.15;
-  translate: 0 -50%;
-  clip-path: polygon(12% 0, 88% 0, 100% 15%, 100% 85%, 88% 100%, 12% 100%, 0 85%, 0 15%);
-  background:
-    radial-gradient(circle at 50% 50%, transparent 0 22%, rgba(0, 0, 0, 0.5) 23% 25%, transparent 26%),
-    repeating-radial-gradient(circle at 50% 50%, var(--wd-iron-light) 0 2px, var(--wd-iron-dark) 2px 4px),
-    var(--wd-iron);
-  box-shadow: inset 0 0 0 3px var(--wd-iron-dark);
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
-}
-
-/* Clavos/pomos junto a la juntura central */
-.stud {
-  position: absolute;
-  right: 12%;
-  width: 5.5%;
-  aspect-ratio: 1;
-  translate: 0 -50%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #8c8c8c, var(--wd-iron) 55%, var(--wd-iron-dark));
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.6);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5%;
+  background: linear-gradient(180deg, #a5a8ab, #6c6f72 55%, #47494b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 /* ── Marca y botón (paleta RealtyHub) ───────────────────────── */
@@ -287,9 +247,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
-  padding: 0 16px;
+  padding: 27vh 16px 0;
   pointer-events: none;
   transition:
     opacity 300ms ease,
@@ -360,15 +320,15 @@
 /* ── Móvil ──────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .portal {
-    width: 88vw;
+    width: 84vw;
     height: 64vh;
   }
 
-  .corbel {
+  .sconce {
     display: none;
   }
 
-  .band {
-    background-size: 12px 50%, 12px 50%, auto;
+  .center {
+    padding-top: 24vh;
   }
 }
