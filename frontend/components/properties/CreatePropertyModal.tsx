@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { uploadPresigned } from "@vercel/blob/client";
 
 import { GATEWAY } from "@/lib/config";
+import CityAutocomplete from "@/components/ui/CityAutocomplete";
 import { OPERATIONS, PROPERTY_TYPES, type PublicProperty } from "@/lib/property";
 
 // Al crear sólo tienen sentido estos estados; Vendida/Alquilada llegan al firmar contrato
@@ -393,13 +394,12 @@ export default function CreatePropertyModal({
               <label htmlFor="prop-city" className={labelClass}>
                 Ciudad <span className="text-[#ff385c]">*</span>
               </label>
-              <input
+              <CityAutocomplete
                 id="prop-city"
-                type="text"
                 required
-                placeholder="Montería"
+                placeholder="Ej: Bogotá"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={setCity}
                 className={inputClass}
               />
             </div>
