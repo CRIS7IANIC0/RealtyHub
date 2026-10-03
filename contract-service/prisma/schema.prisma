@@ -17,6 +17,13 @@ model Contract {
   operation_type String     @default("Venta")
   status         String
   signed_at      DateTime?
+  // Datos opcionales para el documento PDF
+  city              String?
+  payment_method    String?
+  deposit           Float?
+  duration_months   Int?
+  start_date        DateTime?
+  special_clauses   String?
   created_at     DateTime   @default(now())
   documents      Document[]
 

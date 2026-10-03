@@ -20,7 +20,7 @@ export const OPERATION_TYPE_OPTIONS = [
 export const TYPE_OPTIONS = OPERATION_TYPE_OPTIONS;
 
 export const STATUS_OPTIONS = [
-  { value: "Borrador", label: "Borrador" },
+  { value: "Pendiente", label: "Pendiente" },
   { value: "Firmado", label: "Firmado" },
 ];
 
@@ -92,7 +92,13 @@ export default function CreateContractModal({
   const [agentId, setAgentId] = useState("");
   const [price, setPrice] = useState("");
   const [operationType, setOperationType] = useState("Venta");
-  const [status, setStatus] = useState("Borrador");
+  const [status, setStatus] = useState("Pendiente");
+  const [city, setCity] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [deposit, setDeposit] = useState("");
+  const [durationMonths, setDurationMonths] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [specialClauses, setSpecialClauses] = useState("");
 
   /* Feedback */
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +110,13 @@ export default function CreateContractModal({
     setAgentId("");
     setPrice("");
     setOperationType("Venta");
-    setStatus("Borrador");
+    setStatus("Pendiente");
+    setCity("");
+    setPaymentMethod("");
+    setDeposit("");
+    setDurationMonths("");
+    setStartDate("");
+    setSpecialClauses("");
     setError(null);
   }
 
@@ -154,6 +166,16 @@ export default function CreateContractModal({
           operation_type: operationType,
           type: operationType,
           status,
+          city: city.trim() || undefined,
+          payment_method: paymentMethod.trim() || undefined,
+          deposit: deposit ? parseFloat(deposit) : undefined,
+          special_clauses: specialClauses.trim() || undefined,
+          ...(operationType === "Alquiler"
+            ? {
+                duration_months: durationMonths ? parseInt(durationMonths, 10) : undefined,
+                start_date: startDate || undefined,
+              }
+            : {}),
           ...(status === "Firmado" ? { signed_at: new Date().toISOString() } : {}),
         }),
       });
@@ -380,6 +402,40 @@ export default function CreateContractModal({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Datos para el documento PDF */}
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            <div>
+              <label htmlFor="contract-city" className={labelClass}>Ciudad de firma</label>
+              <input id="contract-city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Medellín" className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="contract-payment" className={labelClass}>Forma de pago</label>
+              <input id="contract-payment" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} placeholder="Transferencia bancaria" className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="contract-deposit" className={labelClass}>
+                {operationType === "Alquiler" ? "Depósito en garantía" : "Arras / anticipo"}
+              </label>
+              <input id="contract-deposit" type="number" min="0" value={deposit} onChange={(e) => setDeposit(e.target.value)} placeholder="0" className={inputClass} />
+            </div>
+            {operationType === "Alquiler" && (
+              <>
+                <div>
+                  <label htmlFor="contract-duration" className={labelClass}>Duración (meses)</label>
+                  <input id="contract-duration" type="number" min="1" value={durationMonths} onChange={(e) => setDurationMonths(e.target.value)} placeholder="12" className={inputClass} />
+                </div>
+                <div>
+                  <label htmlFor="contract-start" className={labelClass}>Fecha de inicio</label>
+                  <input id="contract-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
+                </div>
+              </>
+            )}
+          </div>
+          <div className="pt-1">
+            <label htmlFor="contract-clauses" className={labelClass}>Cláusulas especiales (opcional)</label>
+            <textarea id="contract-clauses" rows={3} value={specialClauses} onChange={(e) => setSpecialClauses(e.target.value)} className={inputClass} />
           </div>
 
           {/* Action Buttons */}

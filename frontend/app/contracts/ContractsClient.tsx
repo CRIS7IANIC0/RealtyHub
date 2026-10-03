@@ -9,6 +9,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { GATEWAY } from "@/lib/config";
 import CreateContractModal from "@/components/contracts/CreateContractModal";
 import Navbar from "@/components/Navbar";
 import type { Contract, PropertySnippet, LeadSnippet, UserSnippet } from "./page";
@@ -48,19 +50,12 @@ function statusPill(status: string): { bg: string; text: string; dot: string; la
       label: "Firmado",
     };
   }
-  if (s === "borrador") {
-    return {
-      bg: "bg-amber-50",
-      text: "text-amber-700",
-      dot: "bg-amber-500",
-      label: "Borrador",
-    };
-  }
+  // "Borrador" es el nombre heredado del estado Pendiente
   return {
-    bg: "bg-[#f7f7f7]",
-    text: "text-[#6a6a6a]",
-    dot: "bg-[#b0b0b0]",
-    label: status || "Pendiente",
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    dot: "bg-amber-500",
+    label: "Pendiente",
   };
 }
 
@@ -156,9 +151,59 @@ export default function ContractsClient({
   leads?: LeadSnippet[];
   users?: UserSnippet[];
 }) {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "Firmado" | "Borrador">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "Firmado" | "Pendiente">("all");
+
+  async function toggleStatus(contract: Contract) {
+    const next = contract.status.toLowerCase() === "firmado" ? "Pendiente" : "Firmado";
+    if (
+      next === "Pendiente" &&
+      !window.confirm("¿Volver este contrato a Pendiente? Las comisiones ya generadas no se revierten automáticamente.")
+    ) {
+      return;
+    }
+    setBusyId(contract.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`${GATEWAY}/contracts/${contract.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || `Error del servidor (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo cambiar el estado.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function downloadPdf(contract: Contract) {
+    setBusyId(contract.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`${GATEWAY}/contracts/${contract.id}/pdf`);
+      if (!res.ok) throw new Error(`No se pudo generar el PDF (${res.status})`);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contrato-${contract.id.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo descargar el PDF.");
+    } finally {
+      setBusyId(null);
+    }
+  }
   const [filterType, setFilterType] = useState<"all" | "Venta" | "Alquiler">("all");
 
   /* Property & Lead & User Maps for friendly names */
@@ -186,9 +231,9 @@ export default function ContractsClient({
       (leadInfo?.name && leadInfo.name.toLowerCase().includes(term)) ||
       (userInfo?.name && userInfo.name.toLowerCase().includes(term));
 
+    const isSignedC = c.status.toLowerCase() === "firmado";
     const matchesStatus =
-      filterStatus === "all" ||
-      c.status.toLowerCase() === filterStatus.toLowerCase();
+      filterStatus === "all" || (filterStatus === "Firmado" ? isSignedC : !isSignedC);
 
     const matchesType =
       filterType === "all" ||
@@ -200,7 +245,7 @@ export default function ContractsClient({
   /* KPIs */
   const totalCount = contracts.length;
   const signedCount = contracts.filter((c) => c.status.toLowerCase() === "firmado").length;
-  const draftCount = contracts.filter((c) => c.status.toLowerCase() === "borrador").length;
+  const draftCount = contracts.filter((c) => c.status.toLowerCase() !== "firmado").length;
   const totalVolume = contracts
     .filter((c) => c.status.toLowerCase() === "firmado")
     .reduce((sum, c) => sum + (c.price || 0), 0);
@@ -256,7 +301,7 @@ export default function ContractsClient({
             <p className="text-[24px] font-semibold text-emerald-700">{signedCount}</p>
           </div>
           <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">En Borrador</p>
+            <p className="text-[13px] text-[#6a6a6a] mb-1">Pendientes</p>
             <p className="text-[24px] font-semibold text-amber-700">{draftCount}</p>
           </div>
           <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
@@ -311,14 +356,14 @@ export default function ContractsClient({
               </button>
               <button
                 type="button"
-                onClick={() => setFilterStatus("Borrador")}
+                onClick={() => setFilterStatus("Pendiente")}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
-                  filterStatus === "Borrador"
+                  filterStatus === "Pendiente"
                     ? "bg-amber-600 text-white"
                     : "text-[#6a6a6a] hover:text-[#222222]"
                 }`}
               >
-                Borradores ({draftCount})
+                Pendientes ({draftCount})
               </button>
             </div>
 
@@ -360,6 +405,12 @@ export default function ContractsClient({
             </div>
           </div>
         </div>
+
+        {actionError && (
+          <div className="mb-4 rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[13px] text-[#c13515]">
+            {actionError}
+          </div>
+        )}
 
         {/* ── Contracts Grid (Airbnb Design System) ───────────────── */}
         {filteredContracts.length === 0 ? (
@@ -468,6 +519,30 @@ export default function ContractsClient({
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Acciones: cambiar estado + PDF */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(contract)}
+                      disabled={busyId === contract.id}
+                      className={`flex-1 px-4 py-2 rounded-full text-[13px] font-medium transition-colors cursor-pointer disabled:opacity-50 ${
+                        isSigned
+                          ? "border border-[#ebebeb] text-[#222222] hover:border-[#222222]"
+                          : "bg-[#ff385c] hover:bg-[#d90b3e] text-white"
+                      }`}
+                    >
+                      {isSigned ? "Marcar como pendiente" : "Marcar como firmado"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadPdf(contract)}
+                      disabled={busyId === contract.id}
+                      className="px-4 py-2 rounded-full border border-[#ebebeb] text-[13px] font-medium text-[#222222] hover:border-[#222222] transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      PDF
+                    </button>
                   </div>
 
                   {/* Card Footer: Dates & Contract ID */}

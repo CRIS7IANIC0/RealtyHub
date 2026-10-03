@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Patch, Body, Param, Headers, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Headers, Res, HttpException, HttpStatus } from '@nestjs/common';
+import type { Response as ExpressResponse } from 'express';
 import { verifyJwt } from './jwt.util';
 
 // ─── Helper: garantiza que la URL de un microservicio siempre tenga protocolo ───
@@ -349,6 +350,37 @@ export class AppController {
     } catch {
       return [];
     }
+  }
+
+  @Patch('contracts/:id/status')
+  async updateContractStatus(@Param('id') id: string, @Body() body: any) {
+    const res = await fetch(`${CONTRACT_SVC}/contracts/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return propagate(res);
+  }
+
+  @Get('contracts/:id/pdf')
+  async getContractPdf(@Param('id') id: string, @Res() out: ExpressResponse) {
+    let res: Response;
+    try {
+      res = await fetch(`${CONTRACT_SVC}/contracts/${id}/pdf`);
+    } catch {
+      throw new HttpException('Error de conexión con el servicio de contratos', HttpStatus.BAD_GATEWAY);
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new HttpException(data ?? { message: 'No se pudo generar el PDF' }, res.status);
+    }
+    const buf = Buffer.from(await res.arrayBuffer());
+    out.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': res.headers.get('content-disposition') ?? 'attachment; filename="contrato.pdf"',
+      'Content-Length': String(buf.length),
+    });
+    out.end(buf);
   }
 
   @Post('contracts')
