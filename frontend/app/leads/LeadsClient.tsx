@@ -2,12 +2,11 @@
 
 /* ─────────────────────────────────────────────────────────────
    LeadsClient — Client Component
-   Full CRM Leads UI + manages CreateLeadModal
+   Full CRM Leads UI (los leads se generan al agendar una visita)
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
 import { useState } from "react";
-import CreateLeadModal from "@/components/leads/CreateLeadModal";
 import Navbar from "@/components/Navbar";
 
 // ─── Types ──────────────────────────────────────────────────
@@ -83,15 +82,6 @@ function avatarBg(name: string): string {
 }
 
 // ─── SVG Icons ──────────────────────────────────────────────
-
-function IconPlus() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
 
 function IconSearch() {
   return (
@@ -216,7 +206,6 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
 // ─── Main Client Component ──────────────────────────────────
 
 export default function LeadsClient({ leads }: { leads: Lead[] }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -274,18 +263,11 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
                 CRM de Leads
               </h1>
               <p className="text-[13px] text-[#6a6a6a] mt-0.5">
-                Gestiona prospectos y oportunidades de negocio.
+                Prospectos generados automáticamente al agendar visitas.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-[#ff385c] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#e0314f] transition-colors cursor-pointer self-start sm:self-auto"
-          >
-            <IconPlus />
-            Nuevo Lead
-          </button>
         </div>
 
         {/* ── KPI strip ──────────────────────────────── */}
@@ -354,9 +336,7 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
             </p>
             {!search && filterStatus === "all" && (
               <p className="text-[13px] text-[#b0b0b0]">
-                Usa el botón{" "}
-                <span className="font-medium text-[#ff385c]">+ Nuevo Lead</span>{" "}
-                para empezar a captar prospectos.
+                Los leads aparecerán aquí cuando un cliente agende una visita.
               </p>
             )}
           </div>
@@ -383,8 +363,6 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
         </footer>
       </main>
 
-      {/* ── Modal ────────────────────────────────────── */}
-      <CreateLeadModal isOpen={isModalOpen} setIsOpen={setIsModalOpen} />
     </div>
   );
 }

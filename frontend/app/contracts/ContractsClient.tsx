@@ -158,14 +158,19 @@ export default function ContractsClient({
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "Firmado" | "Pendiente">("all");
 
-  async function toggleStatus(contract: Contract) {
-    const next = contract.status.toLowerCase() === "firmado" ? "Pendiente" : "Firmado";
-    if (
-      next === "Pendiente" &&
-      !window.confirm("¿Volver este contrato a Pendiente? Las comisiones ya generadas no se revierten automáticamente.")
-    ) {
+  // Firmado → Pendiente pide confirmación con un diálogo propio
+  // (window.confirm se bloquea en algunos navegadores y dejaba el botón sin efecto).
+  const [confirmRevert, setConfirmRevert] = useState<Contract | null>(null);
+
+  function toggleStatus(contract: Contract) {
+    if (contract.status.toLowerCase() === "firmado") {
+      setConfirmRevert(contract);
       return;
     }
+    void changeStatus(contract, "Firmado");
+  }
+
+  async function changeStatus(contract: Contract, next: "Firmado" | "Pendiente") {
     setBusyId(contract.id);
     setActionError(null);
     try {
@@ -178,8 +183,10 @@ export default function ContractsClient({
         const body = await res.json().catch(() => null);
         throw new Error(body?.message || `Error del servidor (${res.status})`);
       }
+      setConfirmRevert(null);
       router.refresh();
     } catch (err) {
+      setConfirmRevert(null);
       setActionError(err instanceof Error ? err.message : "No se pudo cambiar el estado.");
     } finally {
       setBusyId(null);
@@ -487,9 +494,6 @@ export default function ContractsClient({
                           <p className="font-medium text-[#222222] truncate">
                             {prop?.title || prop?.address || "Inmueble"}
                           </p>
-                          <p className="text-[11px] text-[#6a6a6a] truncate">
-                            ID: <code className="bg-[#f7f7f7] px-1 py-0.5 rounded">{contract.property_id}</code>
-                          </p>
                         </div>
                       </div>
 
@@ -500,9 +504,6 @@ export default function ContractsClient({
                           <p className="font-medium text-[#222222] truncate">
                             {lead?.name || "Cliente / Prospecto"}
                           </p>
-                          <p className="text-[11px] text-[#6a6a6a] truncate">
-                            Lead: <code className="bg-[#f7f7f7] px-1 py-0.5 rounded">{contract.lead_id}</code>
-                          </p>
                         </div>
                       </div>
 
@@ -512,9 +513,6 @@ export default function ContractsClient({
                         <div className="min-w-0 text-[13px]">
                           <p className="font-medium text-[#222222] truncate">
                             {agent?.name || "Agente Inmobiliario"}
-                          </p>
-                          <p className="text-[11px] text-[#6a6a6a] truncate">
-                            Agente: <code className="bg-[#f7f7f7] px-1 py-0.5 rounded">{contract.agent_id}</code>
                           </p>
                         </div>
                       </div>
@@ -562,6 +560,44 @@ export default function ContractsClient({
           </div>
         )}
       </main>
+
+      {/* Confirmación: volver un contrato firmado a pendiente */}
+      {confirmRevert && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: "rgba(0, 0, 0, 0.56)" }}
+          onClick={() => busyId === null && setConfirmRevert(null)}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-[16px] bg-white p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-[18px] font-semibold text-[#222222] mb-2">¿Volver a Pendiente?</h2>
+            <p className="text-[14px] text-[#6a6a6a] mb-6">
+              El contrato de «{propMap.get(confirmRevert.property_id)?.title || "este inmueble"}» dejará de
+              figurar como firmado. Las comisiones ya generadas no se revierten automáticamente.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmRevert(null)}
+                disabled={busyId !== null}
+                className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => changeStatus(confirmRevert, "Pendiente")}
+                disabled={busyId !== null}
+                className="px-5 py-2.5 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {busyId !== null ? "Guardando…" : "Sí, marcar pendiente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para Crear Contrato */}
       <CreateContractModal

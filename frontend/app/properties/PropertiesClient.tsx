@@ -284,8 +284,16 @@ export default function PropertiesClient({
 }) {
   const [propertiesList, setPropertiesList] = useState<Property[]>(properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createdTitle, setCreatedTitle] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+
+  // El aviso de "propiedad creada" se oculta solo a los 5 s
+  useEffect(() => {
+    if (!createdTitle) return;
+    const t = setTimeout(() => setCreatedTitle(null), 5000);
+    return () => clearTimeout(t);
+  }, [createdTitle]);
 
   // Estado de sesión y autenticación
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -524,10 +532,36 @@ export default function PropertiesClient({
         <CreatePropertyModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}
-          onCreated={(created) =>
-            setPropertiesList((prev) => [created as Property, ...prev])
-          }
+          onCreated={(created) => {
+            setPropertiesList((prev) => [created as Property, ...prev]);
+            setCreatedTitle((created as Property).title || "La propiedad");
+          }}
         />
+      )}
+
+      {/* ── Confirmación de propiedad creada ──────────── */}
+      {createdTitle && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-[#222222] pl-4 pr-3 py-3 text-white max-w-[calc(100vw-32px)]"
+        >
+          <span className="flex w-6 h-6 items-center justify-center rounded-full bg-emerald-500 shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <span className="text-[14px] font-medium truncate">
+            ¡Propiedad «{createdTitle}» creada con éxito!
+          </span>
+          <button
+            type="button"
+            onClick={() => setCreatedTitle(null)}
+            aria-label="Cerrar aviso"
+            className="w-6 h-6 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+          >
+            ✕
+          </button>
+        </div>
       )}
     </div>
   );

@@ -23,54 +23,47 @@ export interface Notification {
   created_at: string;
 }
 
-async function fetchNotifications(): Promise<Notification[]> {
+interface NameRef {
+  id: string;
+  name?: string;
+  title?: string;
+  address?: string;
+}
+
+async function fetchList<T>(path: string): Promise<T[]> {
   try {
-    const res = await fetch(`${GATEWAY}/notifications`, {
-      cache: 'no-store',
-    });
+    const res = await fetch(`${GATEWAY}${path}`, { cache: 'no-store' });
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
 export default async function NotificationsPage() {
-  const notifications = await fetchNotifications();
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const [notifications, properties, leads, users] = await Promise.all([
+    fetchList<Notification>('/notifications'),
+    fetchList<NameRef>('/properties'),
+    fetchList<NameRef>('/leads'),
+    fetchList<NameRef>('/users'),
+  ]);
+
+  // Mapa id → nombre legible, para reemplazar UUIDs en notificaciones antiguas
+  const names: Record<string, string> = {};
+  for (const p of properties) names[p.id] = p.title || p.address || '';
+  for (const l of leads) names[l.id] = l.name || '';
+  for (const u of users) names[u.id] = u.name || '';
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
-      {/* ══════════════════════ TOP NAV ══════════════════════ */}
       <Navbar activeTab="notifications" />
 
-      {/* ══════════════════════ BODY ══════════════════════ */}
       <main
-        className="w-full max-w-[800px] mx-auto px-6 md:px-10"
+        className="w-full max-w-[800px] mx-auto px-6 md:px-10 pb-16"
         style={{ paddingTop: 'calc(80px + 40px)' }}
       >
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#222222] mb-1">
-                Centro de Notificaciones
-              </h1>
-              <p className="text-[14px] text-[#6a6a6a]">
-                Alertas automáticas generadas por eventos del sistema.
-              </p>
-            </div>
-            {unreadCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#1a73e8] bg-[#e8f0fe] px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-[#1a73e8]" />
-                {unreadCount} sin leer
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Notifications List */}
-        <NotificationsClient notifications={notifications} />
+        <NotificationsClient notifications={notifications} names={names} />
       </main>
     </div>
   );

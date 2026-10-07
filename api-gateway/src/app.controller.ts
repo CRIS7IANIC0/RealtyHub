@@ -88,6 +88,30 @@ export class AppController {
     return res.json();
   }
 
+  // Solo un ADMIN autenticado puede activar/desactivar cuentas
+  @Patch('users/:id/status')
+  async setUserStatus(
+    @Param('id') id: string,
+    @Body() body: { active?: boolean },
+    @Headers('authorization') authHeader?: string,
+  ) {
+    const token = authHeader?.replace(/^Bearer\s+/i, '');
+    if (!token) throw new HttpException('Autenticación requerida', HttpStatus.UNAUTHORIZED);
+    const payload = verifyJwt(token);
+    if (String(payload.role).toUpperCase() !== 'ADMIN') {
+      throw new HttpException('Solo un administrador puede activar o desactivar cuentas', HttpStatus.FORBIDDEN);
+    }
+    if (payload.sub === id) {
+      throw new HttpException('No puedes desactivar tu propia cuenta', HttpStatus.BAD_REQUEST);
+    }
+    const res = await fetch(`${USER_SVC}/users/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: body?.active }),
+    });
+    return propagate(res);
+  }
+
   @Post('login')
   async login(@Body() body: any) {
     try {
@@ -432,6 +456,16 @@ export class AppController {
       return response.json();
     } catch {
       return [];
+    }
+  }
+
+  @Patch('notifications/read-all')
+  async markAllNotificationsAsRead() {
+    try {
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications/read-all`, { method: 'PATCH' });
+      return response.json();
+    } catch {
+      throw new HttpException('Error al actualizar las notificaciones', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

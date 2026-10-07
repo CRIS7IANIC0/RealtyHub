@@ -5,7 +5,9 @@
    Renders the full Users directory UI + manages CreateUserModal
    ───────────────────────────────────────────────────────────── */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { GATEWAY } from "@/lib/config";
 import CreateUserModal from "@/components/users/CreateUserModal";
 import Navbar from "@/components/Navbar";
 
@@ -16,6 +18,7 @@ interface User {
   email: string;
   role: string;
   office_id: string | number;
+  active?: boolean;
 }
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -195,12 +198,27 @@ function IconUsers() {
 
 // ─── Sub-components ─────────────────────────────────────────
 
-function UserCard({ user }: { user: User }) {
+function UserCard({
+  user,
+  canManage,
+  busy,
+  onToggle,
+}: {
+  user: User;
+  canManage: boolean;
+  busy: boolean;
+  onToggle: (user: User) => void;
+}) {
   const role = roleBadge(user.role);
   const avatar = avatarBg(user.name);
+  const isActive = user.active !== false;
 
   return (
-    <div className="rounded-[12px] bg-white p-5 flex flex-col transition-transform duration-200 hover:scale-[1.02] cursor-pointer">
+    <div
+      className={`rounded-[12px] bg-white p-5 flex flex-col transition-opacity ${
+        isActive ? "" : "opacity-60"
+      }`}
+    >
       {/* Top: Avatar + Name */}
       <div className="flex items-center gap-3.5 mb-4">
         <div
@@ -217,6 +235,11 @@ function UserCard({ user }: { user: User }) {
           >
             {role.label}
           </span>
+          {!isActive && (
+            <span className="inline-block mt-1 ml-1.5 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[#f7f7f7] text-[#6a6a6a]">
+              Inactiva
+            </span>
+          )}
         </div>
       </div>
 
@@ -237,6 +260,21 @@ function UserCard({ user }: { user: User }) {
           </span>
         </div>
       </div>
+
+      {canManage && (
+        <button
+          type="button"
+          onClick={() => onToggle(user)}
+          disabled={busy}
+          className={`mt-4 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
+            isActive
+              ? "border border-[#ebebeb] text-[#222222] hover:border-[#222222]"
+              : "bg-[#222222] text-white hover:bg-black"
+          }`}
+        >
+          {busy ? "Guardando…" : isActive ? "Desactivar cuenta" : "Activar cuenta"}
+        </button>
+      )}
     </div>
   );
 }
@@ -268,8 +306,47 @@ function Stat({
 // ─── Main Client Component ──────────────────────────────────
 
 export default function UsersClient({ users }: { users: User[] }) {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [me, setMe] = useState<{ id?: string; role?: string; token?: string } | null>(null);
+  const [busyId, setBusyId] = useState<string | number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      setMe(stored ? JSON.parse(stored) : null);
+    } catch {
+      setMe(null);
+    }
+  }, []);
+
+  const isAdmin = me?.role?.toUpperCase() === "ADMIN";
+
+  async function toggleActive(user: User) {
+    setBusyId(user.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`${GATEWAY}/users/${user.id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${me?.token ?? ""}`,
+        },
+        body: JSON.stringify({ active: user.active === false }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || `Error del servidor (${res.status})`);
+      }
+      router.refresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo cambiar el estado de la cuenta.");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   /* Filter users by search */
   const filtered = search.trim()
@@ -379,6 +456,12 @@ export default function UsersClient({ users }: { users: User[] }) {
           </div>
         </div>
 
+        {actionError && (
+          <div className="mb-4 rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[13px] text-[#c13515]">
+            {actionError}
+          </div>
+        )}
+
         {/* ── Users grid ─────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[12px] bg-white py-20 px-8">
@@ -415,7 +498,13 @@ export default function UsersClient({ users }: { users: User[] }) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {admins.map((u) => (
-                    <UserCard key={u.id} user={u} />
+                    <UserCard
+                      key={u.id}
+                      user={u}
+                      canManage={isAdmin && u.id !== me?.id}
+                      busy={busyId === u.id}
+                      onToggle={toggleActive}
+                    />
                   ))}
                 </div>
               </section>
@@ -434,7 +523,13 @@ export default function UsersClient({ users }: { users: User[] }) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {gerentes.map((u) => (
-                    <UserCard key={u.id} user={u} />
+                    <UserCard
+                      key={u.id}
+                      user={u}
+                      canManage={isAdmin && u.id !== me?.id}
+                      busy={busyId === u.id}
+                      onToggle={toggleActive}
+                    />
                   ))}
                 </div>
               </section>
@@ -453,7 +548,13 @@ export default function UsersClient({ users }: { users: User[] }) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {agentes.map((u) => (
-                    <UserCard key={u.id} user={u} />
+                    <UserCard
+                      key={u.id}
+                      user={u}
+                      canManage={isAdmin && u.id !== me?.id}
+                      busy={busyId === u.id}
+                      onToggle={toggleActive}
+                    />
                   ))}
                 </div>
               </section>

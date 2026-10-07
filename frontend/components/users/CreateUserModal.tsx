@@ -77,6 +77,8 @@ export default function CreateUserModal({
   /* Form state */
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("agente");
   const [officeId, setOfficeId] = useState("oficina-central");
 
@@ -88,6 +90,8 @@ export default function CreateUserModal({
   function resetForm() {
     setName("");
     setEmail("");
+    setPassword("");
+    setShowPassword(false);
     setRole("agente");
     setOfficeId("oficina-central");
     setError(null);
@@ -114,6 +118,10 @@ export default function CreateUserModal({
       setError("Ingresa un correo electrónico válido.");
       return;
     }
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
 
     setSubmitting(true);
 
@@ -124,6 +132,7 @@ export default function CreateUserModal({
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
+          password,
           role,
           office_id: officeId,
         }),
@@ -226,6 +235,31 @@ export default function CreateUserModal({
               onChange={(e) => setEmail(e.target.value)}
               className={inputClass}
             />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label htmlFor="user-password" className={labelClass}>
+              Contraseña
+            </label>
+            <div className="relative">
+              <input
+                id="user-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Mínimo 6 caracteres"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                className={inputClass + " pr-20"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-[#6a6a6a] hover:text-[#222222] cursor-pointer"
+              >
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
           </div>
 
           {/* Role */}

@@ -2,6 +2,25 @@ import { Controller, Get, Patch, Param } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { PrismaService } from './prisma.service';
 
+function serviceUrl(env: string | undefined, fallback: string): string {
+  const clean = env?.trim().replace(/\/+$/, '');
+  if (!clean) return fallback;
+  if (clean.startsWith('http')) return clean;
+  return clean.includes('.railway.internal') ? `http://${clean}` : `https://${clean}`;
+}
+const PROPERTY_SVC = serviceUrl(process.env.PROPERTY_SERVICE_URL, 'http://localhost:3003');
+const LEAD_SVC = serviceUrl(process.env.LEAD_SERVICE_URL, 'http://localhost:3004');
+const USER_SVC = serviceUrl(process.env.USER_SERVICE_URL, 'http://localhost:3001');
+
+async function fetchJson(url: string): Promise<any> {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 @Controller('notifications')
 export class AppController {
   constructor(private readonly prisma: PrismaService) {}
@@ -19,12 +38,28 @@ export class AppController {
     try {
       const contractId = data?.id ?? data?.data?.id ?? 'desconocido';
       const price = data?.price ?? data?.data?.price ?? 0;
-      const propertyId = data?.property_id ?? data?.data?.property_id ?? '—';
+      const propertyId = data?.property_id ?? data?.data?.property_id;
+      const leadId = data?.lead_id ?? data?.data?.lead_id;
+      const agentId = data?.agent_id ?? data?.data?.agent_id;
+
+      // Resolvemos nombres reales (los otros servicios solo exponen listados)
+      const [property, leads, users] = await Promise.all([
+        propertyId ? fetchJson(`${PROPERTY_SVC}/properties/${propertyId}`) : null,
+        leadId ? fetchJson(`${LEAD_SVC}/leads`) : null,
+        agentId ? fetchJson(`${USER_SVC}/users`) : null,
+      ]);
+      const lead = Array.isArray(leads) ? leads.find((l: any) => l.id === leadId) : null;
+      const agent = Array.isArray(users) ? users.find((u: any) => u.id === agentId) : null;
+
+      const propertyName = property?.title || property?.address || 'la propiedad';
+      const parts = [`Se firmó el contrato de "${propertyName}" por $${Number(price).toLocaleString('es-CO')}.`];
+      if (lead?.name) parts.push(`Cliente: ${lead.name}.`);
+      if (agent?.name) parts.push(`Agente: ${agent.name}.`);
 
       await this.prisma.notification.create({
         data: {
           title: '¡Nuevo Contrato Cerrado! 🎉',
-          message: `Se ha firmado el contrato ${contractId} para la propiedad ${propertyId} por $${Number(price).toLocaleString('es-CO')}.`,
+          message: parts.join(' '),
           type: 'success',
           is_read: false,
         },
@@ -54,6 +89,15 @@ export class AppController {
   // ─────────────────────────────────────────────────────────────
   // HTTP: PATCH /notifications/:id/read — marks is_read = true
   // ─────────────────────────────────────────────────────────────
+  @Patch('read-all')
+  async markAllAsRead() {
+    const { count } = await this.prisma.notification.updateMany({
+      where: { is_read: false },
+      data: { is_read: true },
+    });
+    return { updated: count };
+  }
+
   @Patch(':id/read')
   async markAsRead(@Param('id') id: string) {
     try {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { signJwt } from './jwt.util';
 
@@ -15,8 +15,21 @@ export class AppController {
         name: true,
         email: true,
         role: true,
+        active: true,
       },
     });
+  }
+
+  @Patch(':id/status')
+  async setActive(@Param('id') id: string, @Body() body: { active?: boolean }) {
+    if (typeof body?.active !== 'boolean') {
+      throw new HttpException('El campo active (booleano) es obligatorio', HttpStatus.BAD_REQUEST);
+    }
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
+    const updated = await this.prisma.user.update({ where: { id }, data: { active: body.active } });
+    const { password: _, ...clean } = updated;
+    return clean;
   }
 
   @Post('login')
@@ -77,6 +90,11 @@ export class AppController {
     if (password !== expectedPassword) {
       console.log('❌ Contraseña incorrecta para:', email);
       throw new HttpException('Credenciales inválidas', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (user.active === false) {
+      console.log('⛔ Cuenta desactivada:', email);
+      throw new HttpException('Tu cuenta está desactivada. Contacta al administrador.', HttpStatus.FORBIDDEN);
     }
 
     console.log('✅ Login exitoso:', user.name, `(${user.role})`);

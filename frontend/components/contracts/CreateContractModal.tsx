@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 /* ─────────────────────────────────────────────────────────────
    CreateContractModal — Client Component
    Strict Airbnb Design System · RealtyHub Contract Service
-   Formulario con inputs para property_id, lead_id, agent_id,
-   price, select de type y select de status.
+   Selects con nombres reales de propiedad, cliente y agente.
    ───────────────────────────────────────────────────────────── */
 
 import { GATEWAY } from "@/lib/config";
@@ -136,15 +135,15 @@ export default function CreateContractModal({
     const parsedPrice = parseFloat(price);
 
     if (!trimmedProp) {
-      setError("El ID de la propiedad (property_id) es obligatorio.");
+      setError("Selecciona la propiedad del contrato.");
       return;
     }
     if (!trimmedLead) {
-      setError("El ID del prospecto/cliente (lead_id) es obligatorio.");
+      setError("Selecciona el cliente del contrato.");
       return;
     }
     if (!trimmedAgent) {
-      setError("El ID del agente inmobiliario (agent_id) es obligatorio.");
+      setError("Selecciona el agente responsable.");
       return;
     }
     if (isNaN(parsedPrice) || parsedPrice <= 0) {
@@ -253,98 +252,72 @@ export default function CreateContractModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Property ID Input */}
+          {/* Propiedad */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="contract-property-id" className="text-[13px] font-medium text-[#222222]">
-                ID de Propiedad (property_id) <span className="text-[#ff385c]">*</span>
-              </label>
-              {properties.length > 0 && (
-                <span className="text-[11px] text-[#6a6a6a]">
-                  {properties.length} disponibles
-                </span>
-              )}
-            </div>
-            <input
+            <label htmlFor="contract-property-id" className={labelClass}>
+              Propiedad <span className="text-[#ff385c]">*</span>
+            </label>
+            <select
               id="contract-property-id"
-              type="text"
-              list="properties-list"
-              placeholder="Ej: prop-101 o selecciona una del listado"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} cursor-pointer`}
               autoFocus
-            />
-            {properties.length > 0 && (
-              <datalist id="properties-list">
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title || p.address || p.id}
-                  </option>
-                ))}
-              </datalist>
-            )}
+            >
+              <option value="">Selecciona una propiedad…</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title || p.address || "Propiedad sin nombre"}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Lead ID + Agent ID grid */}
+          {/* Cliente + Agente */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="contract-lead-id" className="text-[13px] font-medium text-[#222222]">
-                  ID del Lead (lead_id) <span className="text-[#ff385c]">*</span>
-                </label>
-              </div>
-              <input
+              <label htmlFor="contract-lead-id" className={labelClass}>
+                Cliente <span className="text-[#ff385c]">*</span>
+              </label>
+              <select
                 id="contract-lead-id"
-                type="text"
-                list="leads-list"
-                placeholder="Ej: lead-202"
                 value={leadId}
                 onChange={(e) => setLeadId(e.target.value)}
-                className={inputClass}
-              />
-              {leads.length > 0 && (
-                <datalist id="leads-list">
-                  {leads.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name ? `${l.name} (${l.email || l.id})` : l.id}
-                    </option>
-                  ))}
-                </datalist>
-              )}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="">Selecciona un cliente…</option>
+                {leads.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name || l.email || "Cliente sin nombre"}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="contract-agent-id" className="text-[13px] font-medium text-[#222222]">
-                  ID del Agente (agent_id) <span className="text-[#ff385c]">*</span>
-                </label>
-              </div>
-              <input
+              <label htmlFor="contract-agent-id" className={labelClass}>
+                Agente <span className="text-[#ff385c]">*</span>
+              </label>
+              <select
                 id="contract-agent-id"
-                type="text"
-                list="agents-list"
-                placeholder="Ej: agent-303"
                 value={agentId}
                 onChange={(e) => setAgentId(e.target.value)}
-                className={inputClass}
-              />
-              {agents.length > 0 && (
-                <datalist id="agents-list">
-                  {agents.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name ? `${a.name} (${a.role || "Agente"})` : a.id}
-                    </option>
-                  ))}
-                </datalist>
-              )}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="">Selecciona un agente…</option>
+                {agents.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name || "Agente sin nombre"}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           {/* Price Input */}
           <div>
             <label htmlFor="contract-price" className={labelClass}>
-              Precio Pactado (price en COP) <span className="text-[#ff385c]">*</span>
+              Precio pactado (COP) <span className="text-[#ff385c]">*</span>
             </label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#6a6a6a]">
