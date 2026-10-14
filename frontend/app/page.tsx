@@ -16,6 +16,8 @@ import WelcomeDoor from "@/components/WelcomeDoor";
 import CompactHeader from "@/components/home/CompactHeader";
 import PropertyCarousel from "@/components/home/PropertyCarousel";
 import PropertyGrid from "@/components/home/PropertyGrid";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import Footer from "@/components/Footer";
 import ImageSlider from "@/components/ImageSlider";
 import { useFavorites } from "@/lib/useFavorites";
 import {
@@ -628,6 +630,9 @@ function PublicLandingView({
           />
         </div>
 
+        {/* ── Testimonios de clientes ─────────────────── */}
+        <TestimonialsSection />
+
         {/* ── Sección 2: Propiedades para alquiler ────── */}
         <PropertyGrid
           id="propiedades-alquiler"
@@ -646,28 +651,7 @@ function PublicLandingView({
         />
 
         {/* ── Footer ────────────────────────────────── */}
-        <footer className="pt-10 border-t border-[#ebebeb]">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[13px] text-[#6a6a6a]">
-              © {new Date().getFullYear()} RealtyHub. Todos los derechos
-              reservados.
-            </p>
-            <div className="flex items-center gap-6">
-              <Link
-                href="/login"
-                className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline"
-              >
-                Acceso para agentes
-              </Link>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Privacidad
-              </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Términos
-              </span>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </div>
   );
