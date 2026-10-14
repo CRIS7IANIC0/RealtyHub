@@ -37,30 +37,6 @@ const TESTIMONIALS: Testimonial[] = [
     rating: 5,
     gradient: "from-[#ff7a8f] to-[#ff385c]",
   },
-  {
-    name: "Julián Pérez",
-    role: "Propietario en Cartagena",
-    comment:
-      "Publiqué mi casa y en dos semanas ya tenía varios interesados reales. El equipo gestionó todo con mucha profesionalidad.",
-    rating: 5,
-    gradient: "from-[#444444] to-[#111111]",
-  },
-  {
-    name: "Valentina Ortiz",
-    role: "Inquilina en Barranquilla",
-    comment:
-      "Excelente experiencia alquilando. Me ayudaron a comparar opciones y conseguí un lugar perfecto dentro de mi presupuesto.",
-    rating: 5,
-    gradient: "from-[#e31c5f] to-[#ff7a8f]",
-  },
-  {
-    name: "Sebastián Torres",
-    role: "Comprador en Montería",
-    comment:
-      "Compré mi primera casa gracias a RealtyHub. Resolvieron todas mis dudas y nunca me sentí presionado.",
-    rating: 5,
-    gradient: "from-[#ff385c] to-[#222222]",
-  },
 ];
 
 function Stars({ rating }: { rating: number }) {
@@ -101,46 +77,64 @@ export default function TestimonialsSection() {
     <section
       id="testimonios"
       aria-labelledby="testimonios-title"
-      className="space-y-6"
+      className="relative overflow-hidden rounded-[28px] bg-white border border-[#ebebeb] px-5 sm:px-8 md:px-12 py-10 md:py-14"
     >
-      <div>
+      {/* Acento decorativo de marca */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#ff385c]/10 blur-3xl"
+      />
+
+      <div className="relative text-center max-w-[640px] mx-auto mb-10">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ff385c]/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-wider text-[#ff385c]">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+          Testimonios
+        </span>
         <h2
           id="testimonios-title"
-          className="text-[22px] md:text-[26px] font-semibold tracking-[-0.44px] text-[#222222]"
+          className="mt-4 text-[26px] md:text-[34px] font-semibold tracking-[-0.6px] leading-tight text-[#222222]"
         >
-          Lo que dicen nuestros clientes
+          Familias felices, <span className="text-[#ff385c]">hogares reales</span>
         </h2>
-        <p className="text-[14px] text-[#6a6a6a] mt-1">
-          Historias reales de personas que encontraron su lugar con RealtyHub.
+        <p className="text-[15px] text-[#6a6a6a] mt-3">
+          Miles de personas ya encontraron su lugar ideal con RealtyHub. Esto es
+          lo que cuentan.
         </p>
       </div>
 
-      <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 hide-scrollbar">
+      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-5">
         {TESTIMONIALS.map((t) => (
           <figure
             key={t.name}
-            className="snap-start shrink-0 w-[85%] sm:w-[60%] md:w-auto flex flex-col justify-between rounded-[20px] bg-white border border-[#ebebeb] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
+            className="flex flex-col rounded-[20px] bg-[#f7f7f7] border border-[#ebebeb] p-6 transition-all duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)]"
           >
-            <div>
-              <Stars rating={t.rating} />
-              <blockquote className="mt-4 text-[15px] leading-relaxed text-[#222222]">
-                “{t.comment}”
-              </blockquote>
-            </div>
-            <figcaption className="mt-6 flex items-center gap-3">
+            {/* 1. Perfil */}
+            <figcaption className="flex items-center gap-3">
               <div
                 aria-hidden="true"
-                className={`flex items-center justify-center w-11 h-11 shrink-0 rounded-full bg-gradient-to-br ${t.gradient} text-white text-[14px] font-semibold`}
+                className={`flex items-center justify-center w-12 h-12 shrink-0 rounded-full bg-gradient-to-br ${t.gradient} text-white text-[15px] font-semibold ring-4 ring-white`}
               >
                 {initials(t.name)}
               </div>
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#222222] truncate">
+                <p className="text-[15px] font-semibold text-[#222222] truncate">
                   {t.name}
                 </p>
                 <p className="text-[13px] text-[#6a6a6a] truncate">{t.role}</p>
               </div>
             </figcaption>
+
+            {/* 2. Estrellas */}
+            <div className="mt-5">
+              <Stars rating={t.rating} />
+            </div>
+
+            {/* 3. Comentario */}
+            <blockquote className="mt-3 text-[15px] leading-relaxed text-[#222222]">
+              “{t.comment}”
+            </blockquote>
           </figure>
         ))}
       </div>
