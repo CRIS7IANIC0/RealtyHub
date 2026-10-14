@@ -17,6 +17,7 @@ import CompactHeader from "@/components/home/CompactHeader";
 import PropertyCarousel from "@/components/home/PropertyCarousel";
 import PropertyGrid from "@/components/home/PropertyGrid";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import PromoBanner from "@/components/home/PromoBanner";
 import Footer from "@/components/Footer";
 import ImageSlider from "@/components/ImageSlider";
 import { useFavorites } from "@/lib/useFavorites";
@@ -630,8 +631,8 @@ function PublicLandingView({
           />
         </div>
 
-        {/* ── Testimonios de clientes ─────────────────── */}
-        <TestimonialsSection />
+        {/* ── Banner con imagen y CTA ──────────────────── */}
+        <PromoBanner />
 
         {/* ── Sección 2: Propiedades para alquiler ────── */}
         <PropertyGrid
@@ -649,6 +650,9 @@ function PublicLandingView({
           onToggleFavorite={toggle}
           priceSuffix="/ mes"
         />
+
+        {/* ── Testimonios de clientes ─────────────────── */}
+        <TestimonialsSection />
 
         {/* ── Footer ────────────────────────────────── */}
         <Footer />

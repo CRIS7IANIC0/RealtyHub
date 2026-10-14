@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BrandLogo } from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Footer from "../Footer";
 import { LEGAL_UPDATED } from "./LegalContent";
 
 export default function LegalPageShell({
