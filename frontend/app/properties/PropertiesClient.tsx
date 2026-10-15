@@ -1,26 +1,38 @@
 "use client";
 
 /* ─────────────────────────────────────────────────────────────
-   PropertiesClient — Client Component
-   Full property catalog UI + manages CreatePropertyModal
-   Soporte RBAC y Protección de Datos:
-   - Usuarios autenticados (user !== null): visualizan métricas
-     administrativas (Total, Disponibles, Vendidas, Valor Portafolio)
-     y el botón "+ Nueva Propiedad" + selector de cambio de estado.
-   - Usuarios públicos (user === null): vista de catálogo limpio,
-     sin métricas internas ni botones administrativos.
+   PropertiesClient — catálogo de propiedades.
+   Misma lógica de antes (sesión, RBAC, cambio de estado, modal de creación);
+   cambia solo la presentación:
+   - Banda oscura con título grande, contador y buscador.
+   - Filtros por operación, tipo y estado + orden por precio.
+   - Rejilla con una tarjeta destacada grande, inclinación 3D y entrada
+     escalonada cada vez que cambia el filtro.
+   - Equipo autenticado: métricas, "Nueva propiedad" y selector de estado.
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CreatePropertyModal from "@/components/properties/CreatePropertyModal";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import ImageSlider from "@/components/ImageSlider";
+import ArrowIcon from "@/components/ui/ArrowIcon";
+import SplitText from "@/components/ui/SplitText";
+import Tilt from "@/components/ui/Tilt";
 import { GATEWAY } from "@/lib/config";
-import { STATUSES, getPropertyImages, isRental } from "@/lib/property";
+import {
+  PROPERTY_TYPES,
+  STATUSES,
+  cardHeading,
+  fmtPrice,
+  getPropertyImages,
+  inferCity,
+  inferType,
+  isRental,
+} from "@/lib/property";
 
-// ─── Types ──────────────────────────────────────────────────
 interface AuthUser {
   id?: string;
   name: string;
@@ -43,281 +55,228 @@ interface Property {
   city?: string | null;
 }
 
-// ─── Helpers ────────────────────────────────────────────────
-
-function fmtPrice(n: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n || 0);
-}
+type Op = "" | "Venta" | "Alquiler";
+type Sort = "recent" | "asc" | "desc";
 
 function statusStyle(status: string): { bg: string; text: string; label: string; dot: string } {
   switch (status?.toLowerCase()) {
     case "available":
     case "disponible":
-      return { bg: "bg-emerald-50", text: "text-emerald-700", label: "Disponible", dot: "bg-emerald-500" };
+      return { bg: "bg-[#e3efe6]", text: "text-[#2f5d3d]", label: "Disponible", dot: "bg-[#3f8a56]" };
     case "reserved":
     case "reservada":
-      return { bg: "bg-amber-50", text: "text-amber-700", label: "Reservada", dot: "bg-amber-500" };
+      return { bg: "bg-[#f6ead2]", text: "text-[#7a5516]", label: "Reservada", dot: "bg-[#c18a2a]" };
     case "sold":
     case "vendida":
-      return { bg: "bg-rose-50", text: "text-rose-700", label: "Vendida", dot: "bg-rose-500" };
+      return { bg: "bg-[#f3e2de]", text: "text-[#7a2f25]", label: "Vendida", dot: "bg-[#b04e42]" };
     case "rented":
     case "alquilada":
-      return { bg: "bg-sky-50", text: "text-sky-700", label: "Alquilada", dot: "bg-sky-500" };
+      return { bg: "bg-[#dfe3ec]", text: "text-[#2c3445]", label: "Alquilada", dot: "bg-[#5b6a8c]" };
     default:
-      return { bg: "bg-[#f7f7f7]", text: "text-[#6a6a6a]", label: status || "—", dot: "bg-[#b0b0b0]" };
+      return { bg: "bg-[#ece6dc]", text: "text-[#6b655e]", label: status || "—", dot: "bg-[#a39d94]" };
   }
 }
 
-// ─── SVG Icons ──────────────────────────────────────────────
-
-function IconPlus() {
+function IconPin() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
-
-function IconSearch() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-function IconChevronLeft() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-  );
-}
-
-function IconBuilding() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
-      <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
-      <path d="M9 22v-4h6v4" />
-      <path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01" />
-    </svg>
-  );
-}
-
-function IconMapPin() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
   );
 }
 
-// ─── Sub-components ─────────────────────────────────────────
+function IconSearch() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
 
-function PropertyCard({
+/* ── Tarjeta ───────────────────────────────────────────────── */
+function Card({
   property,
+  index,
+  big,
   onStatusUpdated,
   isAuth,
 }: {
   property: Property;
+  index: number;
+  big?: boolean;
   onStatusUpdated: (id: string, newStatus: string) => void;
   isAuth: boolean;
 }) {
   const [currentStatus, setCurrentStatus] = useState(property.status || "Disponible");
   const [isUpdating, setIsUpdating] = useState(false);
   const router = useRouter();
-
   const badge = statusStyle(currentStatus);
   const rental = isRental(property);
+  const city = inferCity(property);
+  const type = inferType(property);
 
   async function handleStatusChange(newStatus: string) {
     if (newStatus === currentStatus || isUpdating || !isAuth) return;
     setIsUpdating(true);
-    const prevStatus = currentStatus;
+    const prev = currentStatus;
     setCurrentStatus(newStatus);
-
     try {
       const res = await fetch(`${GATEWAY}/properties/${property.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) {
-        throw new Error("Error al actualizar estado");
-      }
+      if (!res.ok) throw new Error("Error al actualizar estado");
       onStatusUpdated(property.id, newStatus);
       router.refresh();
     } catch (err) {
       console.error("Error al actualizar estado:", err);
-      setCurrentStatus(prevStatus);
+      setCurrentStatus(prev);
     } finally {
       setIsUpdating(false);
     }
   }
 
   return (
-    <div className="rounded-[16px] bg-white overflow-hidden transition-all duration-300 hover:shadow-md border border-[#ebebeb] flex flex-col justify-between group">
-      <Link href={`/properties/${property.id}`} className="block no-underline flex-1">
-        {/* Image (4:3 aspect ratio) */}
-        <div className="relative aspect-4/3 bg-[#ebebeb] overflow-hidden">
-          <ImageSlider
-            images={getPropertyImages(property)}
-            alt={property.title}
-            imgClassName="group-hover:scale-105 transition-transform duration-500"
-          />
+    <div
+      className={`card-in ${big ? "sm:col-span-2" : ""}`}
+      style={{ ["--i" as string]: Math.min(index, 8) }}
+    >
+      <Tilt max={big ? 4 : 7}>
+        <article className="group h-full flex flex-col rounded-[10px] bg-[#faf8f4] border border-[#e2dcd2] overflow-hidden shadow-[0_18px_40px_-28px_rgba(30,28,26,0.45)]">
+          <Link href={`/properties/${property.id}`} data-cursor="Ver" className="block no-underline text-inherit flex-1">
+            <div className={`relative overflow-hidden bg-[#ece6dc] ${big ? "aspect-[16/9]" : "aspect-[4/3]"}`}>
+              <div className="absolute inset-0 transition-transform duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]">
+                <ImageSlider images={getPropertyImages(property)} alt={property.title} />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent pointer-events-none" />
 
-          {/* Status pill badge with dot */}
-          <span
-            className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full shadow-xs ${badge.bg} ${badge.text}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
-            {badge.label}
-          </span>
+              <span className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 rounded-full ${badge.bg} ${badge.text}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+                {badge.label}
+              </span>
+              <span className="absolute top-3 right-3 text-[12px] font-medium px-3 py-1 rounded-full bg-[#faf8f4]/95 text-[#1e1c1a]">
+                {rental ? "En alquiler" : "En venta"}
+              </span>
 
-          {/* Operación: Venta / Alquiler */}
-          <span className="absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/95 text-[#222222] shadow-xs">
-            {rental ? "Alquiler" : "Venta"}
-          </span>
-        </div>
+              {big && (
+                <p className="absolute left-5 bottom-4 font-display text-[clamp(22px,2.2vw,32px)] text-[#faf8f4] tracking-[-0.03em] pointer-events-none">
+                  {fmtPrice(property.price)}
+                  {rental && <span className="text-[15px] opacity-80"> / mes</span>}
+                </p>
+              )}
+            </div>
 
-        {/* Details */}
-        <div className="p-4">
-          <p className="text-[15px] font-semibold text-[#222222] truncate group-hover:text-[#ff385c] transition-colors">
-            {property.title}
-          </p>
-
-          <div className="flex items-center gap-1.5 mt-1.5">
-            <IconMapPin />
-            <p className="text-[13px] text-[#6a6a6a] truncate">
-              {property.address}
-            </p>
-          </div>
-
-          {property.description && (
-            <p className="text-[12px] text-[#888888] line-clamp-2 mt-2 leading-relaxed">
-              {property.description}
-            </p>
-          )}
-        </div>
-      </Link>
-
-      {/* Footer / Price & Actions */}
-      <div className="px-4 pb-4 pt-3 border-t border-[#f0f0f0] flex items-center justify-between gap-2">
-        <div>
-          <span className="text-[11px] text-[#888888] block uppercase tracking-wider font-medium">
-            {rental ? "Canon mensual" : "Precio"}
-          </span>
-          <p className="text-[15px] font-bold text-[#222222]">
-            {fmtPrice(property.price)}
-            {rental && <span className="text-[12px] font-medium text-[#6a6a6a]"> / mes</span>}
-          </p>
-        </div>
-
-        {/* Selector de estado SOLO para usuarios autenticados / Botón Ver Detalle para públicos */}
-        {isAuth ? (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            <select
-              value={currentStatus}
-              disabled={isUpdating}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="text-[12px] font-medium rounded-full border border-[#ebebeb] px-3 py-1 bg-white text-[#222222] hover:border-[#222222] transition-colors cursor-pointer outline-none focus:border-[#222222] disabled:opacity-50"
-              title="Cambiar estado de la propiedad"
-            >
-              {STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <Link
-            href={`/properties/${property.id}`}
-            className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#ff385c] hover:bg-[#ff385c]/10 px-3 py-1 rounded-full transition-colors no-underline border border-[#ff385c]/20"
-          >
-            Ver Detalle
-            <span>→</span>
+            <div className="p-5">
+              <h3 className="font-display text-[20px] leading-tight tracking-[-0.03em] text-[#1e1c1a] truncate">
+                {property.title || cardHeading(property)}
+              </h3>
+              <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#6b655e] truncate">
+                <IconPin />
+                <span className="truncate">{property.address}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {type && <span className="text-[12px] px-2.5 py-1 rounded-full bg-[#ece6dc] text-[#433e39]">{type}</span>}
+                {city && <span className="text-[12px] px-2.5 py-1 rounded-full bg-[#ece6dc] text-[#433e39]">{city}</span>}
+              </div>
+              {property.description && (
+                <p className="text-[13px] text-[#6b655e] line-clamp-2 mt-3 leading-relaxed">{property.description}</p>
+              )}
+            </div>
           </Link>
-        )}
-      </div>
+
+          <div className="px-5 pb-5 pt-4 mt-auto border-t border-[#e2dcd2] flex items-center justify-between gap-3">
+            {!big ? (
+              <div>
+                <span className="text-[12px] text-[#6b655e] block">{rental ? "Canon mensual" : "Precio"}</span>
+                <p className="font-display text-[20px] tracking-[-0.02em] text-[#a64739] tabular">
+                  {fmtPrice(property.price)}
+                  {rental && <span className="text-[13px] text-[#6b655e]"> / mes</span>}
+                </p>
+              </div>
+            ) : (
+              <span className="text-[13px] text-[#6b655e]">Destacada del catálogo</span>
+            )}
+
+            {isAuth ? (
+              <select
+                value={currentStatus}
+                disabled={isUpdating}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="text-[13px] font-medium rounded-full border border-[#cfc7ba] px-3.5 py-1.5 bg-[#faf8f4] text-[#1e1c1a] hover:border-[#1e1c1a] transition-colors cursor-pointer outline-none focus:border-[#1e1c1a] disabled:opacity-50"
+                title="Cambiar estado de la propiedad"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Link
+                href={`/properties/${property.id}`}
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#1e1c1a] hover:text-[#a64739] border-b border-current pb-0.5 no-underline transition-colors"
+              >
+                Ver detalle <ArrowIcon size={14} />
+              </Link>
+            )}
+          </div>
+        </article>
+      </Tilt>
     </div>
   );
 }
 
-function Stat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  accent?: boolean;
-}) {
+/* ── Chip de filtro ────────────────────────────────────────── */
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-[16px] bg-white p-5 border border-[#ebebeb] shadow-xs">
-      <p className="text-[13px] text-[#6a6a6a] mb-1 font-medium">{label}</p>
-      <p
-        className={`text-[24px] font-bold tracking-tight ${
-          accent ? "text-[#ff385c]" : "text-[#222222]"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`shrink-0 rounded-full px-4 py-2 text-[14px] font-medium transition-colors duration-300 cursor-pointer border ${
+        active
+          ? "bg-[#1e1c1a] text-[#faf8f4] border-[#1e1c1a]"
+          : "bg-transparent text-[#433e39] border-[#cfc7ba] hover:border-[#1e1c1a]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
-// ─── Main Client Component ──────────────────────────────────
-
-export default function PropertiesClient({
-  properties,
-}: {
-  properties: Property[];
-}) {
+/* ── Página ────────────────────────────────────────────────── */
+export default function PropertiesClient({ properties }: { properties: Property[] }) {
   const [propertiesList, setPropertiesList] = useState<Property[]>(properties);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createdTitle, setCreatedTitle] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [op, setOp] = useState<Op>("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [sort, setSort] = useState<Sort>("recent");
 
-  // El aviso de "propiedad creada" se oculta solo a los 5 s
   useEffect(() => {
     if (!createdTitle) return;
     const t = setTimeout(() => setCreatedTitle(null), 5000);
     return () => clearTimeout(t);
   }, [createdTitle]);
 
-  // Estado de sesión y autenticación
   const [user, setUser] = useState<AuthUser | null>(null);
-
   useEffect(() => {
     function loadUser() {
       try {
         const stored = localStorage.getItem("user");
-        if (stored) {
-          setUser(JSON.parse(stored));
-        } else {
-          setUser(null);
-        }
+        setUser(stored ? JSON.parse(stored) : null);
       } catch {
         setUser(null);
       }
     }
-
     loadUser();
-
-    // Sincronización en tiempo real
     window.addEventListener("storage", loadUser);
     window.addEventListener("realtyhub_auth_changed", loadUser);
-
     return () => {
       window.removeEventListener("storage", loadUser);
       window.removeEventListener("realtyhub_auth_changed", loadUser);
@@ -325,26 +284,33 @@ export default function PropertiesClient({
   }, []);
 
   const handleStatusUpdated = (id: string, newStatus: string) => {
-    setPropertiesList((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
-    );
+    setPropertiesList((prev) => prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
   };
 
-  /* Filter */
-  const filtered = propertiesList.filter((p) => {
-    const matchesSearch =
-      !search.trim() ||
-      p.title?.toLowerCase().includes(search.toLowerCase()) ||
-      p.address?.toLowerCase().includes(search.toLowerCase()) ||
-      p.description?.toLowerCase().includes(search.toLowerCase());
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const list = propertiesList.filter((p) => {
+      const matchesSearch =
+        !term ||
+        p.title?.toLowerCase().includes(term) ||
+        p.address?.toLowerCase().includes(term) ||
+        p.description?.toLowerCase().includes(term);
+      const matchesStatus = filterStatus === "all" || p.status?.toLowerCase() === filterStatus.toLowerCase();
+      const matchesOp = !op || (op === "Alquiler" ? isRental(p) : !isRental(p));
+      const matchesType = !typeFilter || inferType(p) === typeFilter;
+      return matchesSearch && matchesStatus && matchesOp && matchesType;
+    });
+    if (sort === "asc") return [...list].sort((a, b) => a.price - b.price);
+    if (sort === "desc") return [...list].sort((a, b) => b.price - a.price);
+    return list;
+  }, [propertiesList, search, filterStatus, op, typeFilter, sort]);
 
-    const matchesStatus =
-      filterStatus === "all" || p.status?.toLowerCase() === filterStatus.toLowerCase();
+  // Tipos que realmente existen en el catálogo
+  const presentTypes = useMemo(
+    () => PROPERTY_TYPES.filter((t) => propertiesList.some((p) => inferType(p) === t)),
+    [propertiesList]
+  );
 
-    return matchesSearch && matchesStatus;
-  });
-
-  /* KPIs Administrativos (Solo para usuarios autenticados) */
   const totalValue = propertiesList.reduce((s, p) => s + (p.price || 0), 0);
   const disponibles = propertiesList.filter(
     (p) => p.status?.toLowerCase() === "disponible" || p.status?.toLowerCase() === "available"
@@ -353,181 +319,190 @@ export default function PropertiesClient({
     (p) => p.status?.toLowerCase() === "vendida" || p.status?.toLowerCase() === "sold"
   ).length;
 
+  const hasFilters = !!search.trim() || filterStatus !== "all" || !!op || !!typeFilter;
+  const filterKey = `${op}|${typeFilter}|${filterStatus}|${sort}|${search}`;
+
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
-      {/* ══════════════════════════════════════════════
-          TOP NAV — Sticky Airbnb / SaaS Design System
-          ══════════════════════════════════════════════ */}
+    <div className="min-h-screen bg-[#f3efe8]">
       <Navbar activeTab="properties" />
 
-      {/* ══════════════════════════════════════════════
-          CANVAS BODY
-          ══════════════════════════════════════════════ */}
-      <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8">
-        {/* ── Breadcrumb ─────────────────────────────── */}
-        <div className="flex items-center gap-2 mb-6">
-          <a
-            href="/"
-            className="flex items-center gap-1 text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline font-medium"
-          >
-            <IconChevronLeft />
-            Inicio
-          </a>
-          <span className="text-[13px] text-[#ebebeb]">/</span>
-          <span className="text-[13px] text-[#222222] font-semibold">
-            Propiedades
-          </span>
-        </div>
-
-        {/* ── Page header ────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-11 h-11 rounded-[14px] bg-white border border-[#ebebeb] shadow-2xs">
-              <IconBuilding />
-            </div>
+      {/* Banda oscura: título, contador y buscador */}
+      <section className="relative overflow-hidden bg-[#151922] text-[#faf8f4] grain">
+        <div aria-hidden="true" className="absolute inset-0 hero-mesh opacity-70" />
+        <div className="relative w-full max-w-[1400px] mx-auto px-6 md:px-10 pt-14 pb-12 md:pt-20 md:pb-16">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
             <div>
-              <h1 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-[#222222]">
-                Catálogo de Propiedades
-              </h1>
-              <p className="text-[14px] text-[#6a6a6a] mt-0.5">
+              <SplitText
+                as="h1"
+                parts={[{ t: "Catálogo de" }, { t: "propiedades", accent: true }]}
+                accentClassName="text-[#e7b4a8]"
+                className="page-title !text-[clamp(38px,6vw,92px)] !leading-[0.98] !tracking-[-0.05em]"
+              />
+              <p className="mt-5 text-[17px] text-[#faf8f4]/70 max-w-[46ch]">
                 {user
-                  ? "Gestiona los inmuebles, disponibilidad y valores de tu portafolio."
-                  : "Explora las propiedades residenciales y comerciales disponibles."}
+                  ? "Gestiona los inmuebles, su disponibilidad y los valores de tu portafolio."
+                  : "Casas, apartamentos y locales con visita agendada en minutos."}
               </p>
+            </div>
+
+            <div className="flex items-center gap-5">
+              <p className="font-display text-[clamp(44px,6vw,88px)] leading-none tracking-[-0.05em] tabular">
+                {String(filtered.length).padStart(2, "0")}
+                <span className="block text-[14px] tracking-normal text-[#faf8f4]/60 mt-1 font-sans">
+                  {filtered.length === 1 ? "propiedad" : "propiedades"}
+                </span>
+              </p>
+              {user && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  data-magnetic
+                  className="inline-flex items-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#933f33] px-6 py-3.5 text-[15px] font-medium text-[#faf8f4] transition-colors duration-300 cursor-pointer"
+                >
+                  <span className="text-[20px] leading-none -mt-0.5">+</span>
+                  Nueva propiedad
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Botón "+ Nueva Propiedad" SOLO para usuarios autenticados */}
-          {user && (
+          {/* Buscador */}
+          <label className="mt-10 flex items-center gap-3 rounded-full bg-[#faf8f4] text-[#1e1c1a] px-6 py-4 max-w-[760px] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] focus-within:ring-2 focus-within:ring-[#e7b4a8] transition-shadow">
+            <IconSearch />
+            <input
+              type="text"
+              placeholder="Busca por título, dirección o descripción"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="bg-transparent outline-none text-[16px] placeholder:text-[#716b63] w-full"
+              aria-label="Buscar propiedades"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch("")} className="text-[#6b655e] hover:text-[#1e1c1a] cursor-pointer text-[14px]" aria-label="Borrar búsqueda">
+                Borrar
+              </button>
+            )}
+          </label>
+        </div>
+      </section>
+
+      <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pt-10 pb-6">
+        {/* Métricas (solo equipo) */}
+        {user && (
+          <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              ["Total de inmuebles", String(propertiesList.length), false],
+              ["Disponibles", String(disponibles), true],
+              ["Vendidas", String(vendidas), false],
+              ["Valor del portafolio", fmtPrice(totalValue), false],
+            ].map(([label, value, accent]) => (
+              <div key={label as string} className="rounded-[10px] bg-[#faf8f4] border border-[#e2dcd2] p-5">
+                <dt className="text-[13px] text-[#6b655e]">{label}</dt>
+                <dd className={`mt-1 font-display text-[clamp(22px,2.2vw,30px)] tracking-[-0.03em] tabular ${accent ? "text-[#a64739]" : ""}`}>
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {/* Filtros */}
+        <div className="space-y-4 mb-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip active={op === ""} onClick={() => setOp("")}>Todo</Chip>
+            <Chip active={op === "Venta"} onClick={() => setOp("Venta")}>En venta</Chip>
+            <Chip active={op === "Alquiler"} onClick={() => setOp("Alquiler")}>En alquiler</Chip>
+            <span className="hidden sm:block w-px h-6 bg-[#cfc7ba] mx-2" />
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+              <Chip active={typeFilter === ""} onClick={() => setTypeFilter("")}>Cualquier tipo</Chip>
+              {presentTypes.map((t) => (
+                <Chip key={t} active={typeFilter === t} onClick={() => setTypeFilter(typeFilter === t ? "" : t)}>
+                  {t}
+                </Chip>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+              {[
+                { value: "all", label: "Todos los estados" },
+                { value: "disponible", label: "Disponibles" },
+                { value: "reservada", label: "Reservadas" },
+                { value: "vendida", label: "Vendidas" },
+                { value: "alquilada", label: "Alquiladas" },
+              ].map((f) => (
+                <Chip key={f.value} active={filterStatus === f.value} onClick={() => setFilterStatus(f.value)}>
+                  {f.label}
+                </Chip>
+              ))}
+            </div>
+            <label className="flex items-center gap-2 text-[14px] text-[#6b655e]">
+              Ordenar
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as Sort)}
+                className="rounded-full border border-[#cfc7ba] bg-[#faf8f4] px-4 py-2 text-[14px] text-[#1e1c1a] outline-none hover:border-[#1e1c1a] focus:border-[#1e1c1a] cursor-pointer"
+              >
+                <option value="recent">Más recientes</option>
+                <option value="asc">Precio: menor a mayor</option>
+                <option value="desc">Precio: mayor a menor</option>
+              </select>
+            </label>
+          </div>
+
+          {hasFilters && (
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] px-5 py-2.5 text-[14px] font-semibold text-white transition-all duration-200 shadow-sm hover:shadow cursor-pointer self-start sm:self-auto active:scale-95"
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setFilterStatus("all");
+                setOp("");
+                setTypeFilter("");
+              }}
+              className="text-[14px] font-medium text-[#1e1c1a] border-b border-[#1e1c1a] pb-0.5 hover:text-[#a64739] hover:border-[#a64739] cursor-pointer"
             >
-              <IconPlus />
-              Nueva Propiedad
+              Limpiar filtros
             </button>
           )}
         </div>
 
-        {/* ── KPI Strip (Métricas Administrativas SOLO para usuarios autenticados) ── */}
-        {user && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <Stat label="Total Inmuebles" value={propertiesList.length} />
-            <Stat label="Disponibles" value={disponibles} accent />
-            <Stat label="Vendidas" value={vendidas} />
-            <Stat label="Valor Portafolio" value={fmtPrice(totalValue)} />
-          </div>
-        )}
-
-        {/* ── Filters bar ────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-8">
-          {/* Search */}
-          <div className="flex items-center gap-2.5 rounded-full border border-[#ebebeb] bg-white px-4 py-2.5 flex-1 max-w-[420px] focus-within:border-[#222222] transition-colors shadow-2xs">
-            <IconSearch />
-            <input
-              type="text"
-              placeholder="Buscar por título, dirección o descripción…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none text-[14px] text-[#222222] placeholder:text-[#999999] w-full"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="text-[#6a6a6a] hover:text-[#222222] cursor-pointer text-sm"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Status filter pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
-            {[
-              { value: "all", label: "Todos" },
-              { value: "disponible", label: "Disponibles" },
-              { value: "reservada", label: "Reservadas" },
-              { value: "vendida", label: "Vendidas" },
-              { value: "alquilada", label: "Alquiladas" },
-            ].map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setFilterStatus(f.value)}
-                className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-all cursor-pointer border ${
-                  filterStatus === f.value
-                    ? "bg-[#222222] text-white border-[#222222] shadow-xs"
-                    : "bg-white text-gray-600 border-[#ebebeb] hover:border-gray-400 hover:text-gray-900"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Property Grid ──────────────────────────── */}
+        {/* Rejilla */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[16px] bg-white border border-[#ebebeb] py-20 px-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mb-4 text-2xl">
-              🏠
-            </div>
-            <p className="text-[16px] font-semibold text-[#222222] mb-1">
-              {search || filterStatus !== "all"
-                ? "No se encontraron propiedades con esos filtros."
-                : "No hay propiedades registradas aún."}
+          <div className="flex flex-col items-center justify-center rounded-[10px] bg-[#ece6dc] py-24 px-8 text-center">
+            <svg viewBox="0 0 120 100" width="86" height="72" fill="none" stroke="#716b63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 52 60 10l52 42M22 44v48h76V44M50 92V64h20v28" />
+            </svg>
+            <p className="font-display text-[26px] tracking-[-0.03em] mt-6">
+              {hasFilters ? "Ninguna propiedad coincide con esos filtros." : "Aún no hay propiedades registradas."}
             </p>
-            {!search && filterStatus === "all" && (
-              <p className="text-[13px] text-[#6a6a6a]">
-                {user ? (
-                  <>
-                    Usa el botón{" "}
-                    <span className="font-semibold text-[#ff385c]">
-                      + Nueva Propiedad
-                    </span>{" "}
-                    para registrar tu primer inmueble.
-                  </>
-                ) : (
-                  "Pronto se publicarán nuevas propiedades en el catálogo."
-                )}
-              </p>
-            )}
+            <p className="text-[15px] text-[#6b655e] mt-2 max-w-[44ch]">
+              {hasFilters
+                ? "Prueba con otra búsqueda o quita algún filtro."
+                : user
+                ? "Usa «Nueva propiedad» para registrar tu primer inmueble."
+                : "Pronto se publicarán nuevas propiedades en el catálogo."}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((p) => (
-              <PropertyCard
+          <div key={filterKey} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+            {filtered.map((p, i) => (
+              <Card
                 key={p.id}
                 property={p}
+                index={i}
+                big={i === 0 && filtered.length >= 3}
                 onStatusUpdated={handleStatusUpdated}
                 isAuth={!!user}
               />
             ))}
           </div>
         )}
-
-        {/* ── Footer ─────────────────────────────────── */}
-        <footer className="py-10 border-t border-[#ebebeb] mt-16">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[13px] text-[#6a6a6a]">
-              © {new Date().getFullYear()} RealtyHub. Todos los derechos
-              reservados.
-            </p>
-            <div className="flex items-center gap-6">
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Soporte
-              </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Privacidad
-              </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
-                Términos
-              </span>
-            </div>
-          </div>
-        </footer>
       </main>
 
-      {/* ── Modal (Solo activo si está logueado) ──────── */}
+      <div className="mt-20">
+        <Footer dark />
+      </div>
+
       {user && (
         <CreatePropertyModal
           isOpen={isModalOpen}
@@ -539,20 +514,17 @@ export default function PropertiesClient({
         />
       )}
 
-      {/* ── Confirmación de propiedad creada ──────────── */}
       {createdTitle && (
         <div
           role="status"
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-[#222222] pl-4 pr-3 py-3 text-white max-w-[calc(100vw-32px)]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-3 rounded-full bg-[#1e1c1a] pl-4 pr-3 py-3 text-[#faf8f4] max-w-[calc(100vw-32px)]"
         >
-          <span className="flex w-6 h-6 items-center justify-center rounded-full bg-emerald-500 shrink-0">
+          <span className="flex w-6 h-6 items-center justify-center rounded-full bg-[#3f8a56] shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
-          <span className="text-[14px] font-medium truncate">
-            ¡Propiedad «{createdTitle}» creada con éxito!
-          </span>
+          <span className="text-[14px] font-medium truncate">¡Propiedad «{createdTitle}» creada con éxito!</span>
           <button
             type="button"
             onClick={() => setCreatedTitle(null)}

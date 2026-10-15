@@ -3,9 +3,9 @@
 /* ─────────────────────────────────────────────────────────────
    CommissionsClient — Client Component
    Módulo de Gestión de Comisiones · Strict Airbnb Design System
-   Fondo general #f7f7f7 · Tarjetas blancas #ffffff rounded-[12px]
-   Sin sombras (shadow-none) · Borde #ebebeb
-   Monto en negrita (16px font-semibold #222222)
+   Fondo general #f3efe8 · Tarjetas blancas #ffffff rounded-[12px]
+   Sin sombras (shadow-none) · Borde #e2dcd2
+   Monto en negrita (16px font-semibold #1e1c1a)
    Pill de estado: Pendiente = amarillo, Pagada = verde
    KPI en la parte superior con total por pagar
    Generación automática vía RabbitMQ (sin botón de nueva comisión)
@@ -64,7 +64,7 @@ function statusPill(status: string): { bg: string; text: string; dot: string; la
 
 function IconCoins() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="8" cy="8" r="6" />
       <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
       <path d="M7 6h1v4" />
@@ -75,7 +75,7 @@ function IconCoins() {
 
 function IconSearch() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -84,7 +84,7 @@ function IconSearch() {
 
 function IconUser() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] shrink-0">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -93,7 +93,7 @@ function IconUser() {
 
 function IconFileText() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] shrink-0">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -112,7 +112,7 @@ function IconBolt() {
 
 function IconBell() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#222222]">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#1e1c1a]">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -176,7 +176,7 @@ export default function CommissionsClient({
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV (AIRBNB CLEAN HEADER con RBAC)
           ══════════════════════════════════════════════ */}
@@ -186,71 +186,65 @@ export default function CommissionsClient({
           CANVAS BODY
           ══════════════════════════════════════════════ */}
       <main
-        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16"
-        style={{ paddingTop: "calc(80px + 36px)" }}
+        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16 pt-8 md:pt-12"
       >
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[12px] font-semibold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                Liquidación Comercial
-              </span>
-            </div>
-            <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#222222]">
+            <h1 className="page-title text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#1e1c1a]">
               Gestión de Comisiones
             </h1>
-            <p className="text-[14px] text-[#6a6a6a] mt-1">
+            <p className="text-[14px] text-[#6b655e] mt-1">
               Control de comisiones y pagos pendientes generados automáticamente tras el cierre de contratos.
             </p>
           </div>
 
           {/* Badge informativo de RabbitMQ */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#ebebeb] text-[13px] text-[#6a6a6a] shadow-none self-start sm:self-auto">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#e2dcd2] text-[13px] text-[#6b655e] shadow-none self-start sm:self-auto">
             <IconBolt />
-            <span>Automatización activa vía <strong>RabbitMQ</strong></span>
+            <span>Se generan automáticamente al firmar un contrato</span>
           </div>
         </div>
 
         {/* ── KPI Strip (Airbnb Style: White Cards, Rounded 12px, No Shadows) ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* KPI Principal Solicitado: Total comisiones por pagar */}
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Total Comisiones por Pagar</p>
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Total Comisiones por Pagar</p>
             <p className="text-[24px] font-semibold text-amber-600 tracking-tight">
               {fmtPrice(totalPendingAmount)}
             </p>
-            <p className="text-[12px] text-[#6a6a6a] mt-1">
+            <p className="text-[12px] text-[#6b655e] mt-1">
               {pendingCommissions.length} pagos pendientes
             </p>
           </div>
 
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Total Comisiones Pagadas</p>
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Total Comisiones Pagadas</p>
             <p className="text-[24px] font-semibold text-emerald-700 tracking-tight">
               {fmtPrice(totalPaidAmount)}
             </p>
-            <p className="text-[12px] text-[#6a6a6a] mt-1">
+            <p className="text-[12px] text-[#6b655e] mt-1">
               {paidCommissions.length} pagos liquidados
             </p>
           </div>
 
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Comisiones Registradas</p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Comisiones Registradas</p>
+            <p className="text-[24px] font-semibold text-[#1e1c1a]">
               {totalCount}
             </p>
-            <p className="text-[12px] text-[#6a6a6a] mt-1">
+            <p className="text-[12px] text-[#6b655e] mt-1">
               Calculadas al 5% por contrato
             </p>
           </div>
 
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Agentes con Liquidación</p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Agentes con Liquidación</p>
+            <p className="text-[24px] font-semibold text-[#1e1c1a]">
               {new Set(commissions.map((c) => c.agent_id)).size}
             </p>
-            <p className="text-[12px] text-[#6a6a6a] mt-1">
+            <p className="text-[12px] text-[#6b655e] mt-1">
               Miembros de la red
             </p>
           </div>
@@ -268,19 +262,19 @@ export default function CommissionsClient({
               placeholder="Buscar por agente, ID de contrato o comisión..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-full border border-[#ebebeb] bg-white pl-11 pr-4 py-2.5 text-[14px] text-[#222222] placeholder:text-[#6a6a6a] outline-none transition-colors focus:border-[#222222]"
+              className="w-full rounded-full border border-[#e2dcd2] bg-white pl-11 pr-4 py-2.5 text-[14px] text-[#1e1c1a] placeholder:text-[#6b655e] outline-none transition-colors focus:border-[#1e1c1a]"
             />
           </div>
 
           {/* Quick Filter Pills */}
-          <div className="inline-flex rounded-full border border-[#ebebeb] bg-white p-1 self-start md:self-auto">
+          <div className="inline-flex rounded-full border border-[#e2dcd2] bg-white p-1 self-start md:self-auto">
             <button
               type="button"
               onClick={() => setFilterStatus("all")}
               className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                 filterStatus === "all"
-                  ? "bg-[#222222] text-white"
-                  : "text-[#6a6a6a] hover:text-[#222222]"
+                  ? "bg-[#1e1c1a] text-white"
+                  : "text-[#6b655e] hover:text-[#1e1c1a]"
               }`}
             >
               Todas ({totalCount})
@@ -291,7 +285,7 @@ export default function CommissionsClient({
               className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                 filterStatus === "Pendiente"
                   ? "bg-amber-600 text-white"
-                  : "text-[#6a6a6a] hover:text-[#222222]"
+                  : "text-[#6b655e] hover:text-[#1e1c1a]"
               }`}
             >
               Pendientes ({pendingCommissions.length})
@@ -302,7 +296,7 @@ export default function CommissionsClient({
               className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                 filterStatus === "Pagada"
                   ? "bg-emerald-700 text-white"
-                  : "text-[#6a6a6a] hover:text-[#222222]"
+                  : "text-[#6b655e] hover:text-[#1e1c1a]"
               }`}
             >
               Pagadas ({paidCommissions.length})
@@ -312,14 +306,14 @@ export default function CommissionsClient({
 
         {/* ── Tarjetas de Comisiones (Airbnb Design System) ────── */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[12px] bg-white border border-[#ebebeb] py-16 px-8 text-center shadow-none">
-            <div className="w-14 h-14 rounded-full bg-[#f7f7f7] flex items-center justify-center text-[#6a6a6a] mb-4">
+          <div className="flex flex-col items-center justify-center rounded-[12px] bg-white border border-[#e2dcd2] py-16 px-8 text-center shadow-none">
+            <div className="w-14 h-14 rounded-full bg-[#f3efe8] flex items-center justify-center text-[#6b655e] mb-4">
               <IconCoins />
             </div>
-            <h3 className="text-[17px] font-semibold text-[#222222] mb-1">
+            <h3 className="text-[17px] font-semibold text-[#1e1c1a] mb-1">
               No hay comisiones para mostrar
             </h3>
-            <p className="text-[14px] text-[#6a6a6a] max-w-md">
+            <p className="text-[14px] text-[#6b655e] max-w-md">
               {commissions.length === 0
                 ? "Las comisiones se generan automáticamente al firmar contratos en el módulo de Contratos."
                 : "No se encontraron comisiones que coincidan con los filtros aplicados."}
@@ -334,15 +328,15 @@ export default function CommissionsClient({
               return (
                 <div
                   key={commission.id}
-                  className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none hover:border-[#222222] transition-colors flex flex-col justify-between"
+                  className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none hover:border-[#1e1c1a] transition-colors flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header de tarjeta: Monto destacado (16px font-semibold #222222) + Pill de estado */}
+                    {/* Header de tarjeta: Monto destacado (16px font-semibold #1e1c1a) + Pill de estado */}
                     <div className="flex items-start justify-between gap-2 mb-4">
                       <div>
-                        <p className="text-[12px] text-[#6a6a6a] mb-0.5">Monto de Comisión (5%)</p>
+                        <p className="text-[12px] text-[#6b655e] mb-0.5">Monto de Comisión (5%)</p>
                         {/* Monto en negrita (16px) */}
-                        <p className="text-[16px] font-semibold text-[#222222] tracking-tight">
+                        <p className="text-[16px] font-semibold text-[#1e1c1a] tracking-tight">
                           {fmtPrice(commission.amount)}
                         </p>
                       </div>
@@ -355,16 +349,16 @@ export default function CommissionsClient({
                     </div>
 
                     {/* Detalles: Agente y Contrato */}
-                    <div className="space-y-3 pt-3 border-t border-[#f7f7f7] mb-4">
+                    <div className="space-y-3 pt-3 border-t border-[#f3efe8] mb-4">
                       {/* Nombre del Agente */}
                       <div className="flex items-start gap-2.5">
                         <IconUser />
                         <div className="min-w-0 text-[13px]">
-                          <p className="font-medium text-[#222222] truncate">
+                          <p className="font-medium text-[#1e1c1a] truncate">
                             {agent?.name || "Agente Inmobiliario"}
                           </p>
-                          <p className="text-[11px] text-[#6a6a6a] truncate">
-                            ID: <code className="bg-[#f7f7f7] px-1 py-0.5 rounded">{commission.agent_id}</code>
+                          <p className="text-[11px] text-[#6b655e] truncate">
+                            ID: <code className="bg-[#f3efe8] px-1 py-0.5 rounded">{commission.agent_id}</code>
                           </p>
                         </div>
                       </div>
@@ -373,11 +367,11 @@ export default function CommissionsClient({
                       <div className="flex items-start gap-2.5">
                         <IconFileText />
                         <div className="min-w-0 text-[13px]">
-                          <p className="font-medium text-[#222222] truncate">
+                          <p className="font-medium text-[#1e1c1a] truncate">
                             Contrato Asociado
                           </p>
-                          <p className="text-[11px] text-[#6a6a6a] truncate">
-                            ID: <code className="bg-[#f7f7f7] px-1 py-0.5 rounded">{commission.contract_id}</code>
+                          <p className="text-[11px] text-[#6b655e] truncate">
+                            ID: <code className="bg-[#f3efe8] px-1 py-0.5 rounded">{commission.contract_id}</code>
                           </p>
                         </div>
                       </div>
@@ -385,11 +379,11 @@ export default function CommissionsClient({
                   </div>
 
                   {/* Card Footer: Fecha de Creación & ID de Comisión */}
-                  <div className="pt-3 border-t border-[#ebebeb] flex items-center justify-between text-[11px] text-[#6a6a6a]">
+                  <div className="pt-3 border-t border-[#e2dcd2] flex items-center justify-between text-[11px] text-[#6b655e]">
                     <span>
                       Registrada: {fmtDate(commission.created_at)}
                     </span>
-                    <span className="font-mono text-[10px] text-[#6a6a6a] bg-[#f7f7f7] px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-[10px] text-[#6b655e] bg-[#f3efe8] px-1.5 py-0.5 rounded">
                       {commission.id.slice(0, 8)}…
                     </span>
                   </div>

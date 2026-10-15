@@ -56,12 +56,11 @@ export default async function NotificationsPage() {
   for (const u of users) names[u.id] = u.name || '';
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       <Navbar activeTab="notifications" />
 
       <main
-        className="w-full max-w-[800px] mx-auto px-6 md:px-10 pb-16"
-        style={{ paddingTop: 'calc(80px + 40px)' }}
+        className="w-full max-w-[800px] mx-auto px-6 md:px-10 pb-16 pt-8 md:pt-12"
       >
         <NotificationsClient notifications={notifications} names={names} />
       </main>

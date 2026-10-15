@@ -36,9 +36,9 @@ function statusPill(status: string): { bg: string; text: string; label: string }
     case "Cerrado":
       return { bg: "bg-emerald-50", text: "text-emerald-700", label: "Cerrado" };
     case "Perdido":
-      return { bg: "bg-[#f7f7f7]", text: "text-[#6a6a6a]", label: "Perdido" };
+      return { bg: "bg-[#f3efe8]", text: "text-[#6b655e]", label: "Perdido" };
     default:
-      return { bg: "bg-[#f7f7f7]", text: "text-[#6a6a6a]", label: status || "—" };
+      return { bg: "bg-[#f3efe8]", text: "text-[#6b655e]", label: status || "—" };
   }
 }
 
@@ -85,7 +85,7 @@ function avatarBg(name: string): string {
 
 function IconSearch() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -94,7 +94,7 @@ function IconSearch() {
 
 function IconBell() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#222222]">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#1e1c1a]">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -111,7 +111,7 @@ function IconChevronLeft() {
 
 function IconTarget() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
       <circle cx="12" cy="12" r="2" />
@@ -121,7 +121,7 @@ function IconTarget() {
 
 function IconPhone() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] flex-shrink-0">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] flex-shrink-0">
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   );
@@ -129,7 +129,7 @@ function IconPhone() {
 
 function IconMail() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] flex-shrink-0">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] flex-shrink-0">
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
@@ -151,10 +151,10 @@ function LeadCard({ lead }: { lead: Lead }) {
             {lead.name ? lead.name.charAt(0) : "L"}
           </div>
           <div className="min-w-0">
-            <p className="text-[14px] font-medium text-[#222222] truncate">
+            <p className="text-[14px] font-medium text-[#1e1c1a] truncate">
               {lead.name}
             </p>
-            <p className="text-[12px] text-[#6a6a6a] mt-0.5">
+            <p className="text-[12px] text-[#6b655e] mt-0.5">
               {fmtDate(lead.created_at)}
             </p>
           </div>
@@ -168,22 +168,22 @@ function LeadCard({ lead }: { lead: Lead }) {
       <div className="space-y-1.5 mb-3">
         <div className="flex items-center gap-2">
           <IconMail />
-          <span className="text-[13px] text-[#6a6a6a] truncate">{lead.email}</span>
+          <span className="text-[13px] text-[#6b655e] truncate">{lead.email}</span>
         </div>
         <div className="flex items-center gap-2">
           <IconPhone />
-          <span className="text-[13px] text-[#6a6a6a]">{lead.phone}</span>
+          <span className="text-[13px] text-[#6b655e]">{lead.phone}</span>
         </div>
       </div>
 
       {/* Bottom: source + property */}
-      <div className="flex items-center justify-between pt-3 border-t border-[#f7f7f7]">
+      <div className="flex items-center justify-between pt-3 border-t border-[#f3efe8]">
         <div className="flex items-center gap-1.5">
           <span className="text-sm">{sourceIcon(lead.source)}</span>
-          <span className="text-[12px] text-[#6a6a6a]">{lead.source}</span>
+          <span className="text-[12px] text-[#6b655e]">{lead.source}</span>
         </div>
         {lead.property_id && lead.property_id !== "sin-asignar" && (
-          <span className="text-[11px] text-[#6a6a6a] bg-[#f7f7f7] rounded-full px-2 py-0.5 truncate max-w-[120px]">
+          <span className="text-[11px] text-[#6b655e] bg-[#f3efe8] rounded-full px-2 py-0.5 truncate max-w-[120px]">
             Prop: {lead.property_id.slice(0, 8)}…
           </span>
         )}
@@ -195,8 +195,8 @@ function LeadCard({ lead }: { lead: Lead }) {
 function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
     <div className="rounded-[12px] bg-white p-5">
-      <p className="text-[13px] text-[#6a6a6a] mb-1">{label}</p>
-      <p className={`text-[24px] font-semibold ${accent ? "text-[#ff385c]" : "text-[#222222]"}`}>
+      <p className="text-[13px] text-[#6b655e] mb-1">{label}</p>
+      <p className={`text-[24px] font-semibold ${accent ? "text-[#c4584c]" : "text-[#1e1c1a]"}`}>
         {value}
       </p>
     </div>
@@ -229,7 +229,7 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
   const enNegociacion = leads.filter((l) => l.status === "Negociacion").length;
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV — Airbnb Design System con RBAC
           ══════════════════════════════════════════════ */}
@@ -239,30 +239,29 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
           CANVAS BODY
           ══════════════════════════════════════════════ */}
       <main
-        className="w-full max-w-[1400px] mx-auto px-6 md:px-10"
-        style={{ paddingTop: "calc(80px + 40px)" }}
+        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pt-8 md:pt-12"
       >
         {/* ── Breadcrumb ─────────────────────────────── */}
         <div className="flex items-center gap-2 mb-6">
-          <a href="/" className="flex items-center gap-1 text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline">
+          <a href="/" className="flex items-center gap-1 text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors no-underline">
             <IconChevronLeft />
             Inicio
           </a>
-          <span className="text-[13px] text-[#ebebeb]">/</span>
-          <span className="text-[13px] text-[#222222] font-medium">Leads</span>
+          <span className="text-[13px] text-[#e2dcd2]">/</span>
+          <span className="text-[13px] text-[#1e1c1a] font-medium">Leads</span>
         </div>
 
         {/* ── Page header ────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f7f7f7]">
+            <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f3efe8]">
               <IconTarget />
             </div>
             <div>
-              <h1 className="text-[22px] font-medium tracking-[-0.44px] text-[#222222]">
+              <h1 className="page-title text-[22px] font-medium tracking-[-0.44px] text-[#1e1c1a]">
                 CRM de Leads
               </h1>
-              <p className="text-[13px] text-[#6a6a6a] mt-0.5">
+              <p className="text-[13px] text-[#6b655e] mt-0.5">
                 Prospectos generados automáticamente al agendar visitas.
               </p>
             </div>
@@ -281,17 +280,17 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
         {/* ── Filters bar ────────────────────────────── */}
         <div className="flex flex-col sm:flex-row gap-3 mb-8">
           {/* Search */}
-          <div className="flex items-center gap-2.5 rounded-full border border-[#ebebeb] bg-white px-4 py-2.5 flex-1 max-w-[400px] focus-within:border-[#222222] transition-colors">
+          <div className="flex items-center gap-2.5 rounded-full border border-[#e2dcd2] bg-white px-4 py-2.5 flex-1 max-w-[400px] focus-within:border-[#1e1c1a] transition-colors">
             <IconSearch />
             <input
               type="text"
               placeholder="Buscar por nombre, email o teléfono…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none text-[14px] text-[#222222] placeholder:text-[#b0b0b0] w-full"
+              className="bg-transparent outline-none text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] w-full"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="text-[#6a6a6a] hover:text-[#222222] cursor-pointer text-sm">
+              <button onClick={() => setSearch("")} className="text-[#6b655e] hover:text-[#1e1c1a] cursor-pointer text-sm">
                 ✕
               </button>
             )}
@@ -313,8 +312,8 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
                 onClick={() => setFilterStatus(f.value)}
                 className={`rounded-full px-4 py-2 text-[13px] font-medium transition-colors cursor-pointer ${
                   filterStatus === f.value
-                    ? "bg-[#222222] text-white"
-                    : "bg-white text-[#6a6a6a] hover:text-[#222222]"
+                    ? "bg-[#1e1c1a] text-white"
+                    : "bg-white text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 {f.label}
@@ -326,16 +325,16 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
         {/* ── Leads Grid ─────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[12px] bg-white py-20 px-8">
-            <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-[#f3efe8] flex items-center justify-center mb-4">
               <IconTarget />
             </div>
-            <p className="text-[14px] text-[#6a6a6a] mb-1">
+            <p className="text-[14px] text-[#6b655e] mb-1">
               {search || filterStatus !== "all"
                 ? "No se encontraron leads con esos filtros."
                 : "No hay leads registrados aún."}
             </p>
             {!search && filterStatus === "all" && (
-              <p className="text-[13px] text-[#b0b0b0]">
+              <p className="text-[13px] text-[#a39d94]">
                 Los leads aparecerán aquí cuando un cliente agende una visita.
               </p>
             )}
@@ -349,15 +348,15 @@ export default function LeadsClient({ leads }: { leads: Lead[] }) {
         )}
 
         {/* ── Footer ─────────────────────────────────── */}
-        <footer className="py-10 border-t border-[#ebebeb] mt-12">
+        <footer className="py-10 border-t border-[#e2dcd2] mt-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[13px] text-[#6a6a6a]">
+            <p className="text-[13px] text-[#6b655e]">
               © {new Date().getFullYear()} RealtyHub. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-6">
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">Soporte</span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">Privacidad</span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">Términos</span>
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">Soporte</span>
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">Privacidad</span>
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">Términos</span>
             </div>
           </div>
         </footer>

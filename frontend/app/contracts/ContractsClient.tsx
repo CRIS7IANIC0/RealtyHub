@@ -3,8 +3,8 @@
 /* ─────────────────────────────────────────────────────────────
    ContractsClient — Client Component
    Módulo de Gestión de Contratos · Strict Airbnb Design System
-   Canvas fondo #f7f7f7 · Cero sombras · Precio en 16px font-semibold (#222222)
-   Pills para el estado · Botón principal en Rausch (#ff385c) rounded-full
+   Canvas fondo #f3efe8 · Cero sombras · Precio en 16px font-semibold (#1e1c1a)
+   Pills para el estado · Botón principal en Rausch (#c4584c) rounded-full
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
@@ -72,7 +72,7 @@ function IconPlus() {
 
 function IconSearch() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -81,7 +81,7 @@ function IconSearch() {
 
 function IconFileText() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -93,7 +93,7 @@ function IconFileText() {
 
 function IconBuilding() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] shrink-0">
       <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
       <path d="M9 22v-4h6v4" />
       <path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01" />
@@ -103,7 +103,7 @@ function IconBuilding() {
 
 function IconUser() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] shrink-0">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -112,7 +112,7 @@ function IconUser() {
 
 function IconUserCheck() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a] shrink-0">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e] shrink-0">
       <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="8.5" cy="7" r="4" />
       <polyline points="17 11 19 13 23 9" />
@@ -131,7 +131,7 @@ function IconCheckCircle() {
 
 function IconBell() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#222222]">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#1e1c1a]">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -258,7 +258,7 @@ export default function ContractsClient({
     .reduce((sum, c) => sum + (c.price || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV (AIRBNB CLEAN HEADER con RBAC)
           ══════════════════════════════════════════════ */}
@@ -268,29 +268,23 @@ export default function ContractsClient({
           CANVAS BODY
           ══════════════════════════════════════════════ */}
       <main
-        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16"
-        style={{ paddingTop: "calc(80px + 36px)" }}
+        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16 pt-8 md:pt-12"
       >
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[12px] font-semibold uppercase tracking-wider text-[#ff385c] bg-[#ff385c]/10 px-2.5 py-0.5 rounded-full">
-                Módulo Comercial
-              </span>
-            </div>
-            <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#222222]">
+            <h1 className="page-title text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#1e1c1a]">
               Gestión de Contratos
             </h1>
-            <p className="text-[14px] text-[#6a6a6a] mt-1">
-              Registro y administración de cierres de ventas y alquileres con automatización por eventos.
+            <p className="text-[14px] text-[#6b655e] mt-1">
+              Registro y administración de cierres de ventas y alquileres con generación automática de comisiones y avisos.
             </p>
           </div>
 
-          {/* Botón principal en color Rausch (#ff385c), rounded-full */}
+          {/* Botón principal en color Rausch (#c4584c), rounded-full */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-medium transition-colors cursor-pointer shadow-none self-start sm:self-auto"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white text-[14px] font-medium transition-colors cursor-pointer shadow-none self-start sm:self-auto"
           >
             <IconPlus />
             <span>Nuevo Contrato</span>
@@ -299,21 +293,21 @@ export default function ContractsClient({
 
         {/* ── KPI Strip ─────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Total Contratos</p>
-            <p className="text-[24px] font-semibold text-[#222222]">{totalCount}</p>
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Total Contratos</p>
+            <p className="text-[24px] font-semibold text-[#1e1c1a]">{totalCount}</p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Contratos Firmados</p>
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Contratos Firmados</p>
             <p className="text-[24px] font-semibold text-emerald-700">{signedCount}</p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Pendientes</p>
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Pendientes</p>
             <p className="text-[24px] font-semibold text-amber-700">{draftCount}</p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Volumen Firmado</p>
-            <p className="text-[20px] sm:text-[22px] font-semibold text-[#222222] truncate">
+          <div className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none">
+            <p className="text-[13px] text-[#6b655e] mb-1">Volumen Firmado</p>
+            <p className="text-[20px] sm:text-[22px] font-semibold text-[#1e1c1a] truncate">
               {fmtPrice(totalVolume)}
             </p>
           </div>
@@ -331,21 +325,21 @@ export default function ContractsClient({
               placeholder="Buscar por ID, inmueble, lead, agente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-full border border-[#ebebeb] bg-white pl-11 pr-4 py-2.5 text-[14px] text-[#222222] placeholder:text-[#6a6a6a] outline-none transition-colors focus:border-[#222222]"
+              className="w-full rounded-full border border-[#e2dcd2] bg-white pl-11 pr-4 py-2.5 text-[14px] text-[#1e1c1a] placeholder:text-[#6b655e] outline-none transition-colors focus:border-[#1e1c1a]"
             />
           </div>
 
           {/* Quick Filter Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {/* Estado filter */}
-            <div className="inline-flex rounded-full border border-[#ebebeb] bg-white p-1">
+            <div className="inline-flex rounded-full border border-[#e2dcd2] bg-white p-1">
               <button
                 type="button"
                 onClick={() => setFilterStatus("all")}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterStatus === "all"
-                    ? "bg-[#222222] text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    ? "bg-[#1e1c1a] text-white"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Todos ({totalCount})
@@ -356,7 +350,7 @@ export default function ContractsClient({
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterStatus === "Firmado"
                     ? "bg-emerald-700 text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Firmados ({signedCount})
@@ -367,7 +361,7 @@ export default function ContractsClient({
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterStatus === "Pendiente"
                     ? "bg-amber-600 text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Pendientes ({draftCount})
@@ -375,14 +369,14 @@ export default function ContractsClient({
             </div>
 
             {/* Tipo filter */}
-            <div className="inline-flex rounded-full border border-[#ebebeb] bg-white p-1">
+            <div className="inline-flex rounded-full border border-[#e2dcd2] bg-white p-1">
               <button
                 type="button"
                 onClick={() => setFilterType("all")}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterType === "all"
-                    ? "bg-[#222222] text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    ? "bg-[#1e1c1a] text-white"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Tipo: Todos
@@ -392,8 +386,8 @@ export default function ContractsClient({
                 onClick={() => setFilterType("Venta")}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterType === "Venta"
-                    ? "bg-[#ff385c] text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    ? "bg-[#b04e42] text-white"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Venta
@@ -403,8 +397,8 @@ export default function ContractsClient({
                 onClick={() => setFilterType("Alquiler")}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium transition-colors cursor-pointer ${
                   filterType === "Alquiler"
-                    ? "bg-[#ff385c] text-white"
-                    : "text-[#6a6a6a] hover:text-[#222222]"
+                    ? "bg-[#b04e42] text-white"
+                    : "text-[#6b655e] hover:text-[#1e1c1a]"
                 }`}
               >
                 Alquiler
@@ -414,28 +408,28 @@ export default function ContractsClient({
         </div>
 
         {actionError && (
-          <div className="mb-4 rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[13px] text-[#c13515]">
+          <div className="mb-4 rounded-[8px] border border-[#e2dcd2] bg-white px-4 py-3 text-[13px] text-[#a64739]">
             {actionError}
           </div>
         )}
 
         {/* ── Contracts Grid (Airbnb Design System) ───────────────── */}
         {filteredContracts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[12px] bg-white border border-[#ebebeb] py-16 px-8 text-center shadow-none">
-            <div className="w-14 h-14 rounded-full bg-[#f7f7f7] flex items-center justify-center text-[#6a6a6a] mb-4">
+          <div className="flex flex-col items-center justify-center rounded-[12px] bg-white border border-[#e2dcd2] py-16 px-8 text-center shadow-none">
+            <div className="w-14 h-14 rounded-full bg-[#f3efe8] flex items-center justify-center text-[#6b655e] mb-4">
               <IconFileText />
             </div>
-            <h3 className="text-[17px] font-semibold text-[#222222] mb-1">
+            <h3 className="text-[17px] font-semibold text-[#1e1c1a] mb-1">
               No se encontraron contratos
             </h3>
-            <p className="text-[14px] text-[#6a6a6a] max-w-md mb-6">
+            <p className="text-[14px] text-[#6b655e] max-w-md mb-6">
               {contracts.length === 0
                 ? "Aún no hay contratos registrados. Crea el primer contrato para iniciar los cierres de venta o alquiler."
                 : "No hay contratos que coincidan con los filtros o el término de búsqueda actual."}
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-medium transition-colors cursor-pointer shadow-none"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white text-[14px] font-medium transition-colors cursor-pointer shadow-none"
             >
               <IconPlus />
               <span>Registrar Contrato</span>
@@ -453,19 +447,19 @@ export default function ContractsClient({
               return (
                 <div
                   key={contract.id}
-                  className="rounded-[12px] bg-white p-5 border border-[#ebebeb] shadow-none hover:border-[#222222] transition-colors flex flex-col justify-between"
+                  className="rounded-[12px] bg-white p-5 border border-[#e2dcd2] shadow-none hover:border-[#1e1c1a] transition-colors flex flex-col justify-between"
                 >
                   <div>
                     {/* Card Top: Type badge + Status pill */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#f7f7f7] text-[#222222]">
+                        <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#f3efe8] text-[#1e1c1a]">
                           {contract.operation_type || contract.type}
                         </span>
                         {isSigned && (
                           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full" title="Evento contract.signed emitido a RabbitMQ">
                             <IconCheckCircle />
-                            <span>RabbitMQ</span>
+                            <span>Automático</span>
                           </span>
                         )}
                       </div>
@@ -477,21 +471,21 @@ export default function ContractsClient({
                       </span>
                     </div>
 
-                    {/* Price in 16px font-semibold (#222222 Hof) */}
+                    {/* Price in 16px font-semibold (#1e1c1a Hof) */}
                     <div className="mb-4">
-                      <p className="text-[12px] text-[#6a6a6a] mb-0.5">Precio pactado</p>
-                      <p className="text-[16px] font-semibold text-[#222222] tracking-tight">
+                      <p className="text-[12px] text-[#6b655e] mb-0.5">Precio pactado</p>
+                      <p className="text-[16px] font-semibold text-[#1e1c1a] tracking-tight">
                         {fmtPrice(contract.price)}
                       </p>
                     </div>
 
                     {/* Details: Property, Lead, Agent */}
-                    <div className="space-y-2.5 pt-3 border-t border-[#f7f7f7] mb-4">
+                    <div className="space-y-2.5 pt-3 border-t border-[#f3efe8] mb-4">
                       {/* Property */}
                       <div className="flex items-start gap-2.5">
                         <IconBuilding />
                         <div className="min-w-0 text-[13px]">
-                          <p className="font-medium text-[#222222] truncate">
+                          <p className="font-medium text-[#1e1c1a] truncate">
                             {prop?.title || prop?.address || "Inmueble"}
                           </p>
                         </div>
@@ -501,7 +495,7 @@ export default function ContractsClient({
                       <div className="flex items-start gap-2.5">
                         <IconUser />
                         <div className="min-w-0 text-[13px]">
-                          <p className="font-medium text-[#222222] truncate">
+                          <p className="font-medium text-[#1e1c1a] truncate">
                             {lead?.name || "Cliente / Prospecto"}
                           </p>
                         </div>
@@ -511,7 +505,7 @@ export default function ContractsClient({
                       <div className="flex items-start gap-2.5">
                         <IconUserCheck />
                         <div className="min-w-0 text-[13px]">
-                          <p className="font-medium text-[#222222] truncate">
+                          <p className="font-medium text-[#1e1c1a] truncate">
                             {agent?.name || "Agente Inmobiliario"}
                           </p>
                         </div>
@@ -527,8 +521,8 @@ export default function ContractsClient({
                       disabled={busyId === contract.id}
                       className={`flex-1 px-4 py-2 rounded-full text-[13px] font-medium transition-colors cursor-pointer disabled:opacity-50 ${
                         isSigned
-                          ? "border border-[#ebebeb] text-[#222222] hover:border-[#222222]"
-                          : "bg-[#ff385c] hover:bg-[#d90b3e] text-white"
+                          ? "border border-[#e2dcd2] text-[#1e1c1a] hover:border-[#1e1c1a]"
+                          : "bg-[#b04e42] hover:bg-[#a64739] text-white"
                       }`}
                     >
                       {isSigned ? "Marcar como pendiente" : "Marcar como firmado"}
@@ -537,20 +531,20 @@ export default function ContractsClient({
                       type="button"
                       onClick={() => downloadPdf(contract)}
                       disabled={busyId === contract.id}
-                      className="px-4 py-2 rounded-full border border-[#ebebeb] text-[13px] font-medium text-[#222222] hover:border-[#222222] transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-4 py-2 rounded-full border border-[#e2dcd2] text-[13px] font-medium text-[#1e1c1a] hover:border-[#1e1c1a] transition-colors cursor-pointer disabled:opacity-50"
                     >
                       PDF
                     </button>
                   </div>
 
                   {/* Card Footer: Dates & Contract ID */}
-                  <div className="pt-3 border-t border-[#ebebeb] flex items-center justify-between text-[11px] text-[#6a6a6a]">
+                  <div className="pt-3 border-t border-[#e2dcd2] flex items-center justify-between text-[11px] text-[#6b655e]">
                     <span>
                       {isSigned && contract.signed_at
                         ? `Firmado: ${fmtDate(contract.signed_at)}`
                         : `Creado: ${fmtDate(contract.created_at)}`}
                     </span>
-                    <span className="font-mono text-[10px] text-[#6a6a6a] bg-[#f7f7f7] px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-[10px] text-[#6b655e] bg-[#f3efe8] px-1.5 py-0.5 rounded">
                       {contract.id.slice(0, 8)}…
                     </span>
                   </div>
@@ -572,8 +566,8 @@ export default function ContractsClient({
             className="w-full max-w-[420px] rounded-[16px] bg-white p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-[18px] font-semibold text-[#222222] mb-2">¿Volver a Pendiente?</h2>
-            <p className="text-[14px] text-[#6a6a6a] mb-6">
+            <h2 className="text-[18px] font-semibold text-[#1e1c1a] mb-2">¿Volver a Pendiente?</h2>
+            <p className="text-[14px] text-[#6b655e] mb-6">
               El contrato de «{propMap.get(confirmRevert.property_id)?.title || "este inmueble"}» dejará de
               figurar como firmado. Las comisiones ya generadas no se revierten automáticamente.
             </p>
@@ -582,7 +576,7 @@ export default function ContractsClient({
                 type="button"
                 onClick={() => setConfirmRevert(null)}
                 disabled={busyId !== null}
-                className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -590,7 +584,7 @@ export default function ContractsClient({
                 type="button"
                 onClick={() => changeStatus(confirmRevert, "Pendiente")}
                 disabled={busyId !== null}
-                className="px-5 py-2.5 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50"
               >
                 {busyId !== null ? "Guardando…" : "Sí, marcar pendiente"}
               </button>

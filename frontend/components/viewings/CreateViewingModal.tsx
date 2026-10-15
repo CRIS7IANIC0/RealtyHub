@@ -149,8 +149,8 @@ export default function CreateViewingModal({
   if (!isOpen) return null;
 
   const inputClass =
-    "w-full rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-[#b0b0b0] outline-none transition-colors focus:border-[#222222]";
-  const labelClass = "block text-[13px] font-medium text-[#222222] mb-1.5";
+    "w-full rounded-[8px] border border-[#e2dcd2] bg-white px-4 py-3 text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] outline-none transition-colors focus:border-[#1e1c1a]";
+  const labelClass = "block text-[13px] font-medium text-[#1e1c1a] mb-1.5";
 
   return (
     <div
@@ -164,18 +164,18 @@ export default function CreateViewingModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#ebebeb] mb-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#e2dcd2] mb-6">
           <div>
-            <h2 className="text-[20px] font-bold text-[#222222] tracking-tight">
+            <h2 className="text-[20px] font-bold text-[#1e1c1a] tracking-tight">
               Agendar Nueva Visita
             </h2>
-            <p className="text-[13px] text-[#6a6a6a] mt-0.5">
+            <p className="text-[13px] text-[#6b655e] mt-0.5">
               Conecta un prospecto con una propiedad. Ingresará al pool en estado &apos;Pendiente&apos;.
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6a6a6a] hover:bg-[#f7f7f7] hover:text-[#222222] transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b655e] hover:bg-[#f3efe8] hover:text-[#1e1c1a] transition-colors cursor-pointer"
           >
             <IconX />
           </button>
@@ -201,11 +201,11 @@ export default function CreateViewingModal({
           {/* Propiedad (ID o Selector) */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[13px] font-medium text-[#222222]">
-                Propiedad <span className="text-[#ff385c]">*</span>
+              <label className="text-[13px] font-medium text-[#1e1c1a]">
+                Propiedad <span className="text-[#c4584c]">*</span>
               </label>
               {properties.length > 0 && (
-                <span className="text-[11px] text-[#6a6a6a]">
+                <span className="text-[11px] text-[#6b655e]">
                   {properties.length} disponibles
                 </span>
               )}
@@ -225,14 +225,14 @@ export default function CreateViewingModal({
                     </option>
                   ))}
                 </select>
-                <div className="text-[11px] text-[#6a6a6a] flex items-center gap-1">
+                <div className="text-[11px] text-[#6b655e] flex items-center gap-1">
                   <span>O escribe el UUID exacto:</span>
                   <input
                     type="text"
                     placeholder="Escribir ID manual..."
                     value={propertyId}
                     onChange={(e) => setPropertyId(e.target.value)}
-                    className="flex-1 bg-[#f7f7f7] px-2 py-1 rounded text-[12px] border border-[#ebebeb] text-[#222222] outline-none focus:border-[#222222]"
+                    className="flex-1 bg-[#f3efe8] px-2 py-1 rounded text-[12px] border border-[#e2dcd2] text-[#1e1c1a] outline-none focus:border-[#1e1c1a]"
                   />
                 </div>
               </div>
@@ -251,11 +251,11 @@ export default function CreateViewingModal({
           {/* Lead (ID o Selector) */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[13px] font-medium text-[#222222]">
-                Prospecto (Lead) <span className="text-[#ff385c]">*</span>
+              <label className="text-[13px] font-medium text-[#1e1c1a]">
+                Prospecto (Lead) <span className="text-[#c4584c]">*</span>
               </label>
               {leads.length > 0 && (
-                <span className="text-[11px] text-[#6a6a6a]">
+                <span className="text-[11px] text-[#6b655e]">
                   {leads.length} registrados
                 </span>
               )}
@@ -275,14 +275,14 @@ export default function CreateViewingModal({
                     </option>
                   ))}
                 </select>
-                <div className="text-[11px] text-[#6a6a6a] flex items-center gap-1">
+                <div className="text-[11px] text-[#6b655e] flex items-center gap-1">
                   <span>O escribe el UUID exacto:</span>
                   <input
                     type="text"
                     placeholder="Escribir ID manual..."
                     value={leadId}
                     onChange={(e) => setLeadId(e.target.value)}
-                    className="flex-1 bg-[#f7f7f7] px-2 py-1 rounded text-[12px] border border-[#ebebeb] text-[#222222] outline-none focus:border-[#222222]"
+                    className="flex-1 bg-[#f3efe8] px-2 py-1 rounded text-[12px] border border-[#e2dcd2] text-[#1e1c1a] outline-none focus:border-[#1e1c1a]"
                   />
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function CreateViewingModal({
           {/* Fecha y Hora (datetime-local) */}
           <div>
             <label className={labelClass}>
-              Fecha y Hora de la Visita <span className="text-[#ff385c]">*</span>
+              Fecha y Hora de la Visita <span className="text-[#c4584c]">*</span>
             </label>
             <input
               type="datetime-local"
@@ -310,25 +310,25 @@ export default function CreateViewingModal({
               className={inputClass}
               required
             />
-            <p className="text-[11px] text-[#6a6a6a] mt-1">
+            <p className="text-[11px] text-[#6b655e] mt-1">
               El sistema validará automáticamente que la propiedad no tenga otra visita agendada en ese horario.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#ebebeb] mt-6">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#e2dcd2] mt-6">
             <button
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="rounded-full border border-[#ebebeb] px-5 py-2.5 text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors disabled:opacity-50 cursor-pointer"
+              className="rounded-full border border-[#e2dcd2] px-5 py-2.5 text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] px-6 py-2.5 text-[14px] font-semibold text-white transition-colors disabled:opacity-50 shadow-sm cursor-pointer active:scale-95"
+              className="flex items-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] px-6 py-2.5 text-[14px] font-semibold text-white transition-colors disabled:opacity-50 shadow-sm cursor-pointer active:scale-95"
             >
               {submitting && <IconLoader />}
               {submitting ? "Agendando..." : "Confirmar Visita"}

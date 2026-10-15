@@ -1,43 +1,86 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────
-   RealtyHub — Strict Corporate Design System
+   RealtyHub — Sistema de diseño (editorial cálido)
+   Colores en OKLCH-friendly hex, croma bajo: nada saturado.
    ───────────────────────────────────────────── */
 
 :root {
-  /* Brand Palette */
-  --rh-rausch: #ff385c;         /* Accent / Brand red-coral */
-  --rh-hof: #222222;            /* Primary text */
-  --rh-foggy: #6a6a6a;          /* Secondary text */
-  --rh-bebe: #ebebeb;           /* Subtle borders */
-  --rh-canvas: #f7f7f7;         /* Page background */
-  --rh-white: #ffffff;           /* Card / surface */
+  /* Superficies */
+  --rh-canvas: #f3efe8;        /* fondo hueso */
+  --rh-surface: #faf8f4;       /* tarjetas, campos */
+  --rh-sand: #ece6dc;          /* bloques secundarios */
+  --rh-line: #e2dcd2;          /* bordes finos */
+  --rh-line-strong: #cfc7ba;
 
-  /* Spacing tokens */
-  --rh-section-gap: 48px;
-  --rh-nav-height: 80px;
+  /* Texto */
+  --rh-ink: #1e1c1a;           /* tinta cálida */
+  --rh-muted: #6b655e;         /* texto secundario (5.2:1 sobre canvas) */
+  --rh-faint: #716b63;         /* placeholders, deshabilitado */
 
-  /* Radii */
+  /* Acento: terracota apagado. Solo acción primaria y precio. */
+  --rh-accent: #c4584c;
+  --rh-accent-strong: #a64739;
+  --rh-accent-soft: #f3e2de;
+
+  /* Secundario: azul polvo para campos de sección y detalles */
+  --rh-dusk: #8e9ab3;
+  --rh-dusk-soft: #dfe3ec;
+  --rh-dusk-deep: #2c3445;     /* bloque oscuro de sección */
+  --rh-night: #151922;         /* secciones oscuras, precarga */
+
+  /* Alias heredados (el código existente usa estos nombres) */
+  --rh-rausch: var(--rh-accent);
+  --rh-hof: var(--rh-ink);
+  --rh-foggy: var(--rh-muted);
+  --rh-bebe: var(--rh-line);
+  --rh-white: var(--rh-surface);
+
+  --rh-section-gap: 96px;
+  --rh-nav-height: 72px;
+  --rh-sidebar: 248px;
+
   --rh-radius-card: 12px;
   --rh-radius-pill: 9999px;
-}
 
-/* Tailwind v4 — register design-system colours */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --base-delay: 3400ms; /* espera la precarga en la primera visita */
+}
+.rh-seen { --base-delay: 100ms; }
+
 @theme inline {
-  --color-rausch: var(--rh-rausch);
-  --color-hof: var(--rh-hof);
-  --color-foggy: var(--rh-foggy);
-  --color-bebe: var(--rh-bebe);
+  --color-rausch: var(--rh-accent);
+  --color-accent: var(--rh-accent);
+  --color-hof: var(--rh-ink);
+  --color-ink: var(--rh-ink);
+  --color-foggy: var(--rh-muted);
+  --color-bebe: var(--rh-line);
   --color-canvas: var(--rh-canvas);
-  --color-surface: var(--rh-white);
+  --color-surface: var(--rh-surface);
+  --color-sand: var(--rh-sand);
+  --color-dusk: var(--rh-dusk);
 
   --color-background: var(--rh-canvas);
-  --color-foreground: var(--rh-hof);
+  --color-foreground: var(--rh-ink);
 
-  --font-sans: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Las utilidades de Tailwind (bg-white, text-gray-500…) heredan la paleta cálida */
+  --color-white: #faf8f4;
+  --color-black: #14110f;
+  --color-gray-50: #f6f2ea;
+  --color-gray-100: #efe9df;
+  --color-gray-200: #e2dcd2;
+  --color-gray-300: #cfc7ba;
+  --color-gray-400: #a39d94;
+  --color-gray-500: #6b655e;
+  --color-gray-600: #5a544d;
+  --color-gray-700: #433e39;
+  --color-gray-800: #2b2825;
+  --color-gray-900: #1e1c1a;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ── Base resets ─────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -48,32 +91,237 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   background: var(--rh-canvas);
-  color: var(--rh-hof);
-  font-family: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  color: var(--rh-ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
 }
 
-/* ── Utility: hide scrollbar but keep scroll ── */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* Titulares: Bricolage ligera, cerrada, grande */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
 }
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+/* Títulos con peso medio, como Sinergia; sobrescribe font-light/extralight heredados */
+.font-display, h1, h2, h3 { font-weight: 500; }
+/* Acento editorial: cursiva serif dentro de titulares */
+/* Acento en titulares: mismo tipo, en color (sin cursiva) */
+.accent-i {
+  font-style: normal;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  font-size: 1em;
 }
 
-/* ── Smooth image loading ────────────────────── */
-/* En @layer base para que utilidades como h-full / object-cover puedan sobrescribirlo */
-@layer base {
-  img {
-    display: block;
-    max-width: 100%;
-    height: auto;
+/* Cuando hay barra lateral (equipo autenticado, escritorio) */
+@media (min-width: 1024px) {
+  body.has-sidebar {
+    padding-left: var(--rh-sidebar);
   }
 }
+
+/* ── Elementos del navegador con la paleta ────── */
+::selection {
+  background: var(--rh-accent);
+  color: #faf8f4;
+}
+:focus-visible {
+  outline: 2px solid var(--rh-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+input, select, textarea {
+  caret-color: var(--rh-accent);
+  accent-color: var(--rh-accent);
+}
+html {
+  scrollbar-color: var(--rh-line-strong) var(--rh-canvas);
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--rh-canvas); }
+::-webkit-scrollbar-thumb { background: var(--rh-line-strong); border-radius: 999px; border: 2px solid var(--rh-canvas); }
+td, th, .tabular { font-variant-numeric: tabular-nums; }
+
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+@layer base {
+  img { display: block; max-width: 100%; height: auto; }
+}
+
+/* ── Revelado al hacer scroll (contenido visible por defecto) ── */
+.reveal-ready .reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-ready .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Entrada del hero (tras la precarga) ── */
+.hero-word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.hero-word {
+  display: inline-block;
+  transform: translateY(108%);
+  animation: hero-rise 1.1s var(--ease-out) forwards;
+  animation-delay: calc(var(--base-delay) + var(--i) * 70ms);
+}
+@keyframes hero-rise { to { transform: none; } }
+.hero-fade {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: hero-fade 1s var(--ease-out) forwards;
+  animation-delay: calc(var(--base-delay) + 450ms + var(--fd, 0ms));
+}
+@keyframes hero-fade { to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-word, .hero-fade { animation: none; opacity: 1; transform: none; }
+  .reveal-ready .reveal,
+  .reveal-ready .reveal.is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Título de página: la misma voz en panel, catálogo y detalle.
+   Va sin capa para ganar a las utilidades de tamaño/peso heredadas. */
+.page-title {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+/* ── Cursor propio (solo puntero fino y sin reduced-motion) ── */
+html.has-cursor, html.has-cursor * { cursor: none !important; }
+html.has-cursor input, html.has-cursor textarea { cursor: text !important; }
+
+/* ── Marquesina ── */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+/* ── Fondo del hero: zoom lento ── */
+@keyframes kenburns { from { transform: scale(1.0); } to { transform: scale(1.12); } }
+.kenburns { animation: kenburns 24s ease-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .kenburns { animation: none; } }
+
+/* ── Lenis ── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ── Grano sutil sobre secciones oscuras ── */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ── Malla de color animada (cuando no hay foto) ── */
+.hero-mesh {
+  background:
+    radial-gradient(60% 70% at 20% 30%, rgba(176, 78, 66, 0.55), transparent 60%),
+    radial-gradient(55% 60% at 80% 20%, rgba(142, 154, 179, 0.45), transparent 60%),
+    radial-gradient(70% 70% at 60% 90%, rgba(44, 52, 69, 0.9), transparent 65%),
+    #151922;
+  background-size: 140% 140%;
+  animation: mesh 18s ease-in-out infinite alternate;
+}
+@keyframes mesh { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+@media (prefers-reduced-motion: reduce) { .hero-mesh { animation: none; } }
+
+/* ── Login: entrada escalonada, chips flotantes, botón con destello ── */
+.login-rise { opacity: 0; transform: translateY(26px); animation: login-rise 1s var(--ease-out) forwards; animation-delay: var(--d, 0ms); }
+@keyframes login-rise { to { opacity: 1; transform: none; } }
+.login-float { animation: login-rise 1s var(--ease-out) forwards, login-bob 5s ease-in-out infinite; animation-delay: var(--d, 0ms), calc(var(--d, 0ms) + 1s + var(--f, 0s)); }
+@keyframes login-bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+.btn-shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-shine::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+  transform: translateX(-120%); transition: transform 0.9s var(--ease-out);
+}
+.btn-shine:hover::after { transform: translateX(120%); }
+.field-wrap { position: relative; }
+.field-wrap::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 0; height: 2px; border-radius: 2px;
+  background: var(--rh-accent); transform: scaleX(0); transform-origin: left; transition: transform 0.5s var(--ease-out);
+}
+.field-wrap:focus-within::after { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  .login-rise, .login-float { opacity: 1; transform: none; animation: none; }
+}
+
+/* ── SplitText: palabras desde una máscara ── */
+.split-w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.split-w > span { display: inline-block; }
+.reveal-ready .split .split-w > span { transform: translateY(112%); }
+.reveal-ready .split.is-in .split-w > span {
+  transform: none;
+  transition: transform 1s var(--ease-out);
+  transition-delay: calc(var(--sd, 0ms) + var(--i) * 55ms);
+}
+@media (prefers-reduced-motion: reduce) { .reveal-ready .split .split-w > span { transform: none; } }
+
+/* ── Texto que rueda al pasar el cursor (nav, botones) ── */
+.roll-wrap { position: relative; display: inline-block; overflow: hidden; height: 1.3em; line-height: 1.3; vertical-align: bottom; }
+.roll-wrap > span { display: block; transition: transform 0.55s var(--ease-out); }
+a:hover .roll-wrap > span, button:hover .roll-wrap > span { transform: translateY(-100%); }
+.roll-wrap > span:last-child { position: absolute; left: 0; top: 100%; }
+
+/* ── Foco de luz que sigue al puntero en el hero ── */
+.hero-spot { background: radial-gradient(520px circle at var(--mx, 70%) var(--my, 40%), rgba(231,180,168,0.20), transparent 62%); }
+
+/* ── Tarjetas del catálogo: entrada escalonada al cambiar el filtro ── */
+.card-in { animation: card-in 0.8s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes card-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .card-in { animation: none; } }
+
+/* ── Botones que se "hunden" al presionarlos ──
+   Usa la propiedad `scale` (independiente de `transform`) para no pelear con
+   el efecto magnético, que mueve los botones con transform inline. */
+button, [role="button"], a.rounded-full, a[data-magnetic], summary {
+  transition: scale 0.18s var(--ease-out), filter 0.18s ease;
+}
+button:not(:disabled):active,
+[role="button"]:active,
+a.rounded-full:active,
+a[data-magnetic]:active,
+summary:active {
+  scale: 0.94;
+  filter: brightness(0.9);
+  transition-duration: 0.07s;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active, [role="button"]:active, a.rounded-full:active, a[data-magnetic]:active { scale: 1; }
+}
+
+/* ── Logo-botón: la casita se redibuja al pasar el cursor ── */
+.brand svg path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.brand:hover svg path { animation: brand-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1); }
+.brand:hover svg path:nth-child(2) { animation-delay: 0.12s; animation-fill-mode: backwards; }
+.brand:hover svg path:nth-child(3) { animation-delay: 0.3s; animation-fill-mode: backwards; }
+@keyframes brand-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.brand { box-shadow: inset 0 0 0 1px transparent; }
+.brand:hover { box-shadow: inset 0 0 0 1px rgba(127, 120, 110, 0.35); }
+@media (prefers-reduced-motion: reduce) { .brand:hover svg path { animation: none; } }

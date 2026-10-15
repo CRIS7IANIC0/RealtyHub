@@ -275,9 +275,9 @@ export default function CreatePropertyModal({
 
   /* ── Shared classes ──────────────────────────────────────── */
   const inputClass =
-    "w-full rounded-[10px] border border-[#ebebeb] bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-[#b0b0b0] outline-none transition-colors focus:border-[#222222]";
+    "w-full rounded-[10px] border border-[#e2dcd2] bg-white px-4 py-3 text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] outline-none transition-colors focus:border-[#1e1c1a]";
 
-  const labelClass = "block text-[13px] font-medium text-[#222222] mb-1.5";
+  const labelClass = "block text-[13px] font-medium text-[#1e1c1a] mb-1.5";
 
   return (
     /* ── Backdrop ───────────────────────────────────────────── */
@@ -293,19 +293,19 @@ export default function CreatePropertyModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#ebebeb] mb-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#e2dcd2] mb-6">
           <div>
-            <h2 className="text-[22px] font-bold tracking-tight text-[#222222]">
+            <h2 className="text-[22px] font-bold tracking-tight text-[#1e1c1a]">
               Nueva propiedad
             </h2>
-            <p className="text-[13px] text-[#6a6a6a] mt-0.5">
+            <p className="text-[13px] text-[#6b655e] mt-0.5">
               Registra un inmueble en venta o en alquiler con sus fotos.
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6a6a6a] hover:bg-[#f7f7f7] hover:text-[#222222] transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b655e] hover:bg-[#f3efe8] hover:text-[#1e1c1a] transition-colors cursor-pointer"
           >
             <IconX />
           </button>
@@ -323,12 +323,12 @@ export default function CreatePropertyModal({
           {/* Operación: Venta / Alquiler */}
           <div>
             <span className={labelClass}>
-              Operación <span className="text-[#ff385c]">*</span>
+              Operación <span className="text-[#c4584c]">*</span>
             </span>
             <div
               role="radiogroup"
               aria-label="Operación"
-              className="grid grid-cols-2 gap-1 p-1 rounded-full bg-[#f7f7f7] border border-[#ebebeb]"
+              className="grid grid-cols-2 gap-1 p-1 rounded-full bg-[#f3efe8] border border-[#e2dcd2]"
             >
               {OPERATIONS.map((op) => (
                 <button
@@ -339,8 +339,8 @@ export default function CreatePropertyModal({
                   onClick={() => setOperation(op)}
                   className={`rounded-full py-2 text-[14px] font-semibold transition-all cursor-pointer ${
                     operation === op
-                      ? "bg-white text-[#222222] shadow-sm"
-                      : "text-[#6a6a6a] hover:text-[#222222]"
+                      ? "bg-white text-[#1e1c1a] shadow-sm"
+                      : "text-[#6b655e] hover:text-[#1e1c1a]"
                   }`}
                 >
                   {op === "Venta" ? "En venta" : "En alquiler"}
@@ -352,7 +352,7 @@ export default function CreatePropertyModal({
           {/* Title */}
           <div>
             <label htmlFor="prop-title" className={labelClass}>
-              Título del inmueble <span className="text-[#ff385c]">*</span>
+              Título del inmueble <span className="text-[#c4584c]">*</span>
             </label>
             <input
               id="prop-title"
@@ -392,7 +392,7 @@ export default function CreatePropertyModal({
             </div>
             <div>
               <label htmlFor="prop-city" className={labelClass}>
-                Ciudad <span className="text-[#ff385c]">*</span>
+                Ciudad <span className="text-[#c4584c]">*</span>
               </label>
               <CityAutocomplete
                 id="prop-city"
@@ -408,7 +408,7 @@ export default function CreatePropertyModal({
           {/* Address */}
           <div>
             <label htmlFor="prop-address" className={labelClass}>
-              Dirección <span className="text-[#ff385c]">*</span>
+              Dirección <span className="text-[#c4584c]">*</span>
             </label>
             <input
               id="prop-address"
@@ -441,7 +441,7 @@ export default function CreatePropertyModal({
             <div>
               <label htmlFor="prop-price" className={labelClass}>
                 {operation === "Alquiler" ? "Canon mensual (COP)" : "Precio (COP)"}{" "}
-                <span className="text-[#ff385c]">*</span>
+                <span className="text-[#c4584c]">*</span>
               </label>
               <input
                 id="prop-price"
@@ -481,7 +481,7 @@ export default function CreatePropertyModal({
             </label>
             <label
               htmlFor="prop-files-input"
-              className="border-2 border-dashed border-gray-300 hover:border-[#ff385c] rounded-[14px] p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50/50 hover:bg-rose-50/20 text-center"
+              className="border-2 border-dashed border-gray-300 hover:border-[#c4584c] rounded-[14px] p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50/50 hover:bg-rose-50/20 text-center"
             >
               <IconUpload />
               <p className="text-[13px] font-semibold text-gray-700 mt-2">
@@ -520,14 +520,14 @@ export default function CreatePropertyModal({
                         className="w-full h-full object-cover"
                       />
                       {index === 0 && (
-                        <span className="absolute bottom-1 left-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/90 text-[#222222]">
+                        <span className="absolute bottom-1 left-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/90 text-[#1e1c1a]">
                           Portada
                         </span>
                       )}
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(index)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-[#ff385c] text-white flex items-center justify-center text-xs opacity-80 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-[#b04e42] text-white flex items-center justify-center text-xs opacity-80 group-hover:opacity-100 transition-opacity cursor-pointer"
                         title="Eliminar foto"
                       >
                         ✕
@@ -540,7 +540,7 @@ export default function CreatePropertyModal({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-[#ebebeb] pt-2" />
+          <div className="border-t border-[#e2dcd2] pt-2" />
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-1">
@@ -548,14 +548,14 @@ export default function CreatePropertyModal({
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="rounded-full px-5 py-2.5 text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors cursor-pointer disabled:opacity-50"
+              className="rounded-full px-5 py-2.5 text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] px-6 py-2.5 text-[14px] font-semibold text-white transition-all cursor-pointer shadow-sm disabled:opacity-70 active:scale-95"
+              className="flex items-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] px-6 py-2.5 text-[14px] font-semibold text-white transition-all cursor-pointer shadow-sm disabled:opacity-70 active:scale-95"
             >
               {submitting ? (
                 <>

@@ -165,10 +165,10 @@ export default function CreateUserModal({
 
   /* ── Input class helper ──────────────────────────────────── */
   const inputClass =
-    "w-full rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-[#b0b0b0] outline-none transition-colors focus:border-[#222222]";
+    "w-full rounded-[8px] border border-[#e2dcd2] bg-white px-4 py-3 text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] outline-none transition-colors focus:border-[#1e1c1a]";
 
   const labelClass =
-    "block text-[13px] font-medium text-[#222222] mb-1.5";
+    "block text-[13px] font-medium text-[#1e1c1a] mb-1.5";
 
   return (
     /* ── Backdrop ───────────────────────────────────────────── */
@@ -185,13 +185,13 @@ export default function CreateUserModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[22px] font-medium tracking-[-0.44px] text-[#222222]">
+          <h2 className="text-[22px] font-medium tracking-[-0.44px] text-[#1e1c1a]">
             Nuevo miembro
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6a6a6a] hover:bg-[#f7f7f7] hover:text-[#222222] transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b655e] hover:bg-[#f3efe8] hover:text-[#1e1c1a] transition-colors cursor-pointer"
           >
             <IconX />
           </button>
@@ -199,7 +199,7 @@ export default function CreateUserModal({
 
         {/* Error banner */}
         {error && (
-          <div className="mb-5 rounded-[8px] bg-[#ff385c]/10 px-4 py-3 text-[13px] font-medium text-[#ff385c]">
+          <div className="mb-5 rounded-[8px] bg-[#c4584c]/10 px-4 py-3 text-[13px] font-medium text-[#c4584c]">
             {error}
           </div>
         )}
@@ -255,7 +255,7 @@ export default function CreateUserModal({
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-[#6a6a6a] hover:text-[#222222] cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] font-semibold text-[#6b655e] hover:text-[#1e1c1a] cursor-pointer"
               >
                 {showPassword ? "Ocultar" : "Mostrar"}
               </button>
@@ -301,7 +301,7 @@ export default function CreateUserModal({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-[#ebebeb]" />
+          <div className="border-t border-[#e2dcd2]" />
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-1">
@@ -309,14 +309,14 @@ export default function CreateUserModal({
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="rounded-full px-5 py-2.5 text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors cursor-pointer disabled:opacity-50"
+              className="rounded-full px-5 py-2.5 text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 rounded-full bg-[#ff385c] px-6 py-2.5 text-[14px] font-semibold text-white hover:bg-[#e0314f] transition-colors cursor-pointer disabled:opacity-70"
+              className="flex items-center gap-2 rounded-full bg-[#b04e42] px-6 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a64739] transition-colors cursor-pointer disabled:opacity-70"
             >
               {submitting ? (
                 <>

@@ -82,11 +82,11 @@ function statusPill(status: string): {
       };
     default:
       return {
-        bg: "bg-[#f7f7f7]",
-        text: "text-[#6a6a6a]",
-        border: "border-[#ebebeb]",
+        bg: "bg-[#f3efe8]",
+        text: "text-[#6b655e]",
+        border: "border-[#e2dcd2]",
         label: status || "Pendiente",
-        dot: "bg-[#b0b0b0]",
+        dot: "bg-[#a39d94]",
       };
   }
 }
@@ -125,7 +125,7 @@ function IconPlus() {
 
 function IconSearch() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -154,7 +154,7 @@ function IconClock() {
 
 function IconHome() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
@@ -163,7 +163,7 @@ function IconHome() {
 
 function IconUser() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6a6a6a]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#6b655e]">
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -215,7 +215,7 @@ function ViewingCard({
   const isAgent = currentUser?.role?.toUpperCase() === "AGENTE";
 
   return (
-    <div className="rounded-[16px] bg-white border border-[#ebebeb] p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all duration-200">
+    <div className="rounded-[16px] bg-white border border-[#e2dcd2] p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all duration-200">
       <div>
         {/* Header: Fecha y Status Pill */}
         <div className="flex items-start justify-between gap-2 mb-4">
@@ -224,14 +224,14 @@ function ViewingCard({
               <IconCalendar />
             </div>
             <div>
-              <p className="text-[14px] font-bold text-[#222222] capitalize">
+              <p className="text-[14px] font-bold text-[#1e1c1a] capitalize">
                 {dateStr}
               </p>
-              <div className="flex items-center gap-1.5 text-[12px] text-[#6a6a6a] mt-0.5 font-medium">
+              <div className="flex items-center gap-1.5 text-[12px] text-[#6b655e] mt-0.5 font-medium">
                 <IconClock />
                 <span>{timeStr || "Hora no definida"}</span>
                 {isPast && isPending && (
-                  <span className="text-[11px] text-[#ff385c] font-semibold ml-1">
+                  <span className="text-[11px] text-[#c4584c] font-semibold ml-1">
                     (Vencida)
                   </span>
                 )}
@@ -249,7 +249,7 @@ function ViewingCard({
         </div>
 
         {/* Separador */}
-        <div className="h-px bg-[#f7f7f7] my-3" />
+        <div className="h-px bg-[#f3efe8] my-3" />
 
         {/* Datos de Propiedad y Lead */}
         <div className="space-y-3">
@@ -259,14 +259,14 @@ function ViewingCard({
               <IconHome />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6a6a6a]">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6b655e]">
                 Propiedad
               </p>
-              <p className="text-[14px] font-semibold text-[#222222] truncate">
+              <p className="text-[14px] font-semibold text-[#1e1c1a] truncate">
                 {property?.title || property?.address || "Inmueble registrado"}
               </p>
               {property?.address && property.title && (
-                <p className="text-[12px] text-[#6a6a6a] truncate mt-0.5">
+                <p className="text-[12px] text-[#6b655e] truncate mt-0.5">
                   {property.address}
                 </p>
               )}
@@ -279,14 +279,14 @@ function ViewingCard({
               <IconUser />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6a6a6a]">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6b655e]">
                 Prospecto (Lead)
               </p>
-              <p className="text-[14px] font-semibold text-[#222222] truncate">
+              <p className="text-[14px] font-semibold text-[#1e1c1a] truncate">
                 {lead?.name || lead?.email || "Prospecto registrado"}
               </p>
               {lead?.email && lead.name && (
-                <p className="text-[12px] text-[#6a6a6a] truncate mt-0.5">
+                <p className="text-[12px] text-[#6b655e] truncate mt-0.5">
                   {lead.email}
                 </p>
               )}
@@ -296,13 +296,13 @@ function ViewingCard({
       </div>
 
       {/* Footer y Acciones de Reclamación (Uber Pool) */}
-      <div className="pt-4 mt-4 border-t border-[#f0f0f0]">
+      <div className="pt-4 mt-4 border-t border-[#ece6dc]">
         {/* Caso 1: Pendiente y usuario es AGENTE -> Botón 'Tomar Visita' */}
         {isPending && isAgent ? (
           <button
             onClick={() => onTakeViewing(viewing.id)}
             disabled={isTaking}
-            className="w-full flex items-center justify-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] text-white py-2.5 px-4 text-[13px] font-bold transition-all duration-200 shadow-sm hover:shadow cursor-pointer active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white py-2.5 px-4 text-[13px] font-bold transition-all duration-200 shadow-sm hover:shadow cursor-pointer active:scale-95 disabled:opacity-50"
           >
             {isTaking ? (
               <>
@@ -323,7 +323,7 @@ function ViewingCard({
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
               Pool de Agentes
             </span>
-            <span className="text-[11px] text-[#888888] font-mono">
+            <span className="text-[11px] text-[#716b63] font-mono">
               ID: {viewing.id.slice(0, 8)}…
             </span>
           </div>
@@ -335,7 +335,7 @@ function ViewingCard({
               Agente Asignado
             </span>
             <span
-              className="text-[11px] font-mono text-[#444444] bg-[#f7f7f7] px-2 py-0.5 rounded max-w-[130px] truncate"
+              className="text-[11px] font-mono text-[#433e39] bg-[#f3efe8] px-2 py-0.5 rounded max-w-[130px] truncate"
               title={viewing.agent_id || "Agente registrado"}
             >
               {viewing.agent_id
@@ -347,9 +347,9 @@ function ViewingCard({
           </div>
         ) : (
           /* Otros estados (Completada, Cancelada, etc.) */
-          <div className="flex items-center justify-between text-[11px] text-[#6a6a6a]">
+          <div className="flex items-center justify-between text-[11px] text-[#6b655e]">
             <span>Estado:</span>
-            <span className="font-semibold text-[#222222] capitalize">
+            <span className="font-semibold text-[#1e1c1a] capitalize">
               {viewing.status}
             </span>
           </div>
@@ -369,11 +369,11 @@ function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-[16px] bg-white border border-[#ebebeb] p-5 shadow-2xs">
-      <p className="text-[13px] text-[#6a6a6a] mb-1 font-medium">{label}</p>
+    <div className="rounded-[16px] bg-white border border-[#e2dcd2] p-5 shadow-2xs">
+      <p className="text-[13px] text-[#6b655e] mb-1 font-medium">{label}</p>
       <p
         className={`text-[24px] font-bold tracking-tight ${
-          accent ? "text-[#ff385c]" : "text-[#222222]"
+          accent ? "text-[#c4584c]" : "text-[#1e1c1a]"
         }`}
       >
         {value}
@@ -515,7 +515,7 @@ export default function ViewingsClient({
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV — Airbnb Design System con RBAC
           ══════════════════════════════════════════════ */}
@@ -529,13 +529,13 @@ export default function ViewingsClient({
         <div className="flex items-center gap-2 mb-6">
           <Link
             href="/"
-            className="flex items-center gap-1 text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline font-medium"
+            className="flex items-center gap-1 text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors no-underline font-medium"
           >
             <IconChevronLeft />
             Inicio
           </Link>
-          <span className="text-[13px] text-[#ebebeb]">/</span>
-          <span className="text-[13px] text-[#222222] font-semibold">
+          <span className="text-[13px] text-[#e2dcd2]">/</span>
+          <span className="text-[13px] text-[#1e1c1a] font-semibold">
             Agenda de Visitas
           </span>
         </div>
@@ -544,7 +544,7 @@ export default function ViewingsClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-[26px] sm:text-[30px] font-bold text-[#222222] tracking-tight">
+              <h1 className="page-title text-[26px] sm:text-[30px] font-bold text-[#1e1c1a] tracking-tight">
                 Agenda de Visitas
               </h1>
               {pendientes > 0 && (
@@ -554,14 +554,14 @@ export default function ViewingsClient({
                 </span>
               )}
             </div>
-            <p className="text-[14px] text-[#6a6a6a] mt-1">
+            <p className="text-[14px] text-[#6b655e] mt-1">
               Pool de visitas tipo Uber: citas pendientes asignables en tiempo real a los agentes disponibles.
             </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] px-5 py-2.5 text-[14px] font-semibold text-white transition-all duration-200 shadow-sm hover:shadow cursor-pointer self-start sm:self-auto active:scale-95"
+            className="inline-flex items-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] px-5 py-2.5 text-[14px] font-semibold text-white transition-all duration-200 shadow-sm hover:shadow cursor-pointer self-start sm:self-auto active:scale-95"
           >
             <IconPlus />
             <span>Agendar Visita</span>
@@ -579,14 +579,14 @@ export default function ViewingsClient({
         {/* Search & Filter Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
           {/* Search */}
-          <div className="flex items-center gap-2.5 rounded-full border border-[#ebebeb] px-4 py-2.5 bg-white max-w-[380px] w-full shadow-2xs focus-within:border-gray-900 transition-colors">
+          <div className="flex items-center gap-2.5 rounded-full border border-[#e2dcd2] px-4 py-2.5 bg-white max-w-[380px] w-full shadow-2xs focus-within:border-gray-900 transition-colors">
             <IconSearch />
             <input
               type="text"
               placeholder="Buscar por ID, propiedad o lead..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none text-[14px] text-[#222222] placeholder:text-[#999999] w-full"
+              className="bg-transparent outline-none text-[14px] text-[#1e1c1a] placeholder:text-[#716b63] w-full"
             />
             {search && (
               <button
@@ -614,8 +614,8 @@ export default function ViewingsClient({
                   onClick={() => setFilterStatus(tab.key)}
                   className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap border ${
                     active
-                      ? "bg-[#222222] text-white border-[#222222] shadow-xs"
-                      : "bg-white text-gray-600 border-[#ebebeb] hover:border-gray-400 hover:text-gray-900"
+                      ? "bg-[#1e1c1a] text-white border-[#1e1c1a] shadow-xs"
+                      : "bg-white text-gray-600 border-[#e2dcd2] hover:border-gray-400 hover:text-gray-900"
                   }`}
                 >
                   {tab.label}
@@ -642,23 +642,23 @@ export default function ViewingsClient({
           </div>
         ) : (
           /* Empty State */
-          <div className="rounded-[16px] bg-white border border-[#ebebeb] p-12 text-center max-w-[500px] mx-auto mt-6 shadow-2xs">
-            <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mx-auto mb-4 text-[#6a6a6a]">
+          <div className="rounded-[16px] bg-white border border-[#e2dcd2] p-12 text-center max-w-[500px] mx-auto mt-6 shadow-2xs">
+            <div className="w-16 h-16 rounded-full bg-[#f3efe8] flex items-center justify-center mx-auto mb-4 text-[#6b655e]">
               <IconCalendar />
             </div>
-            <h3 className="text-[18px] font-bold text-[#222222] mb-1">
+            <h3 className="text-[18px] font-bold text-[#1e1c1a] mb-1">
               {search || filterStatus !== "all"
                 ? "No se encontraron visitas con ese filtro"
                 : "No hay visitas en la agenda"}
             </h3>
-            <p className="text-[14px] text-[#6a6a6a] mb-6">
+            <p className="text-[14px] text-[#6b655e] mb-6">
               {search || filterStatus !== "all"
                 ? "Intenta modificar el término de búsqueda o los filtros aplicados."
                 : "Empieza agendando una cita. Ingresará al pool para que cualquier agente disponible la tome."}
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] px-6 py-2.5 text-[14px] font-semibold text-white transition-colors cursor-pointer shadow-sm active:scale-95"
+              className="inline-flex items-center gap-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] px-6 py-2.5 text-[14px] font-semibold text-white transition-colors cursor-pointer shadow-sm active:scale-95"
             >
               <IconPlus />
               <span>Agendar Visita</span>

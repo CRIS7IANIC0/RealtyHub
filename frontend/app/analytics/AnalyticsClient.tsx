@@ -3,7 +3,7 @@
 /* ─────────────────────────────────────────────────────────────
    AnalyticsClient — Client Component
    Módulo de Analíticas · Strict Airbnb Design System
-   Fondo general #f7f7f7 · Cero sombras · Tarjetas blancas rounded-[12px]
+   Fondo general #f3efe8 · Cero sombras · Tarjetas blancas rounded-[12px]
    Métricas grandes: Volumen Total de Ventas y Contratos Cerrados
    ───────────────────────────────────────────────────────────── */
 
@@ -29,7 +29,7 @@ function IconBell() {
       height="20"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#222222"
+      stroke="#1e1c1a"
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -48,7 +48,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
   const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV — Airbnb Design System con RBAC
           ══════════════════════════════════════════════ */}
@@ -58,22 +58,19 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
           CANVAS BODY — Strict Airbnb Design System
           ══════════════════════════════════════════════ */}
       <main
-        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16"
-        style={{ paddingTop: 'calc(80px + 36px)' }}
+        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pb-16 pt-8 md:pt-12"
       >
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[12px] font-semibold tracking-wider uppercase text-[#ff385c] bg-[#fff0f2] px-2.5 py-0.5 rounded-full">
-                Business Intelligence
-              </span>
-              <span className="text-[12px] text-[#717171]">Tiempo Real</span>
+              
+              <span className="text-[12px] text-[#6b655e]">Tiempo Real</span>
             </div>
-            <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#222222]">
+            <h1 className="page-title text-[28px] font-semibold tracking-[-0.5px] text-[#1e1c1a]">
               Dashboard de Analíticas
             </h1>
-            <p className="text-[14px] text-[#717171] mt-0.5">
+            <p className="text-[14px] text-[#6b655e] mt-0.5">
               Métricas consolidadas a partir de eventos transaccionales emitidos por contratos cerrados.
             </p>
           </div>
@@ -81,7 +78,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Canal Activo: realtyhub_analytics_queue
+              Datos al día
             </span>
           </div>
         </div>
@@ -89,9 +86,9 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
         {/* ─── Hero KPI Cards (Grandes Tarjetas Airbnb) ───────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Tarjeta 1: Volumen Total de Ventas */}
-          <div className="bg-white rounded-[12px] border border-[#ebebeb] p-7 shadow-none hover:border-[#b0b0b0] transition-colors">
+          <div className="bg-white rounded-[12px] border border-[#e2dcd2] p-7 shadow-none hover:border-[#a39d94] transition-colors">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[13px] font-medium text-[#717171] uppercase tracking-wide">
+              <span className="text-[13px] font-medium text-[#6b655e]">
                 Volumen Total de Ventas
               </span>
               <div className="w-10 h-10 rounded-full bg-[#f0fdf4] flex items-center justify-center">
@@ -110,23 +107,23 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 </svg>
               </div>
             </div>
-            <p className="text-[34px] font-bold tracking-[-1px] text-[#222222] mb-2 leading-none">
+            <p className="text-[34px] font-bold tracking-[-1px] text-[#1e1c1a] mb-2 leading-none">
               {fmtPrice(totalRevenue)}
             </p>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center text-[12px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                 Suma consolidada
               </span>
-              <span className="text-[12px] text-[#717171]">
+              <span className="text-[12px] text-[#6b655e]">
                 {totalSales > 0 ? `${totalSales} ventas registradas` : 'Sin ventas aún'}
               </span>
             </div>
           </div>
 
           {/* Tarjeta 2: Cantidad de Contratos Cerrados */}
-          <div className="bg-white rounded-[12px] border border-[#ebebeb] p-7 shadow-none hover:border-[#b0b0b0] transition-colors">
+          <div className="bg-white rounded-[12px] border border-[#e2dcd2] p-7 shadow-none hover:border-[#a39d94] transition-colors">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[13px] font-medium text-[#717171] uppercase tracking-wide">
+              <span className="text-[13px] font-medium text-[#6b655e]">
                 Cantidad de Contratos Cerrados
               </span>
               <div className="w-10 h-10 rounded-full bg-[#eff6ff] flex items-center justify-center">
@@ -148,21 +145,21 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 </svg>
               </div>
             </div>
-            <p className="text-[34px] font-bold tracking-[-1px] text-[#222222] mb-2 leading-none">
+            <p className="text-[34px] font-bold tracking-[-1px] text-[#1e1c1a] mb-2 leading-none">
               {totalSales}
             </p>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center text-[12px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
                 {totalSales === 1 ? '1 contrato firmado' : `${totalSales} contratos firmados`}
               </span>
-              <span className="text-[12px] text-[#717171]">Eventos procesados</span>
+              <span className="text-[12px] text-[#6b655e]">Eventos procesados</span>
             </div>
           </div>
 
           {/* Tarjeta 3: Ticket Promedio por Venta */}
-          <div className="bg-white rounded-[12px] border border-[#ebebeb] p-7 shadow-none hover:border-[#b0b0b0] transition-colors">
+          <div className="bg-white rounded-[12px] border border-[#e2dcd2] p-7 shadow-none hover:border-[#a39d94] transition-colors">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[13px] font-medium text-[#717171] uppercase tracking-wide">
+              <span className="text-[13px] font-medium text-[#6b655e]">
                 Ticket Promedio
               </span>
               <div className="w-10 h-10 rounded-full bg-[#faf5ff] flex items-center justify-center">
@@ -180,66 +177,21 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 </svg>
               </div>
             </div>
-            <p className="text-[34px] font-bold tracking-[-1px] text-[#222222] mb-2 leading-none">
+            <p className="text-[34px] font-bold tracking-[-1px] text-[#1e1c1a] mb-2 leading-none">
               {fmtPrice(avgTicket)}
             </p>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center text-[12px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
                 Por transacción
               </span>
-              <span className="text-[12px] text-[#717171]">Promedio ponderado</span>
+              <span className="text-[12px] text-[#6b655e]">Promedio ponderado</span>
             </div>
           </div>
         </div>
 
-        {/* ─── Detalle de Arquitectura y Pipeline ───────────── */}
-        <div className="bg-white rounded-[12px] border border-[#ebebeb] p-7 shadow-none">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#ebebeb]">
-            <div>
-              <h2 className="text-[18px] font-semibold text-[#222222]">
-                Pipeline de Ingesta & Event-Driven Analytics
-              </h2>
-              <p className="text-[13px] text-[#717171] mt-0.5">
-                Flujo asíncrono desacoplado para auditoría y minería de datos de transacciones.
-              </p>
-            </div>
-            <span className="text-[12px] font-medium text-[#222222] bg-[#f7f7f7] border border-[#ebebeb] px-3 py-1.5 rounded-full">
-              Puerto HTTP: 3010
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-4 rounded-[8px] bg-[#f9fafb] border border-[#f3f4f6]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <h3 className="text-[14px] font-semibold text-[#222222]">Emisor de Eventos</h3>
-              </div>
-              <p className="text-[13px] text-[#6a6a6a]">
-                <strong>contract-service</strong> despacha <code>contract.signed</code> a tres clientes independientes mediante RabbitMQ Fanout.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[8px] bg-[#f9fafb] border border-[#f3f4f6]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <h3 className="text-[14px] font-semibold text-[#222222]">Cola Dedicada</h3>
-              </div>
-              <p className="text-[13px] text-[#6a6a6a]">
-                <strong>realtyhub_analytics_queue</strong> garantiza entrega dedicada sin colisiones ni Round-Robin entre microservicios.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[8px] bg-[#f9fafb] border border-[#f3f4f6]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-                <h3 className="text-[14px] font-semibold text-[#222222]">Almacenamiento</h3>
-              </div>
-              <p className="text-[13px] text-[#6a6a6a]">
-                <strong>realtyhub_analytics_db</strong> (PostgreSQL puerto 5438) persiste cada evento en la tabla <code>Metric</code> vía Prisma.
-              </p>
-            </div>
-          </div>
-        </div>
+        <p className="text-[14px] text-[#6b655e] max-w-[60ch]">
+          Cada contrato que pasa a estado Firmado suma su valor a estas métricas de forma automática.
+        </p>
       </main>
     </div>
   );
