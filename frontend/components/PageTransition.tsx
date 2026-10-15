@@ -93,6 +93,9 @@ export default function PageTransition() {
       const url = new URL(href, window.location.href);
       if (url.origin !== window.location.origin) return;
       if (url.pathname === window.location.pathname) return;
+      // Solo los enlaces marcados usan la cortina completa; el resto navega normal
+      // y recibe la animación rápida (ver efecto de pathname).
+      if (!a.closest('[data-transition="full"]')) return;
       const pre = document.getElementById("rh-preloader");
       if (pre && getComputedStyle(pre).display !== "none") return;
       e.preventDefault();
@@ -112,6 +115,28 @@ export default function PageTransition() {
       window.removeEventListener("rh:navigate", onNavigate);
     };
   }, [go, router]);
+
+  // Cambio de ruta SIN cortina: animación muy rápida en el mismo sitio
+  const prevPath = useRef(pathname);
+  useEffect(() => {
+    if (prevPath.current === pathname) return;
+    prevPath.current = pathname;
+    if (phaseRef.current !== "idle") return; // lo gestiona la cortina
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    document.documentElement.dataset.ptq = "1";
+    const bar = document.createElement("div");
+    bar.className = "rh-topbar";
+    bar.setAttribute("aria-hidden", "true");
+    document.body.appendChild(bar);
+    const tm = window.setTimeout(() => {
+      delete document.documentElement.dataset.ptq;
+      bar.remove();
+    }, 650);
+    return () => {
+      window.clearTimeout(tm);
+      bar.remove();
+    };
+  }, [pathname]);
 
   // La ruta cambió bajo la cortina: descubrir
   useEffect(() => {
@@ -191,6 +216,17 @@ export default function PageTransition() {
         html[data-pt="enter"] main > *:nth-child(4){animation-delay:.24s}
         @keyframes pt-in{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
         @media (prefers-reduced-motion: reduce){html[data-pt="enter"] main > *{animation:none}}
+
+        /* Animación rápida (sin cortina): contenido sube y aparece en ~0.3 s */
+        html[data-ptq] main > *,html[data-ptq] body > div > aside + *{animation:ptq-in .32s cubic-bezier(.16,1,.3,1) both}
+        html[data-ptq] main > *:nth-child(2){animation-delay:.04s}
+        html[data-ptq] main > *:nth-child(3){animation-delay:.08s}
+        html[data-ptq] main > *:nth-child(4){animation-delay:.12s}
+        @keyframes ptq-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        .rh-topbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:9991;pointer-events:none;background:#b04e42;
+          transform-origin:left;transform:scaleX(0);opacity:0;animation:ptq-bar .5s cubic-bezier(.4,0,.2,1) both}
+        @keyframes ptq-bar{0%{transform:scaleX(0);opacity:1}70%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+        @media (prefers-reduced-motion: reduce){html[data-ptq] main > *{animation:none}.rh-topbar{display:none}}
       `}</style>
       <div className="rh-pt" data-phase={phase} aria-hidden="true">
         {(["l1", "l2"] as const).map((l) => (

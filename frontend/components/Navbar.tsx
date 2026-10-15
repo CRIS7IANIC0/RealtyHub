@@ -246,6 +246,7 @@ export default function Navbar({ activeTab, overHero = false }: { activeTab?: Na
     const link = (tab: NavTab, href: string, label: string) => (
       <Link
         href={href}
+        data-transition="full"
         className={`relative py-2 text-[15px] no-underline transition-colors after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-px after:origin-left after:bg-current after:transition-transform after:duration-300 ${
           light
             ? activeTab === tab
@@ -275,6 +276,7 @@ export default function Navbar({ activeTab, overHero = false }: { activeTab?: Na
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
+                data-transition="full"
                 data-magnetic
                 className={`hidden sm:inline-flex items-center rounded-full text-[14px] font-medium px-5 py-2.5 no-underline transition-colors duration-300 ${
                   light
@@ -314,6 +316,7 @@ export default function Navbar({ activeTab, overHero = false }: { activeTab?: Na
                 <Link
                   key={href}
                   href={href}
+                  data-transition="full"
                   onClick={() => setOpen(false)}
                   className="font-display text-[44px] font-light tracking-[-0.03em] leading-[1.15] text-[#1e1c1a] no-underline"
                 >
