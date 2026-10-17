@@ -1,124 +1,95 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Lead Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Registra los leads que llegan al solicitar una visita y los asigna automáticamente al agente activo con menos leads (reparto equitativo). Avisa al agente por mensajería.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Responsabilidad en la arquitectura:** Clientes potenciales (leads) y su asignación a agentes.
 
-## Description
+Parte de **RealtyHub**, plataforma inmobiliaria basada en microservicios. Se comunica con el resto por API REST y por mensajería (RabbitMQ).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tecnologías
 
-## Project setup
+NestJS · TypeScript · Prisma ORM · PostgreSQL · RabbitMQ · Docker
 
-```bash
-$ npm install
-```
+## Reglas de negocio
 
-## Compile and run the project
+- name, email y property_id son obligatorios.
+- Asignación equitativa entre agentes activos; sin agentes se avisa a gerencia.
+- Un fallo de RabbitMQ nunca impide registrar el lead.
 
-```bash
-# development
-$ npm run start
+## Endpoints principales
 
-# watch mode
-$ npm run start:dev
+Se exponen al frontend a través del API Gateway (`/api/v1/...`).
 
-# production mode
-$ npm run start:prod
-```
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/leads` | Lista de leads |
+| `POST` | `/leads` | Registra un lead y lo asigna a un agente |
 
-## Run tests
+## Eventos (RabbitMQ)
+
+| Evento | Efecto |
+|---|---|
+| `lead.created (emite)` | Hacia notification-service: alerta de nuevo lead asignado |
+
+## Variables de entorno
+
+Copia `.env.example` a `.env`. Las credenciales **nunca** se suben al repositorio; en producción se configuran como variables en la plataforma de despliegue.
+
+| Variable | Descripción |
+|---|---|
+| `PORT` | Puerto HTTP (por defecto 3004) |
+| `DATABASE_URL` | Conexión a PostgreSQL (`realtyhub_lead_db`) |
+| `RABBITMQ_URL` | Conexión a RabbitMQ |
+| `USER_SERVICE_URL` | URL interna de user-service |
+
+## Instalación y ejecución
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
+cp .env.example .env        # y completa los valores
+npx prisma generate
+npx prisma db push          # crea las tablas (o usa database/schema.sql)
+npm run start:dev           # http://localhost:3004
 ```
 
-## Deployment
+Compilación de producción: `npm run build && npm run start:prod`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Con Docker
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker build -t lead-service .
+docker run --env-file .env -p 3004:3004 lead-service
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+El contenedor sincroniza el esquema (`prisma db push`) al arrancar.
 
-## Observability
+## Base de datos
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+Base `realtyhub_lead_db` (PostgreSQL). Tablas: `leads`.
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+| Archivo | Contenido |
+|---|---|
+| `prisma/schema.prisma` | Modelo de datos (fuente de verdad) |
+| `database/schema.sql` | Script SQL de creación de tablas |
+| `database/seed.sql` | Datos de ejemplo coherentes con los demás servicios |
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project:
+Restaurar desde cero:
 
 ```bash
-$ npm install @nestjs/observe
+createdb realtyhub_lead_db
+psql -d realtyhub_lead_db -f database/schema.sql
+psql -d realtyhub_lead_db -f database/seed.sql
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/overview) - it takes a single import and an app key.
+Respaldo y restauración de la base:
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+```bash
+pg_dump -Fc -d realtyhub_lead_db -f database/realtyhub_lead_db.dump
+pg_restore -d realtyhub_lead_db --clean --if-exists database/realtyhub_lead_db.dump
+```
 
-## Resources
+## Pruebas
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+npm run test
+```

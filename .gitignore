@@ -13,6 +13,9 @@ dist/
 .env.*
 */.env
 */.env.*
+# Las plantillas sin secretos sí se versionan
+!.env.example
+!*/.env.example
 
 # Logs & temp
 *.log
