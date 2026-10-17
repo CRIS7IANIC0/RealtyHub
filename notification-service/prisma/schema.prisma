@@ -8,12 +8,26 @@ datasource db {
 }
 
 model Notification {
-  id         String   @id @default(uuid())
-  title      String
-  message    String
-  type       String   @default("info")
-  is_read    Boolean  @default(false)
-  created_at DateTime @default(now())
+  id              String   @id @default(uuid())
+  title           String
+  message         String
+  type            String   @default("info")
+  is_read         Boolean  @default(false)
+  // lead | visit | contract | commission | general
+  category        String   @default("general")
+  // USER = personal de RealtyHub · CLIENT = cliente (lead) que no tiene sesión
+  recipient_type  String   @default("USER")
+  // null = aviso general visible para todo el personal
+  recipient_id    String?
+  recipient_name  String?
+  recipient_email String?
+  // sent | failed | skipped (sin SMTP configurado)
+  email_status    String?
+  link            String?
+  // Evita duplicar recordatorios: <evento>:<entidad>:<destinatario>
+  event_key       String?  @unique
+  created_at      DateTime @default(now())
 
+  @@index([recipient_id])
   @@map("notifications")
 }

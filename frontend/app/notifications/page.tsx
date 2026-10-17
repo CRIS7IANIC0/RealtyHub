@@ -9,7 +9,7 @@ import { GATEWAY } from '@/lib/config';
 
 export const metadata: Metadata = {
   title: 'RealtyHub — Centro de Notificaciones',
-  description: 'Historial de alertas automáticas generadas por eventos de contratos y ventas.',
+  description: 'Alertas de leads, visitas, contratos y comisiones para ti y tu equipo.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +20,12 @@ export interface Notification {
   message: string;
   type: string;
   is_read: boolean;
+  category?: string;
+  recipient_type?: string;
+  recipient_id?: string | null;
+  recipient_name?: string | null;
+  email_status?: string | null;
+  link?: string | null;
   created_at: string;
 }
 

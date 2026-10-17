@@ -16,7 +16,35 @@ export interface Commission {
   amount: number;
   split_rule_applied?: string | null;
   status: string;
+  operation_type?: string;
+  contract_price?: number;
+  rate_percent?: number;
+  agent_pct?: number;
+  office_pct?: number;
+  central_pct?: number;
+  agent_amount?: number;
+  office_amount?: number;
+  central_amount?: number;
+  paid_at?: string | null;
   created_at: string;
+}
+
+export interface Agreement {
+  id: string;
+  operation_type: string;
+  rate_percent: number;
+  agent_pct: number;
+  office_pct: number;
+  central_pct: number;
+  active: boolean;
+  valid_from: string;
+  valid_to?: string | null;
+}
+
+export interface OfficeSnippet {
+  id: string;
+  name: string;
+  region?: string;
 }
 
 export interface UserSnippet {
@@ -39,11 +67,12 @@ async function fetchCommissions(): Promise<Commission[]> {
   }
 }
 
-async function fetchUsers(): Promise<UserSnippet[]> {
+async function fetchList<T>(path: string): Promise<T[]> {
   try {
-    const res = await fetch(`${GATEWAY}/users`, { cache: "no-store" });
+    const res = await fetch(`${GATEWAY}${path}`, { cache: "no-store" });
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
@@ -51,10 +80,19 @@ async function fetchUsers(): Promise<UserSnippet[]> {
 
 // ─── Page (Server Component) ────────────────────────────────
 export default async function CommissionsPage() {
-  const [commissions, users] = await Promise.all([
+  const [commissions, users, agreements, offices] = await Promise.all([
     fetchCommissions(),
-    fetchUsers(),
+    fetchList<UserSnippet>("/users"),
+    fetchList<Agreement>("/commissions/agreements"),
+    fetchList<OfficeSnippet>("/offices"),
   ]);
 
-  return <CommissionsClient commissions={commissions} users={users} />;
+  return (
+    <CommissionsClient
+      commissions={commissions}
+      users={users}
+      agreements={agreements}
+      offices={offices}
+    />
+  );
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import ArrowIcon from "@/components/ui/ArrowIcon";
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { Notification } from './page';
 import { GATEWAY } from '@/lib/config';
 
@@ -39,6 +39,34 @@ function humanize(message: string, names: Record<string, string>): string {
     const name = names[id];
     return name ? `"${name}"` : `#${id.slice(0, 8)}`;
   });
+}
+
+const CATEGORIES: { key: string; label: string }[] = [
+  { key: 'all', label: 'Todas' },
+  { key: 'lead', label: 'Leads' },
+  { key: 'visit', label: 'Visitas' },
+  { key: 'contract', label: 'Contratos' },
+  { key: 'commission', label: 'Comisiones' },
+];
+
+const CATEGORY_LABEL: Record<string, string> = {
+  lead: 'Lead',
+  visit: 'Visita',
+  contract: 'Contrato',
+  commission: 'Comisión',
+};
+
+interface Me {
+  id?: string;
+  role?: string;
+}
+
+/** Misma regla del servicio: las propias + avisos generales (+ copias de clientes si es gerencia). */
+function isVisibleTo(n: Notification, me: Me): boolean {
+  if (n.recipient_id && n.recipient_id === me.id) return true;
+  if (!n.recipient_id && (n.recipient_type ?? 'USER') === 'USER') return true;
+  const manager = ['ADMIN', 'GERENTE'].includes(String(me.role).toUpperCase());
+  return manager && n.recipient_type === 'CLIENT';
 }
 
 const TYPE_STYLES: Record<string, { bg: string; fg: string; icon: React.ReactNode }> = {
@@ -94,12 +122,34 @@ export default function NotificationsClient({ notifications, names }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
+  const [me, setMe] = useState<Me | null>(null);
+  const [meLoaded, setMeLoaded] = useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  useEffect(() => {
+    function loadUser() {
+      try {
+        setMe(JSON.parse(localStorage.getItem('user') ?? 'null'));
+      } catch {
+        setMe(null);
+      }
+      setMeLoaded(true);
+    }
+    loadUser();
+    window.addEventListener('realtyhub_auth_changed', loadUser);
+    return () => window.removeEventListener('realtyhub_auth_changed', loadUser);
+  }, []);
+
+  // Cada persona ve sólo lo suyo; sin sesión no se muestra nada
+  const mine = useMemo(() => (me ? notifications.filter((n) => isVisibleTo(n, me)) : []), [notifications, me]);
+  const unreadCount = mine.filter((n) => !n.is_read).length;
   const filtered = useMemo(
-    () => (filter === 'unread' ? notifications.filter((n) => !n.is_read) : notifications),
-    [notifications, filter],
+    () =>
+      mine.filter(
+        (n) => (filter === 'all' || !n.is_read) && (category === 'all' || n.category === category),
+      ),
+    [mine, filter, category],
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Si al marcar como leídas la página actual deja de existir, se usa la última válida
@@ -111,6 +161,7 @@ export default function NotificationsClient({ notifications, names }: Props) {
     setLoadingId(id);
     try {
       await fetch(`${GATEWAY}/notifications/${id}/read`, { method: 'PATCH' });
+      window.dispatchEvent(new Event('realtyhub_notifications_changed'));
       router.refresh();
     } catch (err) {
       console.error('Error al marcar como leída:', err);
@@ -123,7 +174,9 @@ export default function NotificationsClient({ notifications, names }: Props) {
     if (markingAll || unreadCount === 0) return;
     setMarkingAll(true);
     try {
-      await fetch(`${GATEWAY}/notifications/read-all`, { method: 'PATCH' });
+      const qs = new URLSearchParams({ user_id: me?.id ?? '', role: me?.role ?? '' });
+      await fetch(`${GATEWAY}/notifications/read-all?${qs}`, { method: 'PATCH' });
+      window.dispatchEvent(new Event('realtyhub_notifications_changed'));
       router.refresh();
     } catch (err) {
       console.error('Error al marcar todas como leídas:', err);
@@ -145,7 +198,7 @@ export default function NotificationsClient({ notifications, names }: Props) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="page-title text-[28px] font-semibold tracking-[-0.5px] text-[#1e1c1a] mb-1">
+          <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#1e1c1a] mb-1">
             Notificaciones
           </h1>
           <p className="text-[14px] text-[#6b655e]">
@@ -171,11 +224,28 @@ export default function NotificationsClient({ notifications, names }: Props) {
       {/* Filters */}
       <div className="inline-flex rounded-full border border-[#e2dcd2] bg-white p-1 mb-5">
         <button type="button" className={tabClass(filter === 'all')} onClick={() => { setFilter('all'); setPage(1); }}>
-          Todas ({notifications.length})
+          Todas ({mine.length})
         </button>
         <button type="button" className={tabClass(filter === 'unread')} onClick={() => { setFilter('unread'); setPage(1); }}>
           Sin leer ({unreadCount})
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => { setCategory(c.key); setPage(1); }}
+            className={`px-3.5 py-1 rounded-full border text-[12px] font-medium transition-colors cursor-pointer ${
+              category === c.key
+                ? 'border-[#1e1c1a] bg-[#1e1c1a] text-white'
+                : 'border-[#e2dcd2] bg-white text-[#6b655e] hover:border-[#1e1c1a] hover:text-[#1e1c1a]'
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
 
       {/* List */}
@@ -188,10 +258,10 @@ export default function NotificationsClient({ notifications, names }: Props) {
             </svg>
           </div>
           <p className="text-[15px] font-medium text-[#1e1c1a] mb-1">
-            {filter === 'unread' ? 'No tienes notificaciones sin leer' : 'Sin notificaciones'}
+            {meLoaded && !me ? 'Inicia sesión para ver tus notificaciones' : filter === 'unread' ? 'No tienes notificaciones sin leer' : 'Sin notificaciones'}
           </p>
           <p className="text-[13px] text-[#6b655e]">
-            Los eventos de contratos firmados aparecerán aquí automáticamente.
+            Los leads asignados, recordatorios de visitas y cambios en contratos aparecerán aquí automáticamente.
           </p>
         </div>
       ) : (
@@ -210,17 +280,33 @@ export default function NotificationsClient({ notifications, names }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {!n.is_read && (
-                      <span className="w-2 h-2 rounded-full bg-[#b04e42] flex-shrink-0" aria-label="No leída" />
+                      <span className="w-2 h-2 rounded-full bg-[#c4584c] flex-shrink-0" aria-label="No leída" />
                     )}
                     <p className={`text-[14px] text-[#1e1c1a] ${n.is_read ? 'font-medium' : 'font-semibold'}`}>
                       {n.title}
                     </p>
+                    {n.category && CATEGORY_LABEL[n.category] && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#6b655e] bg-[#f3efe8] px-2 py-0.5 rounded-full">
+                        {CATEGORY_LABEL[n.category]}
+                      </span>
+                    )}
                   </div>
                   <p className="text-[13px] text-[#6b655e] leading-relaxed mb-2">
                     {humanize(n.message, names)}
                   </p>
                   <p className="text-[12px] text-[#716b63]" title={fmtFull(n.created_at)}>
                     {fmtRelative(n.created_at)}
+                    {n.recipient_type === 'CLIENT' && (
+                      <span className="ml-2 text-[#6b655e]">
+                        · Enviada al cliente{n.recipient_name ? ` ${n.recipient_name}` : ''}
+                        {n.email_status === 'sent' ? ' (correo enviado)' : ''}
+                      </span>
+                    )}
+                    {n.link && (
+                      <Link href={n.link} className="ml-2 font-medium text-[#1e1c1a] underline-offset-2 hover:underline">
+                        Ver →
+                      </Link>
+                    )}
                   </p>
                 </div>
 
@@ -248,13 +334,13 @@ export default function NotificationsClient({ notifications, names }: Props) {
       {totalPages > 1 && (
         <nav className="flex items-center justify-between mt-6" aria-label="Paginación">
           <button type="button" onClick={() => setPage(current - 1)} disabled={current === 1} className={pagerBtn}>
-            <ArrowIcon dir="left" /> Anterior
+            ← Anterior
           </button>
           <span className="text-[13px] text-[#6b655e]">
             Página <strong className="text-[#1e1c1a]">{current}</strong> de {totalPages}
           </span>
           <button type="button" onClick={() => setPage(current + 1)} disabled={current === totalPages} className={pagerBtn}>
-            Siguiente <ArrowIcon />
+            Siguiente →
           </button>
         </nav>
       )}

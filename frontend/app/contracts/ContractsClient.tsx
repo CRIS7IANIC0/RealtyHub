@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GATEWAY } from "@/lib/config";
 import CreateContractModal from "@/components/contracts/CreateContractModal";
+import SignaturesModal from "@/components/contracts/SignaturesModal";
 import Navbar from "@/components/Navbar";
 import type { Contract, PropertySnippet, LeadSnippet, UserSnippet } from "./page";
 
@@ -161,13 +162,16 @@ export default function ContractsClient({
   // Firmado → Pendiente pide confirmación con un diálogo propio
   // (window.confirm se bloquea en algunos navegadores y dejaba el botón sin efecto).
   const [confirmRevert, setConfirmRevert] = useState<Contract | null>(null);
+  // Contrato cuyo modal de firma digital está abierto
+  const [signingId, setSigningId] = useState<string | null>(null);
 
+  // Pendiente → firma digital de las partes · Firmado → volver a Pendiente (anula las firmas)
   function toggleStatus(contract: Contract) {
     if (contract.status.toLowerCase() === "firmado") {
       setConfirmRevert(contract);
       return;
     }
-    void changeStatus(contract, "Firmado");
+    setSigningId(contract.id);
   }
 
   async function changeStatus(contract: Contract, next: "Firmado" | "Pendiente") {
@@ -525,8 +529,17 @@ export default function ContractsClient({
                           : "bg-[#b04e42] hover:bg-[#a64739] text-white"
                       }`}
                     >
-                      {isSigned ? "Marcar como pendiente" : "Marcar como firmado"}
+                      {isSigned ? "Marcar como pendiente" : "✍️ Firma digital"}
                     </button>
+                    {isSigned && (
+                      <button
+                        type="button"
+                        onClick={() => setSigningId(contract.id)}
+                        className="px-4 py-2 rounded-full border border-[#e2dcd2] text-[13px] font-medium text-[#1e1c1a] hover:border-[#1e1c1a] transition-colors cursor-pointer"
+                      >
+                        Firmas
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => downloadPdf(contract)}
@@ -569,7 +582,7 @@ export default function ContractsClient({
             <h2 className="text-[18px] font-semibold text-[#1e1c1a] mb-2">¿Volver a Pendiente?</h2>
             <p className="text-[14px] text-[#6b655e] mb-6">
               El contrato de «{propMap.get(confirmRevert.property_id)?.title || "este inmueble"}» dejará de
-              figurar como firmado. Las comisiones ya generadas no se revierten automáticamente.
+              figurar como firmado y sus firmas digitales quedarán anuladas (deberán repetirse). La comisión se anula si aún no fue pagada.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -591,6 +604,14 @@ export default function ContractsClient({
             </div>
           </div>
         </div>
+      )}
+
+      {signingId && (
+        <SignaturesModal
+          contractId={signingId}
+          onClose={() => setSigningId(null)}
+          onChanged={() => router.refresh()}
+        />
       )}
 
       {/* Modal para Crear Contrato */}

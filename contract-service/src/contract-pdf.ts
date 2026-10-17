@@ -22,6 +22,18 @@ export interface PdfContext {
   property?: { title?: string; address?: string; city?: string; property_type?: string; description?: string } | null;
   lead?: { name?: string; email?: string; phone?: string } | null;
   agent?: { name?: string; email?: string } | null;
+  /** Firmas electrónicas ya registradas (sólo las firmadas). */
+  signatures?: PdfSignature[];
+  documentHash?: string;
+}
+
+export interface PdfSignature {
+  role: string;
+  signer_name: string | null;
+  signer_document: string | null;
+  signature_image: string | null;
+  signature_hash: string | null;
+  signed_at: Date | null;
 }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
@@ -36,6 +48,8 @@ const COLOR = { ink: '#222222', muted: '#6a6a6a', line: '#d9d9d9', accent: '#ff3
 
 export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
   const { contract: c, property, lead, agent } = ctx;
+  const signatures = ctx.signatures ?? [];
+  const sigOf = (role: string) => signatures.find((x) => x.role === role);
   const esVenta = (c.operation_type || c.type).toLowerCase() !== 'alquiler';
   const firmado = c.status === 'Firmado';
   const ciudad = c.city || property?.city || BLANK;
@@ -164,18 +178,31 @@ export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
   );
 
   // ── Firmas ───────────────────────────────────────────────
-  ensure(150);
-  doc.moveDown(3);
+  ensure(signatures.length ? 230 : 150);
+  doc.moveDown(signatures.length ? 4 : 3);
   const yFirma = doc.y;
   const colW = (width - 40) / 2;
   const x1 = doc.page.margins.left;
   const x2 = x1 + colW + 40;
-  [[x1, parteA, ''], [x2, parteB, lead?.name || '']].forEach(([x, rol, nombre]) => {
+  [[x1, parteA, 'PARTE_A', ''], [x2, parteB, 'PARTE_B', lead?.name || '']].forEach(([x, rol, role, nombre]) => {
+    const sig = sigOf(role as string);
+    if (sig?.signature_image) {
+      const png = Buffer.from(sig.signature_image.split(',')[1] ?? '', 'base64');
+      try {
+        doc.image(png, x as number, yFirma - 58, { fit: [colW, 54], align: 'center', valign: 'bottom' });
+      } catch {
+        // Imagen corrupta: la constancia de firma al final sigue dejando evidencia
+      }
+    }
     doc.moveTo(x as number, yFirma).lineTo((x as number) + colW, yFirma).strokeColor(COLOR.ink).lineWidth(0.8).stroke();
     doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLOR.ink).text(rol as string, x as number, yFirma + 6, { width: colW });
+    const nombreFirma = sig?.signer_name || nombre;
     doc.font('Helvetica').fontSize(9).fillColor(COLOR.muted)
-      .text(nombre ? `${nombre}` : 'Nombre: ______________________', x as number, doc.y, { width: colW })
-      .text('C.C. / NIT: ___________________', x as number, doc.y, { width: colW });
+      .text(nombreFirma ? `${nombreFirma}` : 'Nombre: ______________________', x as number, doc.y, { width: colW })
+      .text(sig?.signer_document ? `C.C. / NIT: ${sig.signer_document}` : 'C.C. / NIT: ___________________', x as number, doc.y, { width: colW });
+    if (sig?.signed_at) {
+      doc.fontSize(8).text(`Firmado electrónicamente el ${fechaLarga(sig.signed_at)}`, x as number, doc.y, { width: colW });
+    }
   });
   doc.x = doc.page.margins.left;
   doc.moveDown(2);
@@ -185,6 +212,25 @@ export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
       : 'Contrato PENDIENTE DE FIRMA: este documento no tiene validez hasta ser suscrito por las partes.',
     doc.page.margins.left, doc.y, { width, align: 'center' },
   );
+
+  // ── Constancia de firma electrónica ──────────────────────
+  if (signatures.length) {
+    ensure(140);
+    section('Constancia de firma electrónica');
+    doc.font('Helvetica').fontSize(8.5).fillColor(COLOR.muted).text(
+      'Las partes suscribieron este documento mediante firma electrónica simple, con valor jurídico conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012. Cada firma queda sellada con una huella criptográfica ligada al contenido del contrato; si los términos cambian, el sello deja de verificar.',
+      { align: 'justify' },
+    );
+    doc.moveDown(0.4);
+    if (ctx.documentHash) field('Huella SHA-256 del contrato', ctx.documentHash.slice(0, 32) + '…');
+    signatures.forEach((sg) => {
+      const parte = sg.role === 'PARTE_A' ? parteA : parteB;
+      field(
+        parte,
+        `${sg.signer_name ?? ''} · sello ${(sg.signature_hash ?? '').slice(0, 16).toUpperCase()}${sg.signed_at ? ` · ${sg.signed_at.toISOString()}` : ''}`,
+      );
+    });
+  }
 
   // ── Pie de página con numeración ─────────────────────────
   const range = doc.bufferedPageRange();

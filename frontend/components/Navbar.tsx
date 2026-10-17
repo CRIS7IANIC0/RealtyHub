@@ -12,6 +12,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { GATEWAY } from "@/lib/config";
 
 export interface AuthUser {
   id?: string;
@@ -230,6 +231,32 @@ export default function Navbar({ activeTab, overHero = false }: { activeTab?: Na
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Contador de notificaciones sin leer del usuario (cada minuto y al leer alguna)
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!user?.id) return; // sin sesión el contador no se muestra
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const qs = new URLSearchParams({ user_id: user?.id ?? "", role: user?.role ?? "" });
+        const res = await fetch(`${GATEWAY}/notifications/unread-count?${qs}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setUnread(Number(data?.count) || 0);
+      } catch {
+        // Sin conexión: se conserva el último valor
+      }
+    }
+    void refresh();
+    const timer = setInterval(refresh, 60_000);
+    window.addEventListener("realtyhub_notifications_changed", refresh);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener("realtyhub_notifications_changed", refresh);
+    };
+  }, [user?.id, user?.role]);
+
   function handleLogout() {
     localStorage.removeItem("user");
     window.dispatchEvent(new Event("realtyhub_auth_changed"));
@@ -360,8 +387,10 @@ export default function Navbar({ activeTab, overHero = false }: { activeTab?: Na
                   >
                     <i.icon className="shrink-0" />
                     <span className="flex-1">{i.label}</span>
-                    {i.tab === "notifications" && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#b04e42]" aria-label="Hay avisos" />
+                    {i.tab === "notifications" && unread > 0 && (
+                      <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#b04e42] text-[#faf8f4] text-[11px] font-semibold leading-5 text-center" aria-label={`${unread} sin leer`}>
+                        {unread > 99 ? "99+" : unread}
+                      </span>
                     )}
                   </Link>
                 </li>

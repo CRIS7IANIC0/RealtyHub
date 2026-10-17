@@ -12,10 +12,41 @@ model Commission {
   contract_id        String
   agent_id           String
   office_id          String?
+  // Comisión total del cierre = agent_amount + office_amount + central_amount
   amount             Float
   split_rule_applied String?
+  // Pendiente | Pagada | Anulada (contrato devuelto a Pendiente antes de pagarse)
   status             String    @default("Pendiente")
+  operation_type     String    @default("Venta")
+  contract_price     Float     @default(0)
+  rate_percent       Float     @default(0)
+  agent_pct          Float     @default(0)
+  office_pct         Float     @default(0)
+  central_pct        Float     @default(0)
+  agent_amount       Float     @default(0)
+  office_amount      Float     @default(0)
+  central_amount     Float     @default(0)
+  agreement_id       String?
+  paid_at            DateTime?
   created_at         DateTime  @default(now())
 
   @@map("commissions")
+}
+
+// Acuerdo comercial por tipo de operación. Un cambio crea una versión nueva y cierra la anterior.
+model CommissionAgreement {
+  id             String    @id @default(uuid())
+  operation_type String
+  // % del precio del contrato (Venta) o del canon mensual (Alquiler: 100 = un canon)
+  rate_percent   Float
+  agent_pct      Float
+  office_pct     Float
+  central_pct    Float
+  active         Boolean   @default(true)
+  valid_from     DateTime  @default(now())
+  valid_to       DateTime?
+  created_by     String?
+  created_at     DateTime  @default(now())
+
+  @@map("commission_agreements")
 }

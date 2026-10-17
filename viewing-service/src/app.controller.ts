@@ -6,12 +6,27 @@ import {
   Param,
   Body,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom, timeout } from 'rxjs';
 import { PrismaService } from './prisma.service';
 
 @Controller('viewings')
 export class AppController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject('NOTIFICATIONS_SERVICE') private readonly notificationsClient: ClientProxy,
+  ) {}
+
+  // La alerta nunca debe romper la operación de la visita
+  private async notify(pattern: string, payload: unknown) {
+    try {
+      await lastValueFrom(this.notificationsClient.emit(pattern, payload).pipe(timeout(3000)));
+    } catch (error) {
+      console.error(`❌ No se pudo emitir "${pattern}":`, error);
+    }
+  }
 
   // 1. Obtener todas las visitas agendadas (ordenadas cronológicamente)
   @Get()
@@ -56,7 +71,7 @@ export class AppController {
       );
     }
 
-    return this.prisma.viewing.create({
+    const created = await this.prisma.viewing.create({
       data: {
         property_id: body.property_id,
         lead_id: body.lead_id,
@@ -65,6 +80,8 @@ export class AppController {
         status: body.status || 'Pendiente',
       },
     });
+    await this.notify('viewing.created', created);
+    return created;
   }
 
   // 3. Tomar visita (Lógica Uber: asigna el agent_id y actualiza status a 'Asignada')
@@ -87,12 +104,14 @@ export class AppController {
       throw new BadRequestException('Visita no encontrada');
     }
 
-    return this.prisma.viewing.update({
+    const updated = await this.prisma.viewing.update({
       where: { id },
       data: {
         agent_id: body.agent_id,
         status: 'Asignada',
       },
     });
+    await this.notify('viewing.taken', updated);
+    return updated;
   }
 }

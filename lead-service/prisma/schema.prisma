@@ -15,6 +15,8 @@ model Lead {
   property_id String
   source      String
   status      String   @default("Nuevo")
+  // Agente al que se asignó el lead automáticamente (reparto equitativo)
+  agent_id    String?
   created_at  DateTime @default(now())
 
   @@map("leads")

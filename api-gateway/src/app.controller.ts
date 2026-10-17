@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Headers, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, Headers, Res, HttpException, HttpStatus } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
 import { verifyJwt } from './jwt.util';
 
@@ -20,6 +20,27 @@ async function propagate(res: Response): Promise<unknown> {
     throw new HttpException(data ?? { message: 'Error en el microservicio' }, res.status);
   }
   return data;
+}
+
+// ─── Helper: query string con sólo los filtros conocidos ───
+function qs(query: Record<string, string>): string {
+  const params = new URLSearchParams();
+  for (const key of ['user_id', 'role', 'unread']) {
+    if (typeof query?.[key] === 'string' && query[key]) params.set(key, query[key]);
+  }
+  const str = params.toString();
+  return str ? `?${str}` : '';
+}
+
+// ─── Helper: exige un JWT válido (y, opcionalmente, uno de los roles indicados) ───
+function requireUser(authHeader: string | undefined, roles?: string[]): Record<string, any> {
+  const token = authHeader?.replace(/^Bearer\s+/i, '');
+  if (!token) throw new HttpException('Autenticación requerida', HttpStatus.UNAUTHORIZED);
+  const payload = verifyJwt(token);
+  if (roles && !roles.includes(String(payload.role).toUpperCase())) {
+    throw new HttpException('No tienes permisos para esta acción', HttpStatus.FORBIDDEN);
+  }
+  return payload;
 }
 
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
@@ -386,6 +407,47 @@ export class AppController {
     return propagate(res);
   }
 
+  // --- FIRMA DIGITAL ---
+  // Estado de firmas + enlaces de firma (los tokens son secretos: exige sesión)
+  @Get('contracts/:id/signatures')
+  async getContractSignatures(@Param('id') id: string, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader);
+    const res = await fetch(`${CONTRACT_SVC}/contracts/${id}/signatures`);
+    return propagate(res);
+  }
+
+  @Get('contracts/:id/verify')
+  async verifyContractSignatures(@Param('id') id: string) {
+    const res = await fetch(`${CONTRACT_SVC}/contracts/${id}/verify`);
+    return propagate(res);
+  }
+
+  // Públicas: el token del enlace identifica al firmante
+  @Get('contracts/sign/:token')
+  async getSigningRequest(@Param('token') token: string) {
+    const res = await fetch(`${CONTRACT_SVC}/contracts/sign/${encodeURIComponent(token)}`);
+    return propagate(res);
+  }
+
+  @Post('contracts/sign/:token')
+  async submitSignature(
+    @Param('token') token: string,
+    @Body() body: any,
+    @Headers('x-forwarded-for') forwardedFor?: string,
+    @Headers('user-agent') userAgent?: string,
+  ) {
+    const res = await fetch(`${CONTRACT_SVC}/contracts/sign/${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
+        ...(userAgent ? { 'user-agent': userAgent } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    return propagate(res);
+  }
+
   @Get('contracts/:id/pdf')
   async getContractPdf(@Param('id') id: string, @Res() out: ExpressResponse) {
     let res: Response;
@@ -448,21 +510,71 @@ export class AppController {
     }
   }
 
-  // --- RUTAS DE NOTIFICACIONES (NOTIFICATIONS) ---
-  @Get('notifications')
-  async getNotifications() {
+  @Get('commissions/agreements')
+  async getCommissionAgreements() {
     try {
-      const response = await fetch(`${NOTIFICATION_SVC}/notifications`);
+      const res = await fetch(`${COMMISSION_SVC}/commissions/agreements`);
+      return res.json();
+    } catch {
+      return [];
+    }
+  }
+
+  // Sólo gerencia/administración definen el acuerdo comercial vigente
+  @Post('commissions/agreements')
+  async createCommissionAgreement(@Body() body: any, @Headers('authorization') authHeader?: string) {
+    const user = requireUser(authHeader, ['ADMIN', 'GERENTE']);
+    const res = await fetch(`${COMMISSION_SVC}/commissions/agreements`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, created_by: user.sub }),
+    });
+    return propagate(res);
+  }
+
+  @Patch('commissions/:id/pay')
+  async payCommission(@Param('id') id: string, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader, ['ADMIN', 'GERENTE']);
+    const res = await fetch(`${COMMISSION_SVC}/commissions/${id}/pay`, { method: 'PATCH' });
+    return propagate(res);
+  }
+
+  @Get('offices')
+  async getOffices() {
+    try {
+      const res = await fetch(`${USER_SVC}/users/offices`);
+      return res.json();
+    } catch {
+      return [];
+    }
+  }
+
+  // --- RUTAS DE NOTIFICACIONES (NOTIFICATIONS) ---
+  // Filtros opcionales: ?user_id=&role=&unread=true
+  @Get('notifications')
+  async getNotifications(@Query() query: Record<string, string>) {
+    try {
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications${qs(query)}`);
       return response.json();
     } catch {
       return [];
     }
   }
 
-  @Patch('notifications/read-all')
-  async markAllNotificationsAsRead() {
+  @Get('notifications/unread-count')
+  async getUnreadCount(@Query() query: Record<string, string>) {
     try {
-      const response = await fetch(`${NOTIFICATION_SVC}/notifications/read-all`, { method: 'PATCH' });
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications/unread-count${qs(query)}`);
+      return response.json();
+    } catch {
+      return { count: 0 };
+    }
+  }
+
+  @Patch('notifications/read-all')
+  async markAllNotificationsAsRead(@Query() query: Record<string, string>) {
+    try {
+      const response = await fetch(`${NOTIFICATION_SVC}/notifications/read-all${qs(query)}`, { method: 'PATCH' });
       return response.json();
     } catch {
       throw new HttpException('Error al actualizar las notificaciones', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -491,7 +603,7 @@ export class AppController {
       const res = await fetch(`${ANALYTICS_SVC}/analytics`);
       return res.json();
     } catch {
-      return { total_revenue: 0, total_sales: 0 };
+      return { total_revenue: 0, total_sales: 0, data_complete: false };
     }
   }
 }

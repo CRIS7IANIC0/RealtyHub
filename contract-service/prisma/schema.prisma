@@ -26,6 +26,7 @@ model Contract {
   special_clauses   String?
   created_at     DateTime   @default(now())
   documents      Document[]
+  signatures     ContractSignature[]
 
   @@map("contracts")
 }
@@ -38,4 +39,30 @@ model Document {
   contract    Contract @relation(fields: [contract_id], references: [id])
 
   @@map("documents")
+}
+
+// Firma electrónica simple (Ley 527 de 1999 / Decreto 2364 de 2012): una fila por parte firmante.
+model ContractSignature {
+  id              String    @id @default(uuid())
+  contract_id     String
+  // PARTE_A = vendedor / arrendador · PARTE_B = comprador / arrendatario
+  role            String
+  party_label     String
+  // Token secreto del enlace de firma (se comparte con el firmante)
+  token           String    @unique
+  signer_name     String?
+  signer_document String?
+  signer_email    String?
+  // PNG en data URL con el trazo manuscrito
+  signature_image String?
+  document_hash   String?
+  signature_hash  String?
+  ip_address      String?
+  user_agent      String?
+  signed_at       DateTime?
+  created_at      DateTime  @default(now())
+  contract        Contract  @relation(fields: [contract_id], references: [id], onDelete: Cascade)
+
+  @@unique([contract_id, role])
+  @@map("contract_signatures")
 }

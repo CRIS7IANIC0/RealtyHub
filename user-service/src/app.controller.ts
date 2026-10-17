@@ -20,6 +20,11 @@ export class AppController {
     });
   }
 
+  @Get('offices')
+  async getOffices() {
+    return this.prisma.office.findMany({ orderBy: { name: 'asc' } });
+  }
+
   @Patch(':id/status')
   async setActive(@Param('id') id: string, @Body() body: { active?: boolean }) {
     if (typeof body?.active !== 'boolean') {
