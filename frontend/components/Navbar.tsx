@@ -1,20 +1,18 @@
 "use client";
 
 /* ─────────────────────────────────────────────────────────────
-   Navbar — Shared Client Component (Modern SaaS / Airbnb Style)
-   - Sticky top con backdrop-blur corporativo
-   - Logo tipográfico de alto impacto con isotipo RealtyHub
-   - Enlaces con hover interactivo y animación de borde inferior
-   - Botón primario estilizado para Iniciar Sesión
-   - Soporte RBAC intacto:
-     * Invitado: Solo Inicio y Propiedades
-     * AGENTE: Inicio, Propiedades, Leads, Agenda, Contratos, Comisiones, Personal
-     * GERENTE / ADMIN: Incluye módulo de Analíticas
+   Navbar — navegación única de RealtyHub.
+   - Visitante: barra superior editorial (Inicio · Propiedades · Iniciar sesión)
+     con menú a pantalla completa en móvil.
+   - Equipo autenticado: barra lateral agrupada por flujo de trabajo en
+     escritorio y cajón en móvil. RBAC intacto:
+       AGENTE: todo menos Analíticas · GERENTE / ADMIN: incluye Analíticas.
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { GATEWAY } from "@/lib/config";
 
 export interface AuthUser {
   id?: string;
@@ -35,155 +33,229 @@ export type NavTab =
   | "users"
   | "notifications";
 
-function IconBell() {
+/* ── Iconos (trazo 1.6, una sola familia) ─────────────────── */
+type IconProps = React.SVGProps<SVGSVGElement>;
+function Icon({ children, ...p }: IconProps) {
   return (
     <svg
-      width="20"
-      height="20"
+      width={18}
+      height={18}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth={1.6}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-gray-700"
+      aria-hidden="true"
+      {...p}
     >
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      {children}
     </svg>
   );
 }
+const I = {
+  home: (p: IconProps) => (<Icon {...p}><path d="m3 11 9-8 9 8" /><path d="M5 10v10h5v-6h4v6h5V10" /></Icon>),
+  building: (p: IconProps) => (<Icon {...p}><rect x="4" y="3" width="16" height="18" rx="1" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2" /></Icon>),
+  target: (p: IconProps) => (<Icon {...p}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></Icon>),
+  calendar: (p: IconProps) => (<Icon {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></Icon>),
+  file: (p: IconProps) => (<Icon {...p}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></Icon>),
+  coins: (p: IconProps) => (<Icon {...p}><circle cx="9" cy="9" r="6" /><path d="M15.5 9.5a6 6 0 1 1-6 6" /></Icon>),
+  chart: (p: IconProps) => (<Icon {...p}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></Icon>),
+  users: (p: IconProps) => (<Icon {...p}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" /></Icon>),
+  bell: (p: IconProps) => (<Icon {...p}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></Icon>),
+  logout: (p: IconProps) => (<Icon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></Icon>),
+  menu: (p: IconProps) => (<Icon {...p}><path d="M4 7h16M4 12h16M4 17h16" /></Icon>),
+  close: (p: IconProps) => (<Icon {...p}><path d="M6 6l12 12M18 6 6 18" /></Icon>),
+};
 
-function IconLogOut() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  );
-}
-
-/** Logo corporativo, compartido con el CompactHeader de la landing. */
-export function BrandLogo({ compactOnMobile = false }: { compactOnMobile?: boolean }) {
+/** Marca: casita dibujada + nombre. Es un botón: lleva siempre al inicio
+ *  (si ya estás en el inicio, sube suave hasta arriba). Se hunde al presionar. */
+export function BrandLogo({
+  compactOnMobile = false,
+  tone = "dark",
+}: {
+  compactOnMobile?: boolean;
+  tone?: "dark" | "light";
+}) {
+  const pathname = usePathname();
+  const ink = tone === "light" ? "text-[#faf8f4]" : "text-[#1e1c1a]";
+  const hover = tone === "light" ? "hover:bg-[#faf8f4]/10" : "hover:bg-[#1e1c1a]/[0.06]";
   return (
     <Link
       href="/"
-      className="flex items-center gap-2.5 no-underline group transition-transform duration-200 hover:scale-[1.02]"
+      data-magnetic
       aria-label="RealtyHub, ir al inicio"
+      title="Ir al inicio"
+      onClick={(e) => {
+        if (pathname === "/") {
+          e.preventDefault();
+          if (window.__lenis) window.__lenis.scrollTo(0, { duration: 1.2 });
+          else window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }}
+      className={`brand rounded-full inline-flex items-center gap-2 no-underline pl-2 pr-3 py-1.5 -ml-2 transition-colors duration-300 ${ink} ${hover}`}
     >
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff385c] to-[#ff5a5f] flex items-center justify-center text-white shadow-xs group-hover:shadow-md transition-shadow shrink-0">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      </div>
+      <svg viewBox="0 0 34 34" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+        <path pathLength={1} d="M3 17 17 4l14 13" />
+        <path pathLength={1} d="M7 14.5V29h20V14.5" />
+        <path pathLength={1} className="text-[#c4584c]" stroke="#c4584c" d="M14 29v-8h6v8" />
+      </svg>
       <span
-        className={`text-[23px] font-extrabold tracking-[-0.6px] text-[#ff385c] ${
+        className={`font-display text-[24px] font-medium tracking-[-0.04em] leading-none ${
           compactOnMobile ? "hidden lg:inline" : ""
         }`}
       >
-        Realty<span className="text-gray-900 font-black">Hub</span>
+        Realty<span className="text-[#c4584c]">Hub</span>
       </span>
+      {compactOnMobile && (
+        <span className="lg:hidden font-display text-[24px] font-medium tracking-[-0.04em] leading-none">
+          R<span className="text-[#c4584c]">H</span>
+        </span>
+      )}
     </Link>
   );
 }
 
-export default function Navbar({ activeTab }: { activeTab?: NavTab }) {
+interface NavItem {
+  tab: NavTab;
+  href: string;
+  label: string;
+  icon: (p: IconProps) => React.JSX.Element;
+  managerOnly?: boolean;
+}
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+const TEAM_GROUPS: NavGroup[] = [
+  { title: "General", items: [{ tab: "inicio", href: "/", label: "Resumen", icon: I.home }] },
+  {
+    title: "Captación",
+    items: [
+      { tab: "properties", href: "/properties", label: "Propiedades", icon: I.building },
+      { tab: "leads", href: "/leads", label: "Leads", icon: I.target },
+      { tab: "viewings", href: "/viewings", label: "Agenda de visitas", icon: I.calendar },
+    ],
+  },
+  {
+    title: "Cierre",
+    items: [
+      { tab: "contracts", href: "/contracts", label: "Contratos", icon: I.file },
+      { tab: "commissions", href: "/commissions", label: "Comisiones", icon: I.coins },
+    ],
+  },
+  {
+    title: "Gestión",
+    items: [
+      { tab: "analytics", href: "/analytics", label: "Analíticas", icon: I.chart, managerOnly: true },
+      { tab: "users", href: "/users", label: "Personal", icon: I.users },
+      { tab: "notifications", href: "/notifications", label: "Notificaciones", icon: I.bell },
+    ],
+  },
+];
+
+const roleStyle = (role?: string) =>
+  role === "ADMIN"
+    ? "bg-[#1e1c1a] text-[#faf8f4]"
+    : role === "GERENTE"
+    ? "bg-[#dfe3ec] text-[#2c3445]"
+    : "bg-[#ece6dc] text-[#433e39]";
+
+export default function Navbar({ activeTab, overHero = false }: { activeTab?: NavTab; overHero?: boolean }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  // Cerrar el menú desplegable al hacer clic fuera
+  // Sobre el hero oscuro la barra es transparente con texto claro; al bajar pasa a hueso
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    }
-
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+    if (!overHero) return;
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [overHero]);
 
   useEffect(() => {
     function loadUser() {
       try {
         const stored = localStorage.getItem("user");
-        if (stored) {
-          setUser(JSON.parse(stored));
-        } else {
-          setUser(null);
-        }
+        setUser(stored ? JSON.parse(stored) : null);
       } catch {
         setUser(null);
       } finally {
         setIsLoaded(true);
       }
     }
-
     loadUser();
-
-    // Sincronización entre pestañas y eventos locales de auth
     window.addEventListener("storage", loadUser);
     window.addEventListener("realtyhub_auth_changed", loadUser);
-
     return () => {
       window.removeEventListener("storage", loadUser);
       window.removeEventListener("realtyhub_auth_changed", loadUser);
     };
   }, []);
 
-  // Control de protección de rutas privadas en el cliente
+  // Protección de rutas privadas en el cliente (sin cambios)
   useEffect(() => {
     if (!isLoaded) return;
-
-    const privateTabs: NavTab[] = [
-      "contracts",
-      "commissions",
-      "analytics",
-      "leads",
-      "viewings",
-      "users",
-    ];
-
+    const privateTabs: NavTab[] = ["contracts", "commissions", "analytics", "leads", "viewings", "users"];
     if (!user && activeTab && privateTabs.includes(activeTab)) {
       router.push("/login");
       return;
     }
-
-    const role = user?.role?.toUpperCase();
-    if (activeTab === "analytics" && role === "AGENTE") {
-      router.push("/");
-    }
+    if (activeTab === "analytics" && user?.role?.toUpperCase() === "AGENTE") router.push("/");
   }, [user, isLoaded, activeTab, router]);
+
+  // La barra lateral reserva espacio en <body> (ver globals.css)
+  useEffect(() => {
+    if (!user) return;
+    document.body.classList.add("has-sidebar");
+    return () => document.body.classList.remove("has-sidebar");
+  }, [user]);
+
+  // Bloquea el scroll mientras el menú móvil está abierto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Contador de notificaciones sin leer del usuario (cada minuto y al leer alguna)
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!user?.id) return; // sin sesión el contador no se muestra
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const qs = new URLSearchParams({ user_id: user?.id ?? "", role: user?.role ?? "" });
+        const res = await fetch(`${GATEWAY}/notifications/unread-count?${qs}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setUnread(Number(data?.count) || 0);
+      } catch {
+        // Sin conexión: se conserva el último valor
+      }
+    }
+    void refresh();
+    const timer = setInterval(refresh, 60_000);
+    window.addEventListener("realtyhub_notifications_changed", refresh);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener("realtyhub_notifications_changed", refresh);
+    };
+  }, [user?.id, user?.role]);
 
   function handleLogout() {
     localStorage.removeItem("user");
@@ -195,155 +267,201 @@ export default function Navbar({ activeTab }: { activeTab?: NavTab }) {
   const role = user?.role?.toUpperCase();
   const isManagerOrAdmin = role === "GERENTE" || role === "ADMIN";
 
-  // Estilo moderno de enlaces con hover sutil de color y borde inferior animado
-  const linkClass = (tab: NavTab) =>
-    `relative text-[14px] transition-all duration-200 no-underline py-2 px-3 rounded-lg font-medium group flex items-center ${
-      activeTab === tab
-        ? "text-gray-900 font-semibold bg-gray-100/80 after:absolute after:bottom-0.5 after:left-3 after:right-3 after:h-[2px] after:bg-[#ff385c] after:rounded-full"
-        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 after:absolute after:bottom-0.5 after:left-3 after:right-3 after:h-[2px] after:bg-gray-300 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 after:rounded-full"
-    }`;
-
-  return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 h-20 transition-all">
-      <div className="w-full max-w-[1400px] h-full mx-auto px-6 md:px-10 flex items-center justify-between">
-        {/* ─── Bloque Izquierdo: Logo Corporativo ─── */}
-        <div className="flex-1 flex justify-start">
-          <BrandLogo />
-        </div>
-
-        {/* ─── Bloque Central: Enlaces de Navegación ─── */}
-        <div className="flex justify-center flex-shrink-0">
-          <nav className="hidden md:flex items-center gap-1.5">
-            <Link href="/" className={linkClass("inicio")}>
-              Inicio
-            </Link>
-
-            {/* Propiedades siempre visible (público y privado) */}
-            <Link href="/properties" className={linkClass("properties")}>
-              Propiedades
-            </Link>
-
-            {/* Módulos protegidos para usuarios autenticados */}
-            {user && (
-              <>
-                <Link href="/leads" className={linkClass("leads")}>
-                  Leads
-                </Link>
-                <Link href="/viewings" className={linkClass("viewings")}>
-                  Agenda
-                </Link>
-                <Link href="/contracts" className={linkClass("contracts")}>
-                  Contratos
-                </Link>
-                <Link href="/commissions" className={linkClass("commissions")}>
-                  Comisiones
-                </Link>
-
-                {/* Analíticas SOLO para GERENTE o ADMIN */}
-                {isManagerOrAdmin && (
-                  <Link href="/analytics" className={linkClass("analytics")}>
-                    Analíticas
-                  </Link>
-                )}
-
-                <Link href="/users" className={linkClass("users")}>
-                  Personal
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-
-        {/* ─── Bloque Derecho: Usuario / Login y Notificaciones ─── */}
-        <div className="flex-1 flex justify-end items-center gap-4">
-          {user ? (
-            <>
-              {/* Centro de notificaciones */}
-              <Link
-                href="/notifications"
-                className="relative cursor-pointer hover:bg-gray-100 p-2.5 rounded-full transition-colors flex items-center justify-center w-10 h-10 no-underline text-gray-700"
-                aria-label="Centro de notificaciones"
-              >
-                <IconBell />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#ff385c] ring-2 ring-white" />
-              </Link>
-
-              {/* Píldora de Rol Corporativa */}
-              <div className="hidden sm:flex items-center pl-2 border-l border-gray-200">
-                <span
-                  className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                    role === "ADMIN"
-                      ? "bg-gray-900 text-white border-gray-900"
-                      : role === "GERENTE"
-                      ? "bg-amber-50 text-amber-800 border-amber-200"
-                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                  }`}
-                >
-                  {role || "AGENTE"}
-                </span>
-              </div>
-
-              {/* Menú Desplegable de Usuario (Dropdown) */}
-              <div ref={dropdownRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center rounded-full focus:outline-none focus:ring-2 focus:ring-[#ff385c] focus:ring-offset-2 transition-transform active:scale-95 cursor-pointer"
-                  aria-expanded={isDropdownOpen}
-                  aria-haspopup="true"
-                  aria-label="Abrir menú de usuario"
-                >
-                  <div
-                    className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-800 to-black text-white flex items-center justify-center text-[13px] font-bold shadow-xs ring-2 ring-gray-100 hover:ring-gray-300 transition-all"
-                    title={`${user.name} (${user.email})`}
-                  >
-                    {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                  </div>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-                    {/* Contenido Superior: Info de Usuario */}
-                    <div className="p-4">
-                      <p className="font-semibold text-gray-800 truncate">
-                        {user.name}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate mt-0.5">
-                        {user.email}
-                      </p>
-                    </div>
-
-                    {/* Separador */}
-                    <hr className="border-gray-100" />
-
-                    {/* Contenido Inferior: Acción Cerrar Sesión */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full text-left p-3 text-rose-600 font-medium hover:bg-gray-50 rounded-b-xl flex items-center gap-2 transition-colors cursor-pointer text-sm"
-                    >
-                      <IconLogOut />
-                      <span>Cerrar sesión</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
+  /* ═══════════ VISITANTE ═══════════ */
+  if (!user) {
+    const light = overHero && !scrolled;
+    const link = (tab: NavTab, href: string, label: string) => (
+      <Link
+        href={href}
+        data-transition="full"
+        className={`relative py-2 text-[15px] no-underline transition-colors after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-px after:origin-left after:bg-current after:transition-transform after:duration-300 ${
+          light
+            ? activeTab === tab
+              ? "text-[#faf8f4] after:scale-x-100"
+              : "text-[#faf8f4]/70 hover:text-[#faf8f4] after:scale-x-0 hover:after:scale-x-100"
+            : activeTab === tab
+            ? "text-[#1e1c1a] after:scale-x-100"
+            : "text-[#6b655e] hover:text-[#1e1c1a] after:scale-x-0 hover:after:scale-x-100"
+        }`}
+      >
+        <span className="roll-wrap"><span>{label}</span><span aria-hidden="true">{label}</span></span>
+      </Link>
+    );
+    return (
+      <>
+        <header
+          className={`${overHero ? "fixed inset-x-0" : "sticky"} top-0 z-50 border-b transition-[background-color,border-color,backdrop-filter] duration-500 ${
+            light ? "bg-transparent border-transparent" : "bg-[#f3efe8]/90 backdrop-blur-md border-[#e2dcd2]"
+          }`}
+        >
+          <div className="w-full max-w-[1440px] mx-auto h-[72px] px-5 md:px-10 flex items-center justify-between">
+            <BrandLogo tone={light ? "light" : "dark"} />
+            <nav className="hidden md:flex items-center gap-9" aria-label="Principal">
+              {link("inicio", "/", "Inicio")}
+              {link("properties", "/properties", "Propiedades")}
+            </nav>
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#ff385c] hover:bg-[#e00b41] text-white text-[14px] font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 no-underline cursor-pointer active:scale-95"
+                data-transition="full"
+                data-magnetic
+                className={`hidden sm:inline-flex items-center rounded-full text-[14px] font-medium px-5 py-2.5 no-underline transition-colors duration-300 ${
+                  light
+                    ? "bg-[#faf8f4] text-[#151922] hover:bg-[#b04e42] hover:text-[#faf8f4]"
+                    : "bg-[#1e1c1a] hover:bg-[#b04e42] text-[#faf8f4]"
+                }`}
               >
-                Iniciar Sesión
+                <span className="roll-wrap"><span>Iniciar sesión</span><span aria-hidden="true">Iniciar sesión</span></span>
               </Link>
+              <button
+                type="button"
+                className={`md:hidden p-2 -mr-2 cursor-pointer ${light ? "text-[#faf8f4]" : ""}`}
+                aria-label="Abrir menú"
+                aria-expanded={open}
+                onClick={() => setOpen(true)}
+              >
+                <I.menu width={24} height={24} />
+              </button>
             </div>
-          )}
+          </div>
+        </header>
+
+        {open && (
+          <div className="fixed inset-0 z-[60] bg-[#f3efe8] flex flex-col px-6 py-5" role="dialog" aria-modal="true" aria-label="Menú">
+            <div className="flex items-center justify-between h-[52px]">
+              <BrandLogo />
+              <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar menú" className="p-2 -mr-2 cursor-pointer">
+                <I.close width={24} height={24} />
+              </button>
+            </div>
+            <nav className="flex-1 flex flex-col justify-center gap-2" aria-label="Principal">
+              {[
+                ["/", "Inicio"],
+                ["/properties", "Propiedades"],
+                ["/login", "Iniciar sesión"],
+              ].map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  data-transition="full"
+                  onClick={() => setOpen(false)}
+                  className="font-display text-[44px] font-light tracking-[-0.03em] leading-[1.15] text-[#1e1c1a] no-underline"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+            <p className="text-[13px] text-[#6b655e]">soporte@realtyhub.com · +57 (604) 123 4567</p>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  /* ═══════════ EQUIPO (sidebar + barra móvil) ═══════════ */
+  const initial = user.name ? user.name.charAt(0).toUpperCase() : "U";
+
+  const itemClass = (tab: NavTab) =>
+    `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] no-underline transition-colors duration-200 ${
+      activeTab === tab
+        ? "bg-[#1e1c1a] text-[#faf8f4]"
+        : "text-[#433e39] hover:bg-[#ece6dc]"
+    }`;
+
+  const navList = (
+    <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Principal">
+      {TEAM_GROUPS.map((g) => {
+        const items = g.items.filter((i) => !i.managerOnly || isManagerOrAdmin);
+        if (!items.length) return null;
+        return (
+          <div key={g.title} className="mt-6 first:mt-2">
+            <p className="px-3 mb-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-[#6b655e]">{g.title}</p>
+            <ul className="space-y-0.5">
+              {items.map((i) => (
+                <li key={i.tab}>
+                  <Link
+                    href={i.href}
+                    onClick={() => setOpen(false)}
+                    className={itemClass(i.tab)}
+                    aria-current={activeTab === i.tab ? "page" : undefined}
+                  >
+                    <i.icon className="shrink-0" />
+                    <span className="flex-1">{i.label}</span>
+                    {i.tab === "notifications" && unread > 0 && (
+                      <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#b04e42] text-[#faf8f4] text-[11px] font-semibold leading-5 text-center" aria-label={`${unread} sin leer`}>
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </nav>
+  );
+
+  const account = (
+    <div className="border-t border-[#e2dcd2] p-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 shrink-0 rounded-full bg-[#1e1c1a] text-[#faf8f4] flex items-center justify-center font-display text-[16px]">
+          {initial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-medium truncate" title={user.email}>{user.name}</p>
+          <span className={`inline-block mt-0.5 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${roleStyle(role)}`}>
+            {role || "AGENTE"}
+          </span>
         </div>
       </div>
-    </header>
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-3 w-full flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] text-[#6b655e] hover:bg-[#ece6dc] hover:text-[#1e1c1a] transition-colors cursor-pointer"
+      >
+        <I.logout width={16} height={16} />
+        Cerrar sesión
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Escritorio: barra lateral fija */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[248px] flex-col bg-[#faf8f4] border-r border-[#e2dcd2]">
+        <div className="h-[72px] px-6 flex items-center shrink-0">
+          <BrandLogo />
+        </div>
+        {navList}
+        {account}
+      </aside>
+
+      {/* Móvil / tablet: barra superior + cajón */}
+      <header className="lg:hidden sticky top-0 z-50 bg-[#f3efe8]/90 backdrop-blur-md border-b border-[#e2dcd2]">
+        <div className="h-[64px] px-5 flex items-center justify-between">
+          <BrandLogo />
+          <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menú" aria-expanded={open} className="p-2 -mr-2 cursor-pointer">
+            <I.menu width={24} height={24} />
+          </button>
+        </div>
+      </header>
+
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menú">
+          <button type="button" aria-label="Cerrar menú" onClick={() => setOpen(false)} className="absolute inset-0 bg-[#1e1c1a]/40" />
+          <div className="absolute inset-y-0 left-0 w-[min(86vw,320px)] bg-[#faf8f4] flex flex-col shadow-[0_0_60px_rgba(30,28,26,0.25)]">
+            <div className="h-[64px] px-5 flex items-center justify-between shrink-0">
+              <BrandLogo />
+              <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar menú" className="p-2 -mr-2 cursor-pointer">
+                <I.close width={22} height={22} />
+              </button>
+            </div>
+            {navList}
+            {account}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

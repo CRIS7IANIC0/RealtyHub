@@ -124,6 +124,14 @@ services:
     environment:
       - NODE_ENV=production
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - USER_SERVICE_URL=http://user-service:3001
+      - PROPERTY_SERVICE_URL=http://property-service:3003
+      - LEAD_SERVICE_URL=http://lead-service:3004
+      - VIEWING_SERVICE_URL=http://viewing-service:3005
+      - CONTRACT_SERVICE_URL=http://contract-service:3006
+      - COMMISSION_SERVICE_URL=http://commission-service:3007
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3009
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3010
     depends_on:
       - rabbitmq
       - user-service
@@ -174,6 +182,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://root:rootpassword@lead_db:5432/realtyhub_lead_db?schema=public
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - USER_SERVICE_URL=http://user-service:3001
     depends_on:
       - lead_db
       - rabbitmq
@@ -200,6 +209,10 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://root:rootpassword@contract_db:5432/realtyhub_contract_db?schema=public
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - PROPERTY_SERVICE_URL=http://property-service:3003
+      - LEAD_SERVICE_URL=http://lead-service:3004
+      - USER_SERVICE_URL=http://user-service:3001
+      - FRONTEND_URL=https://tu-app.vercel.app
     depends_on:
       - contract_db
       - rabbitmq
@@ -213,6 +226,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://root:rootpassword@commission_db:5432/realtyhub_commission_db?schema=public
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - USER_SERVICE_URL=http://user-service:3001
     depends_on:
       - commission_db
       - rabbitmq
@@ -226,6 +240,10 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://root:rootpassword@notification_db:5432/realtyhub_notification_db?schema=public
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - USER_SERVICE_URL=http://user-service:3001
+      - LEAD_SERVICE_URL=http://lead-service:3004
+      - PROPERTY_SERVICE_URL=http://property-service:3003
+      - VIEWING_SERVICE_URL=http://viewing-service:3005
     depends_on:
       - notification_db
       - rabbitmq
@@ -239,6 +257,11 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://root:rootpassword@analytics_db:5432/realtyhub_analytics_db?schema=public
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - CONTRACT_SERVICE_URL=http://contract-service:3006
+      - LEAD_SERVICE_URL=http://lead-service:3004
+      - PROPERTY_SERVICE_URL=http://property-service:3003
+      - USER_SERVICE_URL=http://user-service:3001
+      - COMMISSION_SERVICE_URL=http://commission-service:3007
     depends_on:
       - analytics_db
       - rabbitmq

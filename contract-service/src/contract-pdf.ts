@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 import { pesosEnLetras } from './numero-letras';
 
 export interface PdfContract {
@@ -22,6 +23,23 @@ export interface PdfContext {
   property?: { title?: string; address?: string; city?: string; property_type?: string; description?: string } | null;
   lead?: { name?: string; email?: string; phone?: string } | null;
   agent?: { name?: string; email?: string } | null;
+  /** Firmas electrónicas ya registradas (sólo las firmadas). */
+  signatures?: PdfSignature[];
+  documentHash?: string;
+  /** Enlace público de verificación (se muestra como QR en contratos con firmas). */
+  verifyUrl?: string;
+}
+
+export interface PdfSignature {
+  role: string;
+  signer_name: string | null;
+  signer_document: string | null;
+  signer_email?: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  signature_image: string | null;
+  signature_hash: string | null;
+  signed_at: Date | null;
 }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
@@ -32,10 +50,42 @@ const cop = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
 const BLANK = '______________________________';
 
-const COLOR = { ink: '#222222', muted: '#6a6a6a', line: '#d9d9d9', accent: '#ff385c' };
+const COLOR = {
+  ink: '#1e1c1a',
+  muted: '#6b655e',
+  line: '#e2dcd2',
+  accent: '#b04e42',
+  night: '#151922',
+  sand: '#f3efe8',
+  ok: '#2f7d52',
+  okSoft: '#e6f2ea',
+  warn: '#a8641c',
+  warnSoft: '#fbefdc',
+};
 
-export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
+const fechaHoraBogota = (d: Date) =>
+  d.toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }) + ' (hora Colombia)';
+
+/** Navegador / sistema legibles a partir del user-agent. */
+function dispositivo(ua?: string | null): string {
+  if (!ua) return 'No registrado';
+  const nav = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Navegador';
+  const so = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac OS/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'otro sistema';
+  return `${nav} en ${so}`;
+}
+
+export async function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
   const { contract: c, property, lead, agent } = ctx;
+  const signatures = ctx.signatures ?? [];
+  const sigOf = (role: string) => signatures.find((x) => x.role === role);
   const esVenta = (c.operation_type || c.type).toLowerCase() !== 'alquiler';
   const firmado = c.status === 'Firmado';
   const ciudad = c.city || property?.city || BLANK;
@@ -46,8 +96,9 @@ export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
     : 'CONTRATO DE ARRENDAMIENTO DE VIVIENDA URBANA';
   const parteA = esVenta ? 'EL VENDEDOR' : 'EL ARRENDADOR';
   const parteB = esVenta ? 'EL COMPRADOR' : 'EL ARRENDATARIO';
+  const qr = ctx.verifyUrl && signatures.length ? await QRCode.toBuffer(ctx.verifyUrl, { margin: 1, width: 240 }) : null;
 
-  const doc = new PDFDocument({ size: 'LETTER', margins: { top: 70, bottom: 70, left: 70, right: 70 }, bufferPages: true });
+  const doc = new PDFDocument({ size: 'LETTER', margins: { top: 92, bottom: 66, left: 66, right: 66 }, bufferPages: true });
   const chunks: Buffer[] = [];
   doc.on('data', (b: Buffer) => chunks.push(b));
   const done = new Promise<Buffer>((resolve, reject) => {
@@ -81,13 +132,42 @@ export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
     doc.moveDown(0.5);
   };
 
-  // ── Encabezado ───────────────────────────────────────────
-  doc.font('Helvetica-Bold').fontSize(18).fillColor(COLOR.accent).text('RealtyHub', { continued: true })
-    .font('Helvetica').fontSize(9).fillColor(COLOR.muted).text(`    Gestión inmobiliaria`, { align: 'left' });
-  doc.moveDown(0.8).font('Helvetica-Bold').fontSize(14).fillColor(COLOR.ink).text(titulo, { align: 'center' });
-  doc.moveDown(0.3).font('Helvetica').fontSize(9.5).fillColor(COLOR.muted)
-    .text(`Contrato No. ${numero}   ·   Estado: ${firmado ? 'FIRMADO' : 'PENDIENTE DE FIRMA'}`, { align: 'center' });
-  doc.text(`${ciudad}, ${fechaLarga(fechaDoc)}`, { align: 'center' });
+  // ── Título y resumen (el membrete se dibuja en todas las páginas al final) ──
+  doc.font('Helvetica-Bold').fontSize(15).fillColor(COLOR.ink).text(titulo, { align: 'center' });
+  doc.moveDown(0.25).font('Helvetica').fontSize(9.5).fillColor(COLOR.muted)
+    .text(`Contrato No. ${numero}  ·  ${ciudad}, ${fechaLarga(fechaDoc)}`, { align: 'center' });
+
+  // Insignia de estado
+  const badgeText = firmado ? (signatures.length ? 'FIRMADO ELECTRÓNICAMENTE' : 'FIRMADO') : 'PENDIENTE DE FIRMA';
+  doc.moveDown(0.6);
+  const badgeW = 170;
+  const badgeX = doc.page.margins.left + (width - badgeW) / 2;
+  const badgeY = doc.y;
+  doc.roundedRect(badgeX, badgeY, badgeW, 20, 10).fill(firmado ? COLOR.okSoft : COLOR.warnSoft);
+  doc.font('Helvetica-Bold').fontSize(8.5).fillColor(firmado ? COLOR.ok : COLOR.warn)
+    .text(badgeText, badgeX, badgeY + 6, { width: badgeW, align: 'center' });
+  doc.x = doc.page.margins.left;
+  doc.y = badgeY + 34;
+
+  // Tarjeta de resumen (con QR de verificación si hay firmas)
+  const cardY = doc.y;
+  const cardH = 92;
+  doc.roundedRect(doc.page.margins.left, cardY, width, cardH, 8).lineWidth(0.8).fillAndStroke(COLOR.sand, COLOR.line);
+  const textW = qr ? width - 110 : width - 28;
+  const row = (label: string, value: string, y: number) => {
+    doc.font('Helvetica').fontSize(8).fillColor(COLOR.muted).text(label.toUpperCase(), doc.page.margins.left + 14, y, { width: textW });
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(COLOR.ink).text(value || BLANK, doc.page.margins.left + 14, y + 10, { width: textW, lineBreak: false, ellipsis: true });
+  };
+  row('Inmueble', property?.title || property?.address || '', cardY + 12);
+  row(esVenta ? 'Precio de venta' : 'Canon mensual', cop(c.price), cardY + 40);
+  row('Intermediario', agent?.name ? `${agent.name} · RealtyHub` : 'RealtyHub', cardY + 66);
+  if (qr) {
+    const qx = doc.page.margins.left + width - 88;
+    doc.image(qr, qx, cardY + 8, { width: 68 });
+    doc.font('Helvetica').fontSize(6.5).fillColor(COLOR.muted).text('Escanea para verificar', qx - 6, cardY + 78, { width: 80, align: 'center' });
+  }
+  doc.x = doc.page.margins.left;
+  doc.y = cardY + cardH + 8;
 
   // ── Partes ───────────────────────────────────────────────
   section('I. Identificación de las partes');
@@ -164,39 +244,134 @@ export function buildContractPdf(ctx: PdfContext): Promise<Buffer> {
   );
 
   // ── Firmas ───────────────────────────────────────────────
-  ensure(150);
-  doc.moveDown(3);
-  const yFirma = doc.y;
-  const colW = (width - 40) / 2;
+  ensure(190);
+  doc.moveDown(1.2);
+  const colGap = 18;
+  const colW = (width - colGap) / 2;
+  const boxH = 128;
+  const yBox = doc.y;
   const x1 = doc.page.margins.left;
-  const x2 = x1 + colW + 40;
-  [[x1, parteA, ''], [x2, parteB, lead?.name || '']].forEach(([x, rol, nombre]) => {
-    doc.moveTo(x as number, yFirma).lineTo((x as number) + colW, yFirma).strokeColor(COLOR.ink).lineWidth(0.8).stroke();
-    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLOR.ink).text(rol as string, x as number, yFirma + 6, { width: colW });
-    doc.font('Helvetica').fontSize(9).fillColor(COLOR.muted)
-      .text(nombre ? `${nombre}` : 'Nombre: ______________________', x as number, doc.y, { width: colW })
-      .text('C.C. / NIT: ___________________', x as number, doc.y, { width: colW });
+  const x2 = x1 + colW + colGap;
+  ([[x1, parteA, 'PARTE_A', ''], [x2, parteB, 'PARTE_B', lead?.name || '']] as [number, string, string, string][]).forEach(([x, rol, role, nombre]) => {
+    const sig = sigOf(role);
+    doc.roundedRect(x, yBox, colW, boxH, 8).lineWidth(0.8).fillAndStroke(sig ? '#ffffff' : '#fbfaf7', sig ? COLOR.ok : COLOR.line);
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor(COLOR.muted).text(rol, x + 12, yBox + 10, { width: colW - 24 });
+    if (sig?.signature_image) {
+      try {
+        const png = Buffer.from(sig.signature_image.split(',')[1] ?? '', 'base64');
+        doc.image(png, x + 12, yBox + 22, { fit: [colW - 24, 46], align: 'center', valign: 'center' });
+      } catch {
+        // Imagen corrupta: el certificado de firma al final sigue dejando evidencia
+      }
+    } else {
+      doc.font('Helvetica-Oblique').fontSize(9).fillColor('#a39d94').text('Pendiente de firma', x + 12, yBox + 40, { width: colW - 24, align: 'center' });
+    }
+    doc.moveTo(x + 12, yBox + 74).lineTo(x + colW - 12, yBox + 74).strokeColor(COLOR.ink).lineWidth(0.7).stroke();
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLOR.ink)
+      .text(sig?.signer_name || nombre || 'Nombre: ______________________', x + 12, yBox + 80, { width: colW - 24, lineBreak: false, ellipsis: true });
+    doc.font('Helvetica').fontSize(8.5).fillColor(COLOR.muted)
+      .text(sig?.signer_document ? `C.C. / NIT ${sig.signer_document}` : 'C.C. / NIT: ___________________', x + 12, yBox + 94, { width: colW - 24 });
+    if (sig?.signed_at) {
+      doc.fontSize(7.5).fillColor(COLOR.ok)
+        .text(`Firmado ${sig.signed_at.toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' })} · sello ${(sig.signature_hash ?? '').slice(0, 10).toUpperCase()}`,
+          x + 12, yBox + 108, { width: colW - 24, lineBreak: false, ellipsis: true });
+    }
   });
   doc.x = doc.page.margins.left;
-  doc.moveDown(2);
-  doc.font('Helvetica').fontSize(9).fillColor(COLOR.muted).text(
+  doc.y = yBox + boxH + 14;
+  doc.font('Helvetica').fontSize(8.5).fillColor(COLOR.muted).text(
     firmado
       ? `Contrato registrado como FIRMADO en RealtyHub el ${fechaLarga(c.signed_at ?? new Date())}.`
       : 'Contrato PENDIENTE DE FIRMA: este documento no tiene validez hasta ser suscrito por las partes.',
     doc.page.margins.left, doc.y, { width, align: 'center' },
   );
 
-  // ── Pie de página con numeración ─────────────────────────
+  // ── Certificado de firma electrónica (página propia) ─────
+  if (signatures.length) {
+    doc.addPage();
+    doc.font('Helvetica-Bold').fontSize(14).fillColor(COLOR.ink).text('Certificado de firma electrónica');
+    doc.moveDown(0.2).font('Helvetica').fontSize(9).fillColor(COLOR.muted)
+      .text(`Contrato No. ${numero}`);
+    doc.moveDown(0.8).font('Helvetica').fontSize(9).fillColor(COLOR.ink).text(
+      'Este certificado deja constancia de que las partes suscribieron el contrato mediante firma electrónica, con el mismo valor jurídico que la firma manuscrita conforme a la Ley 527 de 1999 y el Decreto 2364 de 2012. Cada firma queda sellada con una huella criptográfica ligada al contenido del contrato, a la identidad declarada del firmante y al momento de la firma: si cualquiera de esos datos cambia, el sello deja de verificar.',
+      { align: 'justify' },
+    );
+
+    section('Integridad del documento');
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(COLOR.muted).text('Huella SHA-256 del contrato:');
+    doc.font('Courier').fontSize(8.5).fillColor(COLOR.ink).text(ctx.documentHash ?? '—', { width });
+    doc.moveDown(0.3);
+    if (ctx.verifyUrl) field('Verificación en línea', ctx.verifyUrl);
+
+    section('Firmantes');
+    [['PARTE_A', parteA], ['PARTE_B', parteB]].forEach(([role, label]) => {
+      const sg = sigOf(role);
+      ensure(110);
+      const y0 = doc.y;
+      doc.roundedRect(doc.page.margins.left, y0, width, 98, 6).lineWidth(0.7).fillAndStroke(sg ? '#ffffff' : '#fbfaf7', COLOR.line);
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(sg ? COLOR.ok : COLOR.warn)
+        .text(`${label} · ${sg ? 'FIRMÓ' : 'SIN FIRMAR'}`, doc.page.margins.left + 12, y0 + 9, { width: width - 24 });
+      const line = (k: string, v: string, y: number) => {
+        doc.font('Helvetica').fontSize(8).fillColor(COLOR.muted).text(k, doc.page.margins.left + 12, y, { width: 96, lineBreak: false });
+        doc.font('Helvetica').fontSize(8.5).fillColor(COLOR.ink).text(v, doc.page.margins.left + 110, y, { width: width - 124, lineBreak: false, ellipsis: true });
+      };
+      if (sg) {
+        line('Nombre', sg.signer_name ?? '—', y0 + 25);
+        line('Documento', sg.signer_document ?? '—', y0 + 37);
+        line('Correo', sg.signer_email || 'No registrado', y0 + 49);
+        line('Fecha y hora', sg.signed_at ? fechaHoraBogota(sg.signed_at) : '—', y0 + 61);
+        line('Origen', `${sg.ip_address || 'IP no registrada'} · ${dispositivo(sg.user_agent)}`, y0 + 73);
+        line('Sello', (sg.signature_hash ?? '').slice(0, 48).toUpperCase() + '…', y0 + 85);
+      } else {
+        doc.font('Helvetica-Oblique').fontSize(9).fillColor(COLOR.muted).text('Esta parte aún no ha firmado.', doc.page.margins.left + 12, y0 + 40);
+      }
+      doc.x = doc.page.margins.left;
+      doc.y = y0 + 108;
+    });
+
+    doc.moveDown(0.5).font('Helvetica').fontSize(8).fillColor(COLOR.muted).text(
+      'Cómo verificar: escanee el código QR de la primera página o abra el enlace de verificación en línea. El sistema recalcula la huella del contrato y el sello de cada firma y le indica si el documento permanece íntegro.',
+      { align: 'justify' },
+    );
+  }
+
+  // ── Membrete, marca de agua y pie en todas las páginas ───
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {
     doc.switchToPage(i);
-    const prevBottom = doc.page.margins.bottom;
-    doc.page.margins.bottom = 0; // permite escribir en el margen sin disparar un salto de página
-    doc.font('Helvetica').fontSize(8).fillColor(COLOR.muted).text(
-      `${numero}  ·  Página ${i + 1} de ${range.count}`,
-      doc.page.margins.left, doc.page.height - 45, { width, align: 'center', lineBreak: false },
-    );
-    doc.page.margins.bottom = prevBottom;
+    const m = doc.page.margins;
+    const prev = { top: m.top, bottom: m.bottom };
+    m.top = 0;
+    m.bottom = 0; // permite escribir en los márgenes sin disparar saltos de página
+
+    // Membrete
+    doc.rect(0, 0, doc.page.width, 52).fill(COLOR.night);
+    doc.font('Helvetica-Bold').fontSize(16).fillColor('#faf8f4').text('Realty', m.left, 18, { continued: true, lineBreak: false })
+      .fillColor('#e7b4a8').text('Hub', { lineBreak: false });
+    doc.font('Helvetica').fontSize(8).fillColor('#a8b0c2')
+      .text(`Contrato No. ${numero}`, doc.page.width - m.right - 200, 17, { width: 200, align: 'right', lineBreak: false })
+      .text(firmado ? 'Documento firmado electrónicamente' : 'Borrador pendiente de firma', doc.page.width - m.right - 200, 29, { width: 200, align: 'right', lineBreak: false });
+
+    // Marca de agua en contratos sin firmar
+    if (!firmado) {
+      doc.save();
+      doc.rotate(-35, { origin: [doc.page.width / 2, doc.page.height / 2] });
+      doc.font('Helvetica-Bold').fontSize(46).fillColor('#000000').fillOpacity(0.045)
+        .text('PENDIENTE DE FIRMA', 0, doc.page.height / 2 - 30, { width: doc.page.width, align: 'center', lineBreak: false });
+      doc.restore();
+    }
+
+    // Pie
+    doc.moveTo(m.left, doc.page.height - 48).lineTo(doc.page.width - m.right, doc.page.height - 48).strokeColor(COLOR.line).lineWidth(0.6).stroke();
+    doc.font('Helvetica').fontSize(7.5).fillColor(COLOR.muted).fillOpacity(1)
+      .text(
+        signatures.length && ctx.documentHash
+          ? `${numero}  ·  Huella ${ctx.documentHash.slice(0, 16)}…  ·  Página ${i + 1} de ${range.count}`
+          : `${numero}  ·  Página ${i + 1} de ${range.count}`,
+        m.left, doc.page.height - 38, { width: doc.page.width - m.left - m.right, align: 'center', lineBreak: false },
+      );
+    m.top = prev.top;
+    m.bottom = prev.bottom;
   }
 
   doc.end();

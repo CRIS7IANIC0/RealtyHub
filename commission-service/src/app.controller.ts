@@ -1,72 +1,81 @@
-import { Controller, Get, Patch, Param } from '@nestjs/common';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Put, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import { ClientProxy, EventPattern, Payload } from '@nestjs/microservices';
+import { lastValueFrom, timeout } from 'rxjs';
+import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 
 @Controller('commissions')
 export class AppController {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly service: AppService,
+    @Inject('NOTIFICATIONS_SERVICE') private readonly notificationsClient: ClientProxy,
+  ) {}
 
-  // 1. Escuchador de Eventos (Asíncrono vía RabbitMQ)
+  // 1. Eventos asíncronos (RabbitMQ · realtyhub_sales_queue)
   @EventPattern('contract.signed')
   async handleContractSigned(@Payload() data: any) {
-    console.log('------------------------------------------------------');
     console.log(`💰 [COMMISSION] Contrato firmado detectado: ${data?.id}`);
-
     try {
-      if (!data?.id) {
-        console.log('⚠️ Payload inválido recibido en contract.signed.');
-        return;
-      }
-
-      // REGLA DE NEGOCIO: Si no existe ya una comisión para ese contract_id
-      const existing = await this.prisma.commission.findFirst({
-        where: { contract_id: data.id },
-      });
-
-      if (existing) {
-        console.log(`⚠️ La comisión para el contrato ${data.id} ya existe. Omitiendo.`);
-        console.log('------------------------------------------------------');
-        return existing;
-      }
-
-      // Calcular el monto: 5% del precio del contrato
-      const contractPrice = Number(data.price) || 0;
-      const baseCommission = contractPrice > 0 ? contractPrice * 0.05 : 5000;
-
-      // Guardar en Prisma (SOLO CON LOS CAMPOS QUE EXISTEN EN EL SCHEMA)
-      const commission = await this.prisma.commission.create({
-        data: {
-          contract_id: data.id,
-          agent_id: data.agent_id || 'agente-default',
-          amount: baseCommission,
-          status: 'Pendiente',
-        },
-      });
-
-      console.log(`✅ Comisión de $${baseCommission} guardada con estado "Pendiente" en Commission DB.`);
-      console.log('------------------------------------------------------');
-      return commission;
-
+      const c = await this.service.registerSignedContract(data);
+      if (c) console.log(`✅ [COMMISSION] ${c.operation_type} · total $${c.amount} (agente $${c.agent_amount} / oficina $${c.office_amount} / central $${c.central_amount})`);
     } catch (error) {
-      console.error('❌ ERROR CRÍTICO AL GUARDAR COMISIÓN:', error);
-      console.log('------------------------------------------------------');
+      console.error('❌ [COMMISSION] Error al registrar la comisión:', error);
     }
   }
 
-  // 2. Ruta HTTP normal (Síncrona) para ver todos los resultados
-  @Get()
-  async getAllCommissions() {
-    return this.prisma.commission.findMany({
-      orderBy: { created_at: 'desc' },
-    });
+  @EventPattern('contract.reverted')
+  async handleContractReverted(@Payload() data: any) {
+    try {
+      if (data?.id) await this.service.cancelForContract(data.id);
+    } catch (error) {
+      console.error('❌ [COMMISSION] Error al anular la comisión:', error);
+    }
   }
 
-  // 3. Ruta HTTP auxiliar para marcar comisión como pagada
+  // 2. HTTP
+  @Get()
+  async getAllCommissions() {
+    return this.prisma.commission.findMany({ orderBy: { created_at: 'desc' } });
+  }
+
+  @Get('agreements')
+  async getAgreements() {
+    return this.service.listAgreements();
+  }
+
+  @Post('agreements')
+  async createAgreement(@Body() body: any) {
+    return this.service.createAgreement(body, body?.created_by);
+  }
+
+  @Get('agent-rules')
+  async getAgentRules() {
+    return this.service.listAgentRules();
+  }
+
+  @Put('agent-rules')
+  async setAgentRule(@Body() body: any) {
+    return this.service.setAgentRule(body, body?.updated_by);
+  }
+
+  @Delete('agent-rules/:id')
+  async deleteAgentRule(@Param('id') id: string) {
+    return this.service.deleteAgentRule(id);
+  }
+
   @Patch(':id/pay')
   async markAsPaid(@Param('id') id: string) {
-    return this.prisma.commission.update({
-      where: { id },
-      data: { status: 'Pagada' },
-    });
+    const commission = await this.prisma.commission.findUnique({ where: { id } });
+    if (!commission) throw new NotFoundException('Comisión no encontrada');
+    if (commission.status === 'Anulada') throw new BadRequestException('Una comisión anulada no puede pagarse');
+    if (commission.status === 'Pagada') return commission;
+    const paid = await this.prisma.commission.update({ where: { id }, data: { status: 'Pagada', paid_at: new Date() } });
+    try {
+      await lastValueFrom(this.notificationsClient.emit('commission.paid', paid).pipe(timeout(3000)));
+    } catch (error) {
+      console.error('❌ No se pudo emitir "commission.paid":', error);
+    }
+    return paid;
   }
 }

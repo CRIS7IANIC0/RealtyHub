@@ -28,8 +28,8 @@ function roleBadge(role: string): { bg: string; text: string; label: string } {
   switch (role?.toLowerCase()) {
     case "admin":
       return {
-        bg: "bg-[#ff385c]/10",
-        text: "text-[#ff385c]",
+        bg: "bg-[#c4584c]/10",
+        text: "text-[#c4584c]",
         label: "Admin",
       };
     case "gerente":
@@ -48,8 +48,8 @@ function roleBadge(role: string): { bg: string; text: string; label: string } {
       };
     default:
       return {
-        bg: "bg-[#f7f7f7]",
-        text: "text-[#6a6a6a]",
+        bg: "bg-[#f3efe8]",
+        text: "text-[#6b655e]",
         label: role ? role.charAt(0).toUpperCase() + role.slice(1) : "Agente",
       };
   }
@@ -112,7 +112,7 @@ function IconSearch() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -131,7 +131,7 @@ function IconMail() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a] flex-shrink-0"
+      className="text-[#6b655e] flex-shrink-0"
     >
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -150,7 +150,7 @@ function IconMapPin() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a] flex-shrink-0"
+      className="text-[#6b655e] flex-shrink-0"
     >
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
@@ -186,7 +186,7 @@ function IconUsers() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
@@ -227,7 +227,7 @@ function UserCard({
           {user.name ? user.name.charAt(0) : "U"}
         </div>
         <div className="min-w-0">
-          <p className="text-[14px] font-medium text-[#222222] truncate">
+          <p className="text-[14px] font-medium text-[#1e1c1a] truncate">
             {user.name || "Sin nombre"}
           </p>
           <span
@@ -236,7 +236,7 @@ function UserCard({
             {role.label}
           </span>
           {!isActive && (
-            <span className="inline-block mt-1 ml-1.5 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[#f7f7f7] text-[#6a6a6a]">
+            <span className="inline-block mt-1 ml-1.5 text-[11px] font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full bg-[#f3efe8] text-[#6b655e]">
               Inactiva
             </span>
           )}
@@ -248,14 +248,14 @@ function UserCard({
         {user.email && (
           <div className="flex items-center gap-2">
             <IconMail />
-            <span className="text-[13px] text-[#6a6a6a] truncate">
+            <span className="text-[13px] text-[#6b655e] truncate">
               {user.email}
             </span>
           </div>
         )}
         <div className="flex items-center gap-2">
           <IconMapPin />
-          <span className="text-[13px] text-[#6a6a6a]">
+          <span className="text-[13px] text-[#6b655e]">
             {officeLabel(user.office_id)}
           </span>
         </div>
@@ -268,8 +268,8 @@ function UserCard({
           disabled={busy}
           className={`mt-4 rounded-full px-4 py-2 text-[13px] font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
             isActive
-              ? "border border-[#ebebeb] text-[#222222] hover:border-[#222222]"
-              : "bg-[#222222] text-white hover:bg-black"
+              ? "border border-[#e2dcd2] text-[#1e1c1a] hover:border-[#1e1c1a]"
+              : "bg-[#1e1c1a] text-white hover:bg-black"
           }`}
         >
           {busy ? "Guardando…" : isActive ? "Desactivar cuenta" : "Activar cuenta"}
@@ -291,10 +291,10 @@ function Stat({
 }) {
   return (
     <div className="rounded-[12px] bg-white p-5">
-      <p className="text-[13px] text-[#6a6a6a] mb-1">{label}</p>
+      <p className="text-[13px] text-[#6b655e] mb-1">{label}</p>
       <p
         className={`text-[24px] font-semibold ${
-          accent ? "text-[#ff385c]" : "text-[#222222]"
+          accent ? "text-[#c4584c]" : "text-[#1e1c1a]"
         }`}
       >
         {value}
@@ -373,7 +373,7 @@ export default function UsersClient({ users }: { users: User[] }) {
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV — Unified RBAC Navigation
           ══════════════════════════════════════════════ */}
@@ -383,20 +383,19 @@ export default function UsersClient({ users }: { users: User[] }) {
           CANVAS BODY
           ══════════════════════════════════════════════ */}
       <main
-        className="w-full max-w-[1400px] mx-auto px-6 md:px-10"
-        style={{ paddingTop: "calc(80px + 40px)" }}
+        className="w-full max-w-[1400px] mx-auto px-6 md:px-10 pt-8 md:pt-12"
       >
         {/* ── Breadcrumb ─────────────────────────────── */}
         <div className="flex items-center gap-2 mb-6">
           <a
             href="/"
-            className="flex items-center gap-1 text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors no-underline"
+            className="flex items-center gap-1 text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors no-underline"
           >
             <IconChevronLeft />
             Inicio
           </a>
-          <span className="text-[13px] text-[#ebebeb]">/</span>
-          <span className="text-[13px] text-[#222222] font-medium">
+          <span className="text-[13px] text-[#e2dcd2]">/</span>
+          <span className="text-[13px] text-[#1e1c1a] font-medium">
             Personal
           </span>
         </div>
@@ -404,26 +403,28 @@ export default function UsersClient({ users }: { users: User[] }) {
         {/* ── Page header ────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f7f7f7]">
+            <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f3efe8]">
               <IconUsers />
             </div>
             <div>
-              <h1 className="text-[22px] font-medium tracking-[-0.44px] text-[#222222]">
+              <h1 className="page-title text-[22px] font-medium tracking-[-0.44px] text-[#1e1c1a]">
                 Directorio de Personal
               </h1>
-              <p className="text-[13px] text-[#6a6a6a] mt-0.5">
+              <p className="text-[13px] text-[#6b655e] mt-0.5">
                 Administra la jerarquía de tu red inmobiliaria.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-[#ff385c] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#e0314f] transition-colors cursor-pointer self-start sm:self-auto"
-          >
-            <IconPlus />
-            Nuevo Miembro
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 rounded-full bg-[#b04e42] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a64739] transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <IconPlus />
+              Nuevo Miembro
+            </button>
+          )}
         </div>
 
         {/* ── KPI strip ──────────────────────────────── */}
@@ -436,19 +437,19 @@ export default function UsersClient({ users }: { users: User[] }) {
 
         {/* ── Search bar ─────────────────────────────── */}
         <div className="mb-8">
-          <div className="flex items-center gap-2.5 rounded-full border border-[#ebebeb] bg-white px-4 py-2.5 max-w-[400px] focus-within:border-[#222222] transition-colors">
+          <div className="flex items-center gap-2.5 rounded-full border border-[#e2dcd2] bg-white px-4 py-2.5 max-w-[400px] focus-within:border-[#1e1c1a] transition-colors">
             <IconSearch />
             <input
               type="text"
               placeholder="Buscar por nombre, email o rol…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none text-[14px] text-[#222222] placeholder:text-[#b0b0b0] w-full"
+              className="bg-transparent outline-none text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] w-full"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="text-[#6a6a6a] hover:text-[#222222] cursor-pointer"
+                className="text-[#6b655e] hover:text-[#1e1c1a] cursor-pointer"
               >
                 ✕
               </button>
@@ -457,7 +458,7 @@ export default function UsersClient({ users }: { users: User[] }) {
         </div>
 
         {actionError && (
-          <div className="mb-4 rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[13px] text-[#c13515]">
+          <div className="mb-4 rounded-[8px] border border-[#e2dcd2] bg-white px-4 py-3 text-[13px] text-[#a64739]">
             {actionError}
           </div>
         )}
@@ -465,18 +466,18 @@ export default function UsersClient({ users }: { users: User[] }) {
         {/* ── Users grid ─────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[12px] bg-white py-20 px-8">
-            <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-[#f3efe8] flex items-center justify-center mb-4">
               <IconUsers />
             </div>
-            <p className="text-[14px] text-[#6a6a6a] mb-1">
+            <p className="text-[14px] text-[#6b655e] mb-1">
               {search
                 ? "No se encontraron resultados."
                 : "No hay personal registrado aún."}
             </p>
             {!search && (
-              <p className="text-[13px] text-[#b0b0b0]">
+              <p className="text-[13px] text-[#a39d94]">
                 Usa el botón{" "}
-                <span className="font-medium text-[#ff385c]">
+                <span className="font-medium text-[#c4584c]">
                   + Nuevo Miembro
                 </span>{" "}
                 para empezar.
@@ -489,10 +490,10 @@ export default function UsersClient({ users }: { users: User[] }) {
             {admins.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <h2 className="text-[16px] font-medium text-[#222222]">
+                  <h2 className="text-[16px] font-medium text-[#1e1c1a]">
                     Administradores
                   </h2>
-                  <span className="text-[12px] font-medium text-[#6a6a6a] bg-[#f7f7f7] rounded-full px-2 py-0.5">
+                  <span className="text-[12px] font-medium text-[#6b655e] bg-[#f3efe8] rounded-full px-2 py-0.5">
                     {admins.length}
                   </span>
                 </div>
@@ -514,10 +515,10 @@ export default function UsersClient({ users }: { users: User[] }) {
             {gerentes.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <h2 className="text-[16px] font-medium text-[#222222]">
+                  <h2 className="text-[16px] font-medium text-[#1e1c1a]">
                     Gerentes
                   </h2>
-                  <span className="text-[12px] font-medium text-[#6a6a6a] bg-[#f7f7f7] rounded-full px-2 py-0.5">
+                  <span className="text-[12px] font-medium text-[#6b655e] bg-[#f3efe8] rounded-full px-2 py-0.5">
                     {gerentes.length}
                   </span>
                 </div>
@@ -539,10 +540,10 @@ export default function UsersClient({ users }: { users: User[] }) {
             {agentes.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <h2 className="text-[16px] font-medium text-[#222222]">
+                  <h2 className="text-[16px] font-medium text-[#1e1c1a]">
                     Agentes
                   </h2>
-                  <span className="text-[12px] font-medium text-[#6a6a6a] bg-[#f7f7f7] rounded-full px-2 py-0.5">
+                  <span className="text-[12px] font-medium text-[#6b655e] bg-[#f3efe8] rounded-full px-2 py-0.5">
                     {agentes.length}
                   </span>
                 </div>
@@ -563,20 +564,20 @@ export default function UsersClient({ users }: { users: User[] }) {
         )}
 
         {/* ── Footer ─────────────────────────────────── */}
-        <footer className="py-10 border-t border-[#ebebeb] mt-12">
+        <footer className="py-10 border-t border-[#e2dcd2] mt-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[13px] text-[#6a6a6a]">
+            <p className="text-[13px] text-[#6b655e]">
               © {new Date().getFullYear()} RealtyHub. Todos los derechos
               reservados.
             </p>
             <div className="flex items-center gap-6">
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Soporte
               </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Privacidad
               </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Términos
               </span>
             </div>

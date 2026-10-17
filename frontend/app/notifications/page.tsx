@@ -9,7 +9,7 @@ import { GATEWAY } from '@/lib/config';
 
 export const metadata: Metadata = {
   title: 'RealtyHub — Centro de Notificaciones',
-  description: 'Historial de alertas automáticas generadas por eventos de contratos y ventas.',
+  description: 'Alertas de leads, visitas, contratos y comisiones para ti y tu equipo.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +20,12 @@ export interface Notification {
   message: string;
   type: string;
   is_read: boolean;
+  category?: string;
+  recipient_type?: string;
+  recipient_id?: string | null;
+  recipient_name?: string | null;
+  email_status?: string | null;
+  link?: string | null;
   created_at: string;
 }
 
@@ -56,12 +62,11 @@ export default async function NotificationsPage() {
   for (const u of users) names[u.id] = u.name || '';
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       <Navbar activeTab="notifications" />
 
       <main
-        className="w-full max-w-[800px] mx-auto px-6 md:px-10 pb-16"
-        style={{ paddingTop: 'calc(80px + 40px)' }}
+        className="w-full max-w-[800px] mx-auto px-6 md:px-10 pb-16 pt-8 md:pt-12"
       >
         <NotificationsClient notifications={notifications} names={names} />
       </main>

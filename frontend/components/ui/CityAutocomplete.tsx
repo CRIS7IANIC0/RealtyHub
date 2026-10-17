@@ -76,7 +76,7 @@ export default function CityAutocomplete({ id, value, onChange, className, place
         <ul
           id={`${id}-list`}
           role="listbox"
-          className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-[10px] border border-[#ebebeb] bg-white py-1 shadow-lg"
+          className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-[10px] border border-[#e2dcd2] bg-white py-1 shadow-lg"
         >
           {visible.map((city, i) => (
             <li
@@ -88,7 +88,7 @@ export default function CityAutocomplete({ id, value, onChange, className, place
                 pick(city);
               }}
               onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer px-4 py-2 text-[14px] text-[#222222] ${i === active ? "bg-[#f7f7f7]" : ""}`}
+              className={`cursor-pointer px-4 py-2 text-[14px] text-[#1e1c1a] ${i === active ? "bg-[#f3efe8]" : ""}`}
             >
               {city}
             </li>

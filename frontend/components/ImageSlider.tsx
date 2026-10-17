@@ -47,13 +47,13 @@ function IconChevron({ dir }: { dir: "left" | "right" }) {
 
 function Placeholder() {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-[#f0f0f0]">
+    <div className="absolute inset-0 flex items-center justify-center bg-[#ece6dc]">
       <svg
         width="48"
         height="48"
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#c7c7c7"
+        stroke="#a39d94"
         strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -150,7 +150,7 @@ export default function ImageSlider({
             type="button"
             onClick={() => go(index - 1)}
             aria-label="Foto anterior"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#222222] shadow-md transition sm:opacity-0 sm:group-hover/slider:opacity-100 focus-visible:opacity-100 cursor-pointer"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#1e1c1a] shadow-md transition sm:opacity-0 sm:group-hover/slider:opacity-100 focus-visible:opacity-100 cursor-pointer"
           >
             <IconChevron dir="left" />
           </button>
@@ -158,7 +158,7 @@ export default function ImageSlider({
             type="button"
             onClick={() => go(index + 1)}
             aria-label="Foto siguiente"
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#222222] shadow-md transition sm:opacity-0 sm:group-hover/slider:opacity-100 focus-visible:opacity-100 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white/90 hover:bg-white text-[#1e1c1a] shadow-md transition sm:opacity-0 sm:group-hover/slider:opacity-100 focus-visible:opacity-100 cursor-pointer"
           >
             <IconChevron dir="right" />
           </button>

@@ -1,8 +1,11 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // La firma manuscrita viaja como PNG en base64 (hasta 300 KB)
+  app.useBodyParser('json', { limit: '1mb' });
   app.setGlobalPrefix('api/v1');
 
   // Configuración de CORS simplificada y dinámica para aceptar peticiones de Vercel

@@ -9,6 +9,7 @@
    - Flujo comercial: POST /leads -> POST /viewings (Pool 'Pendiente')
    ───────────────────────────────────────────────────────────── */
 
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
@@ -68,11 +69,11 @@ function statusBadge(status: string): { bg: string; text: string; label: string;
       };
     default:
       return {
-        bg: "bg-[#f7f7f7]",
-        text: "text-[#6a6a6a]",
-        border: "border-[#ebebeb]",
+        bg: "bg-[#f3efe8]",
+        text: "text-[#6b655e]",
+        border: "border-[#e2dcd2]",
         label: status || "Registrada",
-        dot: "bg-[#b0b0b0]",
+        dot: "bg-[#a39d94]",
       };
   }
 }
@@ -89,7 +90,7 @@ function IconChevronLeft() {
 
 function IconMapPin() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#ff385c] shrink-0">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#c4584c] shrink-0">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
@@ -98,7 +99,7 @@ function IconMapPin() {
 
 function IconCheckShield() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#ff385c] shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#c4584c] shrink-0">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <path d="m9 12 2 2 4-4" />
     </svg>
@@ -107,7 +108,7 @@ function IconCheckShield() {
 
 function IconClock() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#ff385c] shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#c4584c] shrink-0">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
     </svg>
@@ -116,7 +117,7 @@ function IconClock() {
 
 function IconHandshake() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#ff385c] shrink-0">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#c4584c] shrink-0">
       <path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-4 4" />
       <path d="m18 10 1-1a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0l-1 1" />
       <path d="M7 10.8 11.2 15" />
@@ -127,7 +128,7 @@ function IconHandshake() {
 
 function IconImagePlaceholder() {
   return (
-    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d1d1d1" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#a39d94" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <polyline points="21 15 16 10 5 21" />
@@ -148,7 +149,7 @@ function IconCalendar() {
 
 function IconSparkles() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#ff385c]">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#c4584c]">
       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
     </svg>
   );
@@ -336,11 +337,11 @@ export default function PropertyDetailClient({
   );
 
   const inputClass =
-    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-gray-400 outline-none transition-colors focus:border-[#222222]";
+    "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-[14px] text-[#1e1c1a] placeholder:text-gray-400 outline-none transition-colors focus:border-[#1e1c1a]";
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f7f7f7]">
+      <div className="min-h-screen bg-[#f3efe8]">
         <Navbar activeTab="properties" />
         <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8 animate-pulse">
           <div className="h-5 w-48 bg-gray-200 rounded-md mb-6" />
@@ -361,13 +362,13 @@ export default function PropertyDetailClient({
 
   if (fetchError || !property) {
     return (
-      <div className="min-h-screen bg-[#f7f7f7]">
+      <div className="min-h-screen bg-[#f3efe8]">
         <Navbar activeTab="properties" />
         <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-20 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mb-4 text-2xl font-bold">
             !
           </div>
-          <h1 className="text-2xl font-bold text-[#222222]">
+          <h1 className="page-title text-2xl font-bold text-[#1e1c1a]">
             {fetchError || "Propiedad no encontrada"}
           </h1>
           <p className="text-gray-500 text-sm mt-2 max-w-md">
@@ -375,9 +376,9 @@ export default function PropertyDetailClient({
           </p>
           <Link
             href="/properties"
-            className="mt-6 inline-flex items-center gap-2 bg-[#ff385c] hover:bg-[#e00b41] text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-sm"
+            className="mt-6 inline-flex items-center gap-2 bg-[#b04e42] hover:bg-[#a64739] text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-sm"
           >
-            ← Volver al catálogo de propiedades
+            <ArrowIcon dir="left" /> Volver al catálogo de propiedades
           </Link>
         </main>
       </div>
@@ -390,7 +391,7 @@ export default function PropertyDetailClient({
   const city = inferCity(property);
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       {/* ══════════════════════════════════════════════
           TOP NAV — Airbnb / SaaS Sticky Header
           ══════════════════════════════════════════════ */}
@@ -490,12 +491,12 @@ export default function PropertyDetailClient({
           <div className="lg:col-span-2 space-y-8">
             {/* Título, Dirección y Precio */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff385c]/10 text-[#ff385c] text-[12px] font-bold mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c4584c]/10 text-[#c4584c] text-[12px] font-bold mb-3">
                 <IconSparkles />
                 <span>Propiedad Exclusiva RealtyHub</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#222222] leading-tight">
+              <h1 className="page-title text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1e1c1a] leading-tight">
                 {property.title}
               </h1>
 
@@ -505,10 +506,10 @@ export default function PropertyDetailClient({
               </div>
 
               <div className="mt-6 flex flex-wrap items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-black text-[#222222]">
+                <span className="text-3xl sm:text-4xl font-black text-[#1e1c1a]">
                   {fmtPrice(property.price)}
                 </span>
-                <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                <span className="text-sm font-medium text-gray-500">
                   {rental ? "COP / mes · Canon de arriendo" : "COP · Precio Oficial"}
                 </span>
               </div>
@@ -520,7 +521,7 @@ export default function PropertyDetailClient({
             {/* Beneficios Inmobiliarios Airbnb Style */}
             <div className="space-y-5">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#ff385c]/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#c4584c]/10 flex items-center justify-center shrink-0">
                   <IconCheckShield />
                 </div>
                 <div>
@@ -534,7 +535,7 @@ export default function PropertyDetailClient({
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#ff385c]/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#c4584c]/10 flex items-center justify-center shrink-0">
                   <IconClock />
                 </div>
                 <div>
@@ -548,7 +549,7 @@ export default function PropertyDetailClient({
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#ff385c]/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#c4584c]/10 flex items-center justify-center shrink-0">
                   <IconHandshake />
                 </div>
                 <div>
@@ -567,7 +568,7 @@ export default function PropertyDetailClient({
 
             {/* Descripción Extensa */}
             <div>
-              <h2 className="text-[22px] font-bold text-[#222222] mb-4">
+              <h2 className="text-[22px] font-bold text-[#1e1c1a] mb-4">
                 Acerca de este inmueble
               </h2>
               <p className="text-[15px] text-gray-700 leading-relaxed whitespace-pre-wrap font-normal">
@@ -579,19 +580,19 @@ export default function PropertyDetailClient({
             {/* Cuadrícula de Especificaciones Básicas */}
             <div className="rounded-2xl bg-white border border-gray-200 p-6 grid grid-cols-2 sm:grid-cols-3 gap-6 shadow-2xs">
               <div>
-                <p className="text-xs uppercase font-bold text-gray-400">Tipo</p>
+                <p className="text-xs font-medium text-gray-500">Tipo</p>
                 <p className="text-[14px] font-semibold text-gray-900 mt-1">
                   {propertyType ?? "Inmueble"}
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase font-bold text-gray-400">Operación</p>
+                <p className="text-xs font-medium text-gray-500">Operación</p>
                 <p className="text-[14px] font-semibold text-gray-900 mt-1">
                   {rental ? "Alquiler" : "Venta"}
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase font-bold text-gray-400">Ciudad</p>
+                <p className="text-xs font-medium text-gray-500">Ciudad</p>
                 <p className="text-[14px] font-semibold text-gray-900 mt-1">
                   {city ?? "—"}
                 </p>
@@ -607,7 +608,7 @@ export default function PropertyDetailClient({
               {/* Encabezado de la Tarjeta Flotante */}
               <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-gray-100">
                 <div>
-                  <span className="text-2xl sm:text-3xl font-extrabold text-[#222222]">
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#1e1c1a]">
                     {fmtPrice(property.price)}
                   </span>
                   <span className="text-xs text-gray-500 font-medium block">
@@ -644,8 +645,8 @@ export default function PropertyDetailClient({
               {/* Formulario de Agendamiento Público */}
               <form onSubmit={handleBookingSubmit} className="space-y-4">
                 <div className="text-left">
-                  <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Tu Nombre Completo <span className="text-[#ff385c]">*</span>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                    Tu Nombre Completo <span className="text-[#c4584c]">*</span>
                   </label>
                   <input
                     type="text"
@@ -659,8 +660,8 @@ export default function PropertyDetailClient({
                 </div>
 
                 <div className="text-left">
-                  <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Correo Electrónico <span className="text-[#ff385c]">*</span>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                    Correo Electrónico <span className="text-[#c4584c]">*</span>
                   </label>
                   <input
                     type="email"
@@ -674,8 +675,8 @@ export default function PropertyDetailClient({
                 </div>
 
                 <div className="text-left">
-                  <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Teléfono / WhatsApp <span className="text-[#ff385c]">*</span>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1">
+                    Teléfono / WhatsApp <span className="text-[#c4584c]">*</span>
                   </label>
                   <input
                     type="tel"
@@ -689,8 +690,8 @@ export default function PropertyDetailClient({
                 </div>
 
                 <div className="text-left">
-                  <label className="block text-[12px] font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
-                    <span>Fecha y Hora Deseada <span className="text-[#ff385c]">*</span></span>
+                  <label className="block text-[13px] font-medium text-gray-700 mb-1 flex items-center justify-between">
+                    <span>Fecha y Hora Deseada <span className="text-[#c4584c]">*</span></span>
                     <IconCalendar />
                   </label>
                   <input
@@ -712,19 +713,19 @@ export default function PropertyDetailClient({
                       checked={acceptedPolicy}
                       onChange={(e) => setAcceptedPolicy(e.target.checked)}
                       disabled={submitting}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#ff385c] cursor-pointer"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#c4584c] cursor-pointer"
                     />
                     <span className="text-[12px] leading-snug text-gray-700">
                       Autorizo a RealtyHub el tratamiento de mis datos personales para gestionar esta visita, según la{" "}
                       <button
                         type="button"
                         onClick={() => setPolicyOpen((v) => !v)}
-                        className="font-semibold text-[#ff385c] underline underline-offset-2 cursor-pointer"
+                        className="font-semibold text-[#c4584c] underline underline-offset-2 cursor-pointer"
                         aria-expanded={policyOpen}
                       >
                         Política de Protección de Datos
                       </button>
-                      . <span className="text-[#ff385c]">*</span>
+                      . <span className="text-[#c4584c]">*</span>
                     </span>
                   </label>
 
@@ -744,7 +745,7 @@ export default function PropertyDetailClient({
                       </p>
                       <p>
                         <strong className="text-gray-800">Tus derechos:</strong> conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013, puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar esta autorización, escribiéndonos a{" "}
-                        <a href="mailto:privacidad@realtyhub.com" className="underline text-[#ff385c]">
+                        <a href="mailto:privacidad@realtyhub.com" className="underline text-[#c4584c]">
                           privacidad@realtyhub.com
                         </a>
                         . Es opcional responder preguntas sobre datos sensibles y no te solicitamos ninguno.
@@ -760,7 +761,7 @@ export default function PropertyDetailClient({
                 <button
                   type="submit"
                   disabled={submitting || !acceptedPolicy}
-                  className="w-full mt-2 rounded-full bg-[#ff385c] hover:bg-[#e00b41] text-white py-3.5 px-6 font-bold text-[15px] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full mt-2 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white py-3.5 px-6 font-bold text-[15px] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
@@ -893,7 +894,7 @@ export default function PropertyDetailClient({
                   onClick={() => setSelectedImageIndex(idx)}
                   className={`relative w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${
                     idx === selectedImageIndex
-                      ? "border-[#ff385c] scale-105 opacity-100"
+                      ? "border-[#c4584c] scale-105 opacity-100"
                       : "border-transparent opacity-50 hover:opacity-80"
                   }`}
                 >

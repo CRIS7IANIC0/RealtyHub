@@ -12,21 +12,10 @@
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
-import WelcomeDoor from "@/components/WelcomeDoor";
-import CompactHeader from "@/components/home/CompactHeader";
-import PropertyCarousel from "@/components/home/PropertyCarousel";
-import PropertyGrid from "@/components/home/PropertyGrid";
-import TestimonialsSection from "@/components/home/TestimonialsSection";
-import PromoBanner from "@/components/home/PromoBanner";
-import Footer from "@/components/Footer";
+import PublicHome from "@/components/home/PublicHome";
 import ImageSlider from "@/components/ImageSlider";
-import { useFavorites } from "@/lib/useFavorites";
 import {
-  getPropertyImage,
   getPropertyImages,
-  inferType,
-  isAvailable,
-  isRental,
 } from "@/lib/property";
 
 // ─── Tipos de Datos ──────────────────────────────────────────
@@ -128,12 +117,12 @@ function statusStyle(status: string): string {
       return "bg-amber-50 text-amber-700";
     case "sold":
     case "vendida":
-      return "bg-[#ff385c]/10 text-[#ff385c]";
+      return "bg-[#c4584c]/10 text-[#c4584c]";
     case "rented":
     case "alquilada":
       return "bg-sky-50 text-sky-700";
     default:
-      return "bg-[#f7f7f7] text-[#6a6a6a]";
+      return "bg-[#f3efe8] text-[#6b655e]";
   }
 }
 
@@ -150,9 +139,9 @@ function stageStyle(stage: string): string {
       return "bg-emerald-50 text-emerald-700";
     case "lost":
     case "perdido":
-      return "bg-[#f7f7f7] text-[#6a6a6a]";
+      return "bg-[#f3efe8] text-[#6b655e]";
     default:
-      return "bg-[#f7f7f7] text-[#6a6a6a]";
+      return "bg-[#f3efe8] text-[#6b655e]";
   }
 }
 
@@ -171,7 +160,7 @@ function viewingStatusStyle(status: string): string {
     case "cancelada":
       return "bg-rose-50 text-rose-700";
     default:
-      return "bg-[#f7f7f7] text-[#6a6a6a]";
+      return "bg-[#f3efe8] text-[#6b655e]";
   }
 }
 
@@ -179,21 +168,21 @@ function roleBadge(role: string): { bg: string; text: string; label: string } {
   switch (role?.toLowerCase()) {
     case "admin":
       return {
-        bg: "bg-[#ff385c]/10",
-        text: "text-[#ff385c]",
+        bg: "bg-[#c4584c]/10",
+        text: "text-[#c4584c]",
         label: "Admin",
       };
     case "gerente":
     case "manager":
       return {
-        bg: "bg-[#f7f7f7]",
-        text: "text-[#222222]",
+        bg: "bg-[#f3efe8]",
+        text: "text-[#1e1c1a]",
         label: role.charAt(0).toUpperCase() + role.slice(1),
       };
     default:
       return {
-        bg: "bg-[#f7f7f7]",
-        text: "text-[#6a6a6a]",
+        bg: "bg-[#f3efe8]",
+        text: "text-[#6b655e]",
         label: role ? role.charAt(0).toUpperCase() + role.slice(1) : "Agente",
       };
   }
@@ -231,7 +220,7 @@ function IconBuilding() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
       <path d="M9 22v-4h6v4" />
@@ -251,7 +240,7 @@ function IconUsers() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
@@ -272,7 +261,7 @@ function IconCalendar() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
@@ -293,7 +282,7 @@ function IconTarget() {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
@@ -313,7 +302,7 @@ function IconChevronRight() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-[#6a6a6a]"
+      className="text-[#6b655e]"
     >
       <polyline points="9 18 15 12 9 6" />
     </svg>
@@ -336,29 +325,29 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f7f7f7]">
+        <div className="flex items-center justify-center w-10 h-10 rounded-[12px] bg-[#f3efe8]">
           {icon}
         </div>
         <h2
-          className="text-[22px] font-medium tracking-[-0.44px] text-[#222222]"
+          className="text-[22px] font-medium tracking-[-0.44px] text-[#1e1c1a]"
           style={{ lineHeight: "28px" }}
         >
           {title}
         </h2>
-        <span className="ml-1 text-[13px] font-medium text-[#6a6a6a] bg-[#f7f7f7] rounded-full px-2.5 py-0.5">
+        <span className="ml-1 text-[13px] font-medium text-[#6b655e] bg-[#f3efe8] rounded-full px-2.5 py-0.5">
           {count}
         </span>
       </div>
       {linkHref ? (
         <Link
           href={linkHref}
-          className="flex items-center gap-1 text-[14px] font-medium text-[#222222] hover:text-[#ff385c] transition-colors cursor-pointer no-underline"
+          className="flex items-center gap-1 text-[14px] font-medium text-[#1e1c1a] hover:text-[#c4584c] transition-colors cursor-pointer no-underline"
         >
           Ver todo
           <IconChevronRight />
         </Link>
       ) : (
-        <span className="flex items-center gap-1 text-[14px] font-medium text-[#222222]">
+        <span className="flex items-center gap-1 text-[14px] font-medium text-[#1e1c1a]">
           Gestión activa
         </span>
       )}
@@ -368,8 +357,8 @@ function SectionHeader({
 
 function EmptyRow({ message }: { message: string }) {
   return (
-    <div className="flex items-center justify-center rounded-[12px] bg-white py-16 px-8 border border-[#ebebeb]">
-      <p className="text-[14px] text-[#6a6a6a]">{message}</p>
+    <div className="flex items-center justify-center rounded-[12px] bg-white py-16 px-8 border border-[#e2dcd2]">
+      <p className="text-[14px] text-[#6b655e]">{message}</p>
     </div>
   );
 }
@@ -378,8 +367,8 @@ function PropertyCard({ p }: { p: Property }) {
   const badge = statusStyle(p.status);
 
   return (
-    <div className="shrink-0 w-[280px] rounded-[12px] bg-white overflow-hidden group cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#ebebeb]">
-      <div className="relative aspect-square bg-[#f0f0f0] overflow-hidden">
+    <div className="shrink-0 w-[280px] rounded-[12px] bg-white overflow-hidden group cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#e2dcd2]">
+      <div className="relative aspect-square bg-[#ece6dc] overflow-hidden">
         <ImageSlider
           images={getPropertyImages(p)}
           alt={p.title || p.address}
@@ -393,13 +382,13 @@ function PropertyCard({ p }: { p: Property }) {
       </div>
 
       <div className="p-4">
-        <p className="text-[14px] font-medium text-[#222222] truncate">
+        <p className="text-[14px] font-medium text-[#1e1c1a] truncate">
           {p.title || p.address}
         </p>
-        <p className="text-[12px] text-[#6a6a6a] truncate mt-0.5">
+        <p className="text-[12px] text-[#6b655e] truncate mt-0.5">
           {p.address}
         </p>
-        <p className="text-[15px] font-semibold text-[#222222] mt-2">
+        <p className="text-[15px] font-semibold text-[#1e1c1a] mt-2">
           {fmtPrice(p.price)}
         </p>
       </div>
@@ -411,15 +400,15 @@ function LeadCard({ l }: { l: Lead }) {
   const badge = stageStyle(l.stage);
 
   return (
-    <div className="shrink-0 w-[260px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#ebebeb]">
+    <div className="shrink-0 w-[260px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#e2dcd2]">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-xl">{sourceIcon(l.source)}</span>
           <div>
-            <p className="text-[14px] font-medium text-[#222222]">
+            <p className="text-[14px] font-medium text-[#1e1c1a]">
               Lead #{String(l.id).padStart(3, "0")}
             </p>
-            <p className="text-[13px] text-[#6a6a6a] capitalize">
+            <p className="text-[13px] text-[#6b655e] capitalize">
               {l.source || "Desconocido"}
             </p>
           </div>
@@ -432,7 +421,7 @@ function LeadCard({ l }: { l: Lead }) {
         >
           {l.stage}
         </span>
-        <span className="text-[12px] text-[#6a6a6a]">
+        <span className="text-[12px] text-[#6b655e]">
           Prop #{l.property_id ?? "—"}
         </span>
       </div>
@@ -444,16 +433,16 @@ function ViewingCard({ v }: { v: Viewing }) {
   const badge = viewingStatusStyle(v.status);
 
   return (
-    <div className="shrink-0 w-[260px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#ebebeb]">
+    <div className="shrink-0 w-[260px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#e2dcd2]">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-full bg-[#f7f7f7] flex items-center justify-center text-[#6a6a6a] text-sm font-semibold">
+        <div className="w-10 h-10 rounded-full bg-[#f3efe8] flex items-center justify-center text-[#6b655e] text-sm font-semibold">
           {fmtDate(v.scheduled_at).slice(0, 3)}
         </div>
         <div>
-          <p className="text-[14px] font-medium text-[#222222]">
+          <p className="text-[14px] font-medium text-[#1e1c1a]">
             {fmtDate(v.scheduled_at)}
           </p>
-          <p className="text-[13px] text-[#6a6a6a]">
+          <p className="text-[13px] text-[#6b655e]">
             {fmtTime(v.scheduled_at)}
           </p>
         </div>
@@ -465,7 +454,7 @@ function ViewingCard({ v }: { v: Viewing }) {
         >
           {v.status}
         </span>
-        <span className="text-[12px] text-[#6a6a6a]">
+        <span className="text-[12px] text-[#6b655e]">
           Lead #{v.lead_id ?? "—"}
         </span>
       </div>
@@ -477,16 +466,16 @@ function UserCard({ u }: { u: User }) {
   const role = roleBadge(u.role);
 
   return (
-    <div className="shrink-0 w-[240px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#ebebeb]">
+    <div className="shrink-0 w-[240px] rounded-[12px] bg-white p-5 cursor-pointer transition-transform duration-200 hover:scale-[1.02] border border-[#e2dcd2]">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-11 h-11 rounded-full bg-[#f7f7f7] flex items-center justify-center text-[15px] font-semibold text-[#222222] uppercase">
+        <div className="w-11 h-11 rounded-full bg-[#f3efe8] flex items-center justify-center text-[15px] font-semibold text-[#1e1c1a] uppercase">
           {u.name ? u.name.charAt(0) : "U"}
         </div>
         <div className="min-w-0">
-          <p className="text-[14px] font-medium text-[#222222] truncate">
+          <p className="text-[14px] font-medium text-[#1e1c1a] truncate">
             {u.name || "Sin nombre"}
           </p>
-          <p className="text-[13px] text-[#6a6a6a]">
+          <p className="text-[13px] text-[#6b655e]">
             Oficina {u.office_id ?? "—"}
           </p>
         </div>
@@ -505,7 +494,7 @@ function UserCard({ u }: { u: User }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       <Navbar activeTab="inicio" />
       <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         <div className="space-y-4 mb-10">
@@ -516,146 +505,11 @@ function LoadingSkeleton() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-28 rounded-[12px] bg-white border border-[#ebebeb] p-5 animate-pulse"
+              className="h-28 rounded-[12px] bg-white border border-[#e2dcd2] p-5 animate-pulse"
             />
           ))}
         </div>
-        <div className="h-72 rounded-[12px] bg-white border border-[#ebebeb] animate-pulse" />
-      </main>
-    </div>
-  );
-}
-
-// ─── VISTA PÚBLICA: Landing Comercial Estilo Airbnb ───────────
-
-const CAROUSEL_MAX = 6;
-
-function PublicLandingView({
-  properties,
-  isLoading,
-}: {
-  properties: Property[];
-  isLoading: boolean;
-}) {
-  const [location, setLocation] = useState("");
-  const [propertyType, setPropertyType] = useState("");
-  const { isFavorite, toggle } = useFavorites();
-
-  // Sólo se muestran al público los inmuebles Disponibles
-  const availableProperties = useMemo(
-    () => properties.filter(isAvailable),
-    [properties]
-  );
-
-  // Carrusel: destacados con foto primero, luego el resto
-  const featured = useMemo(
-    () =>
-      [...availableProperties]
-        .sort((a, b) => Number(!!getPropertyImage(b)) - Number(!!getPropertyImage(a)))
-        .slice(0, CAROUSEL_MAX),
-    [availableProperties]
-  );
-
-  // Filtros de la barra de búsqueda (Dónde + Tipo), aplicados en tiempo real
-  const filtered = useMemo(() => {
-    const term = location.trim().toLowerCase();
-    return availableProperties.filter((p) => {
-      if (propertyType && inferType(p) !== propertyType) return false;
-      if (!term) return true;
-      return [p.title, p.address, p.description].some((f) =>
-        f?.toLowerCase().includes(term)
-      );
-    });
-  }, [availableProperties, location, propertyType]);
-
-  const forSale = useMemo(() => filtered.filter((p) => !isRental(p)), [filtered]);
-  const forRent = useMemo(() => filtered.filter(isRental), [filtered]);
-
-  const hasFilters = location.trim() !== "" || propertyType !== "";
-
-  function scrollToResults() {
-    document
-      .getElementById("resultados")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f7f7f7]">
-      <CompactHeader
-        location={location}
-        onLocationChange={setLocation}
-        propertyType={propertyType}
-        onPropertyTypeChange={setPropertyType}
-        onSearch={scrollToResults}
-      />
-
-      <main className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 pt-6 pb-8 space-y-14">
-        {/* ── Carrusel principal ─────────────────────── */}
-        <PropertyCarousel properties={featured} isLoading={isLoading} />
-
-        <div id="resultados" className="space-y-4 scroll-mt-40 md:scroll-mt-28">
-          {hasFilters && !isLoading && (
-            <div className="flex flex-wrap items-center gap-3 text-[14px] text-[#6a6a6a]">
-              <span>
-                {filtered.length}{" "}
-                {filtered.length === 1 ? "resultado" : "resultados"} para tu búsqueda
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setLocation("");
-                  setPropertyType("");
-                }}
-                className="font-semibold text-[#222222] underline underline-offset-4 hover:text-[#ff385c] cursor-pointer"
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          )}
-
-          {/* ── Sección 1: Propiedades disponibles (venta) ── */}
-          <PropertyGrid
-            id="propiedades-disponibles"
-            title="Propiedades disponibles"
-            subtitle="Inmuebles listos para visitar y escriturar."
-            properties={forSale}
-            isLoading={isLoading}
-            emptyMessage={
-              hasFilters
-                ? "Ninguna propiedad en venta coincide con tu búsqueda."
-                : "Por ahora no hay propiedades en venta disponibles. Vuelve pronto."
-            }
-            isFavorite={isFavorite}
-            onToggleFavorite={toggle}
-            viewAllHref="/properties"
-          />
-        </div>
-
-        {/* ── Banner con imagen y CTA ──────────────────── */}
-        <PromoBanner />
-
-        {/* ── Sección 2: Propiedades para alquiler ────── */}
-        <PropertyGrid
-          id="propiedades-alquiler"
-          title="Propiedades disponibles para alquiler"
-          subtitle="Arriendos con disponibilidad inmediata."
-          properties={forRent}
-          isLoading={isLoading}
-          emptyMessage={
-            hasFilters
-              ? "Ningún alquiler coincide con tu búsqueda."
-              : "Por ahora no hay propiedades en alquiler disponibles. Vuelve pronto."
-          }
-          isFavorite={isFavorite}
-          onToggleFavorite={toggle}
-          priceSuffix="/ mes"
-        />
-
-        {/* ── Testimonios de clientes ─────────────────── */}
-        <TestimonialsSection />
-
-        {/* ── Footer ────────────────────────────────── */}
-        <Footer />
+        <div className="h-72 rounded-[12px] bg-white border border-[#e2dcd2] animate-pulse" />
       </main>
     </div>
   );
@@ -708,19 +562,19 @@ function InternalDashboardView({
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f7f7]">
+    <div className="min-h-screen bg-[#f3efe8]">
       <Navbar activeTab="inicio" />
 
       <main className="w-full max-w-[1400px] mx-auto px-6 md:px-10 py-8">
         {/* ── Encabezado de Bienvenida ────────────────── */}
         <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#222222] mb-1">
+            <h1 className="page-title text-[28px] md:text-[32px] font-semibold tracking-[-0.5px] text-[#1e1c1a] mb-1">
               Panel de inicio
             </h1>
-            <p className="text-[14px] text-[#6a6a6a]">
+            <p className="text-[14px] text-[#6b655e]">
               Bienvenido,{" "}
-              <span className="font-semibold text-[#222222]">
+              <span className="font-semibold text-[#1e1c1a]">
                 {user.name || user.email}
               </span>
               . Resumen operativo en tiempo real de tu red inmobiliaria.
@@ -731,7 +585,7 @@ function InternalDashboardView({
             <span
               className={`text-[12px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full ${
                 role === "ADMIN"
-                  ? "bg-[#222222] text-white"
+                  ? "bg-[#1e1c1a] text-white"
                   : role === "GERENTE"
                   ? "bg-amber-100 text-amber-800"
                   : "bg-emerald-100 text-emerald-800"
@@ -744,29 +598,29 @@ function InternalDashboardView({
 
         {/* ── KPI Strip ─────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb]">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Propiedades</p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+          <div className="min-w-0 rounded-[12px] bg-white p-5 border border-[#e2dcd2]">
+            <p className="text-[13px] text-[#6b655e] mb-1">Propiedades</p>
+            <p className="text-[clamp(17px,5.4vw,24px)] font-semibold text-[#1e1c1a] break-words">
               {properties.length}
             </p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb]">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Leads activos</p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+          <div className="min-w-0 rounded-[12px] bg-white p-5 border border-[#e2dcd2]">
+            <p className="text-[13px] text-[#6b655e] mb-1">Leads activos</p>
+            <p className="text-[clamp(17px,5.4vw,24px)] font-semibold text-[#1e1c1a] break-words">
               {activeLeads}
             </p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb]">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">
+          <div className="min-w-0 rounded-[12px] bg-white p-5 border border-[#e2dcd2]">
+            <p className="text-[13px] text-[#6b655e] mb-1">
               Visitas pendientes
             </p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+            <p className="text-[clamp(17px,5.4vw,24px)] font-semibold text-[#1e1c1a] break-words">
               {upcomingViewings}
             </p>
           </div>
-          <div className="rounded-[12px] bg-white p-5 border border-[#ebebeb]">
-            <p className="text-[13px] text-[#6a6a6a] mb-1">Valor portafolio</p>
-            <p className="text-[24px] font-semibold text-[#222222]">
+          <div className="min-w-0 rounded-[12px] bg-white p-5 border border-[#e2dcd2]">
+            <p className="text-[13px] text-[#6b655e] mb-1">Valor portafolio</p>
+            <p className="text-[clamp(17px,5.4vw,24px)] font-semibold text-[#1e1c1a] break-words">
               {fmtPrice(totalValue)}
             </p>
           </div>
@@ -855,20 +709,20 @@ function InternalDashboardView({
         )}
 
         {/* ── Footer ────────────────────────────────── */}
-        <footer className="py-10 border-t border-[#ebebeb] mt-4">
+        <footer className="py-10 border-t border-[#e2dcd2] mt-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[13px] text-[#6a6a6a]">
+            <p className="text-[13px] text-[#6b655e]">
               © {new Date().getFullYear()} RealtyHub. Todos los derechos
               reservados.
             </p>
             <div className="flex items-center gap-6">
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Soporte
               </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Privacidad
               </span>
-              <span className="text-[13px] text-[#6a6a6a] hover:text-[#222222] transition-colors cursor-pointer">
+              <span className="text-[13px] text-[#6b655e] hover:text-[#1e1c1a] transition-colors cursor-pointer">
                 Términos
               </span>
             </div>
@@ -1010,7 +864,7 @@ export default function HomePage() {
     content = <LoadingSkeleton />;
   } else if (!user) {
     content = (
-      <PublicLandingView
+      <PublicHome
         properties={properties}
         isLoading={isDataLoading}
       />
@@ -1027,13 +881,9 @@ export default function HomePage() {
     );
   }
 
-  // 4. La puerta de bienvenida es solo para visitantes: se monta cuando ya se
-  //    leyó la sesión y no hay usuario (tras el login no vuelve a aparecer).
-  const showWelcomeDoor = !isAuthLoading && !user;
 
   return (
     <>
-      {showWelcomeDoor && <WelcomeDoor />}
       {content}
     </>
   );

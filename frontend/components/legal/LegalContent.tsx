@@ -9,24 +9,24 @@ export const LEGAL_UPDATED = "14 de octubre de 2026";
 
 function H({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-[19px] font-semibold text-[#222222] mt-8 mb-2">
+    <h2 className="text-[19px] font-semibold text-[#1e1c1a] mt-8 mb-2">
       {children}
     </h2>
   );
 }
 function H3({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-[15px] font-semibold text-[#222222] mt-4 mb-1">
+    <h3 className="text-[15px] font-semibold text-[#1e1c1a] mt-4 mb-1">
       {children}
     </h3>
   );
 }
 function P({ children }: { children: ReactNode }) {
-  return <p className="text-[14px] leading-relaxed text-[#444444] mb-3">{children}</p>;
+  return <p className="text-[14px] leading-relaxed text-[#433e39] mb-3">{children}</p>;
 }
 function UL({ items }: { items: ReactNode[] }) {
   return (
-    <ul className="list-disc pl-5 space-y-1.5 mb-3 text-[14px] leading-relaxed text-[#444444] marker:text-[#ff385c]">
+    <ul className="list-disc pl-5 space-y-1.5 mb-3 text-[14px] leading-relaxed text-[#433e39] marker:text-[#c4584c]">
       {items.map((it, i) => (
         <li key={i}>{it}</li>
       ))}
@@ -143,7 +143,7 @@ export function TermsContent() {
         Podemos actualizar estos términos; la versión vigente estará siempre
         publicada en esta página. Se rigen por las leyes de la República de
         Colombia. Para dudas escríbenos a{" "}
-        <a className="text-[#ff385c] underline" href="mailto:soporte@realtyhub.com">
+        <a className="text-[#c4584c] underline" href="mailto:soporte@realtyhub.com">
           soporte@realtyhub.com
         </a>
         .
@@ -236,7 +236,7 @@ export function PrivacyContent() {
       />
       <P>
         Para ejercer estos derechos escribe a{" "}
-        <a className="text-[#ff385c] underline" href="mailto:soporte@realtyhub.com">
+        <a className="text-[#c4584c] underline" href="mailto:soporte@realtyhub.com">
           soporte@realtyhub.com
         </a>
         ; responderemos en los plazos que establece la ley.

@@ -21,6 +21,13 @@ export interface Contract {
   created_at?: string;
 }
 
+export interface ViewingSnippet {
+  id: string;
+  property_id: string;
+  lead_id: string;
+  agent_id?: string | null;
+}
+
 export interface PropertySnippet {
   id: string;
   title?: string;
@@ -72,6 +79,16 @@ async function fetchLeads(): Promise<LeadSnippet[]> {
   }
 }
 
+async function fetchViewings(): Promise<ViewingSnippet[]> {
+  try {
+    const res = await fetch(`${GATEWAY}/viewings`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 async function fetchUsers(): Promise<UserSnippet[]> {
   try {
     const res = await fetch(`${GATEWAY}/users`, { cache: "no-store" });
@@ -84,11 +101,12 @@ async function fetchUsers(): Promise<UserSnippet[]> {
 
 // ─── Page (Server Component) ────────────────────────────────
 export default async function ContractsPage() {
-  const [contracts, properties, leads, users] = await Promise.all([
+  const [contracts, properties, leads, users, viewings] = await Promise.all([
     fetchContracts(),
     fetchProperties(),
     fetchLeads(),
     fetchUsers(),
+    fetchViewings(),
   ]);
 
   return (
@@ -97,6 +115,7 @@ export default async function ContractsPage() {
       properties={properties}
       leads={leads}
       users={users}
+      viewings={viewings}
     />
   );
 }

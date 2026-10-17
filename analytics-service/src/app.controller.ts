@@ -1,67 +1,38 @@
 import { Controller, Get } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly service: AppService,
+  ) {}
 
   // ─── 1. Consumidor de eventos de RabbitMQ ───────────────────
+  // Se conserva el registro de cada cierre como respaldo auditable de ingresos.
   @EventPattern('contract.signed')
   async handleContractSigned(@Payload() data: any) {
     try {
-      console.log('------------------------------------------------------');
       console.log(`📊 [ANALYTICS] Contrato firmado recibido:`, data?.id);
-
-      const price = Number(data?.price || 0);
-
       const metric = await this.prisma.metric.create({
-        data: {
-          event_type: 'contract_signed',
-          revenue_value: price,
-        },
+        data: { event_type: 'contract_signed', revenue_value: Number(data?.price || 0) },
       });
-
-      console.log(`✅ [ANALYTICS] Métrica registrada con éxito:`, metric);
-      console.log('------------------------------------------------------');
+      console.log(`✅ [ANALYTICS] Métrica registrada con éxito:`, metric.id);
     } catch (error) {
       console.error('❌ [ANALYTICS] Error al procesar evento contract.signed:', error);
     }
   }
 
-  // ─── 2. Endpoints HTTP para consultar métricas consolidadas ─
+  // ─── 2. KPIs comerciales ────────────────────────────────────
   @Get('analytics')
   async getAnalytics() {
-    return this.calculateMetrics();
+    return this.service.buildDashboard();
   }
 
   @Get()
   async getRoot() {
-    return this.calculateMetrics();
-  }
-
-  private async calculateMetrics() {
-    try {
-      const metrics = await this.prisma.metric.findMany({
-        where: { event_type: 'contract_signed' },
-      });
-
-      const total_revenue = metrics.reduce(
-        (acc, m) => acc + (Number(m.revenue_value) || 0),
-        0,
-      );
-      const total_sales = metrics.length;
-
-      return {
-        total_revenue,
-        total_sales,
-      };
-    } catch (error) {
-      console.error('❌ [ANALYTICS] Error al calcular métricas:', error);
-      return {
-        total_revenue: 0,
-        total_sales: 0,
-      };
-    }
+    return this.service.buildDashboard();
   }
 }

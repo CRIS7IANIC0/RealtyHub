@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { Notification } from './page';
 import { GATEWAY } from '@/lib/config';
 
@@ -38,6 +39,34 @@ function humanize(message: string, names: Record<string, string>): string {
     const name = names[id];
     return name ? `"${name}"` : `#${id.slice(0, 8)}`;
   });
+}
+
+const CATEGORIES: { key: string; label: string }[] = [
+  { key: 'all', label: 'Todas' },
+  { key: 'lead', label: 'Leads' },
+  { key: 'visit', label: 'Visitas' },
+  { key: 'contract', label: 'Contratos' },
+  { key: 'commission', label: 'Comisiones' },
+];
+
+const CATEGORY_LABEL: Record<string, string> = {
+  lead: 'Lead',
+  visit: 'Visita',
+  contract: 'Contrato',
+  commission: 'Comisión',
+};
+
+interface Me {
+  id?: string;
+  role?: string;
+}
+
+/** Misma regla del servicio: las propias + avisos generales (+ copias de clientes si es gerencia). */
+function isVisibleTo(n: Notification, me: Me): boolean {
+  if (n.recipient_id && n.recipient_id === me.id) return true;
+  if (!n.recipient_id && (n.recipient_type ?? 'USER') === 'USER') return true;
+  const manager = ['ADMIN', 'GERENTE'].includes(String(me.role).toUpperCase());
+  return manager && n.recipient_type === 'CLIENT';
 }
 
 const TYPE_STYLES: Record<string, { bg: string; fg: string; icon: React.ReactNode }> = {
@@ -93,12 +122,34 @@ export default function NotificationsClient({ notifications, names }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
+  const [me, setMe] = useState<Me | null>(null);
+  const [meLoaded, setMeLoaded] = useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  useEffect(() => {
+    function loadUser() {
+      try {
+        setMe(JSON.parse(localStorage.getItem('user') ?? 'null'));
+      } catch {
+        setMe(null);
+      }
+      setMeLoaded(true);
+    }
+    loadUser();
+    window.addEventListener('realtyhub_auth_changed', loadUser);
+    return () => window.removeEventListener('realtyhub_auth_changed', loadUser);
+  }, []);
+
+  // Cada persona ve sólo lo suyo; sin sesión no se muestra nada
+  const mine = useMemo(() => (me ? notifications.filter((n) => isVisibleTo(n, me)) : []), [notifications, me]);
+  const unreadCount = mine.filter((n) => !n.is_read).length;
   const filtered = useMemo(
-    () => (filter === 'unread' ? notifications.filter((n) => !n.is_read) : notifications),
-    [notifications, filter],
+    () =>
+      mine.filter(
+        (n) => (filter === 'all' || !n.is_read) && (category === 'all' || n.category === category),
+      ),
+    [mine, filter, category],
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Si al marcar como leídas la página actual deja de existir, se usa la última válida
@@ -110,6 +161,7 @@ export default function NotificationsClient({ notifications, names }: Props) {
     setLoadingId(id);
     try {
       await fetch(`${GATEWAY}/notifications/${id}/read`, { method: 'PATCH' });
+      window.dispatchEvent(new Event('realtyhub_notifications_changed'));
       router.refresh();
     } catch (err) {
       console.error('Error al marcar como leída:', err);
@@ -122,7 +174,9 @@ export default function NotificationsClient({ notifications, names }: Props) {
     if (markingAll || unreadCount === 0) return;
     setMarkingAll(true);
     try {
-      await fetch(`${GATEWAY}/notifications/read-all`, { method: 'PATCH' });
+      const qs = new URLSearchParams({ user_id: me?.id ?? '', role: me?.role ?? '' });
+      await fetch(`${GATEWAY}/notifications/read-all?${qs}`, { method: 'PATCH' });
+      window.dispatchEvent(new Event('realtyhub_notifications_changed'));
       router.refresh();
     } catch (err) {
       console.error('Error al marcar todas como leídas:', err);
@@ -133,21 +187,21 @@ export default function NotificationsClient({ notifications, names }: Props) {
 
   const tabClass = (active: boolean) =>
     `px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors cursor-pointer ${
-      active ? 'bg-[#222222] text-white' : 'text-[#6a6a6a] hover:text-[#222222]'
+      active ? 'bg-[#1e1c1a] text-white' : 'text-[#6b655e] hover:text-[#1e1c1a]'
     }`;
 
   const pagerBtn =
-    'rounded-full border border-[#ebebeb] bg-white px-4 py-2 text-[13px] font-medium text-[#222222] hover:border-[#222222] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#ebebeb]';
+    'rounded-full border border-[#e2dcd2] bg-white px-4 py-2 text-[13px] font-medium text-[#1e1c1a] hover:border-[#1e1c1a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#e2dcd2]';
 
   return (
     <>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#222222] mb-1">
+          <h1 className="text-[28px] font-semibold tracking-[-0.5px] text-[#1e1c1a] mb-1">
             Notificaciones
           </h1>
-          <p className="text-[14px] text-[#6a6a6a]">
+          <p className="text-[14px] text-[#6b655e]">
             {unreadCount > 0
               ? `Tienes ${unreadCount} ${unreadCount === 1 ? 'notificación sin leer' : 'notificaciones sin leer'}.`
               : 'Estás al día, no tienes notificaciones pendientes.'}
@@ -157,7 +211,7 @@ export default function NotificationsClient({ notifications, names }: Props) {
           type="button"
           onClick={markAllAsRead}
           disabled={markingAll || unreadCount === 0}
-          className="inline-flex items-center justify-center gap-2 self-start sm:self-auto rounded-full border border-[#222222] px-5 py-2.5 text-[13px] font-semibold text-[#222222] hover:bg-[#222222] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#222222]"
+          className="inline-flex items-center justify-center gap-2 self-start sm:self-auto rounded-full border border-[#1e1c1a] px-5 py-2.5 text-[13px] font-semibold text-[#1e1c1a] hover:bg-[#1e1c1a] hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#1e1c1a]"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="2 13 7 18 17 6" />
@@ -168,29 +222,46 @@ export default function NotificationsClient({ notifications, names }: Props) {
       </div>
 
       {/* Filters */}
-      <div className="inline-flex rounded-full border border-[#ebebeb] bg-white p-1 mb-5">
+      <div className="inline-flex rounded-full border border-[#e2dcd2] bg-white p-1 mb-5">
         <button type="button" className={tabClass(filter === 'all')} onClick={() => { setFilter('all'); setPage(1); }}>
-          Todas ({notifications.length})
+          Todas ({mine.length})
         </button>
         <button type="button" className={tabClass(filter === 'unread')} onClick={() => { setFilter('unread'); setPage(1); }}>
           Sin leer ({unreadCount})
         </button>
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-5">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => { setCategory(c.key); setPage(1); }}
+            className={`px-3.5 py-1 rounded-full border text-[12px] font-medium transition-colors cursor-pointer ${
+              category === c.key
+                ? 'border-[#1e1c1a] bg-[#1e1c1a] text-white'
+                : 'border-[#e2dcd2] bg-white text-[#6b655e] hover:border-[#1e1c1a] hover:text-[#1e1c1a]'
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-[16px] border border-[#ebebeb] flex flex-col items-center justify-center py-20 px-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f7f7f7] flex items-center justify-center mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="bg-white rounded-[16px] border border-[#e2dcd2] flex flex-col items-center justify-center py-20 px-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-[#f3efe8] flex items-center justify-center mb-4">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a39d94" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </div>
-          <p className="text-[15px] font-medium text-[#222222] mb-1">
-            {filter === 'unread' ? 'No tienes notificaciones sin leer' : 'Sin notificaciones'}
+          <p className="text-[15px] font-medium text-[#1e1c1a] mb-1">
+            {meLoaded && !me ? 'Inicia sesión para ver tus notificaciones' : filter === 'unread' ? 'No tienes notificaciones sin leer' : 'Sin notificaciones'}
           </p>
-          <p className="text-[13px] text-[#6a6a6a]">
-            Los eventos de contratos firmados aparecerán aquí automáticamente.
+          <p className="text-[13px] text-[#6b655e]">
+            Los leads asignados, recordatorios de visitas y cambios en contratos aparecerán aquí automáticamente.
           </p>
         </div>
       ) : (
@@ -201,7 +272,7 @@ export default function NotificationsClient({ notifications, names }: Props) {
               <li
                 key={n.id}
                 className={`flex items-start gap-4 rounded-[16px] border bg-white p-5 transition-colors ${
-                  n.is_read ? 'border-[#ebebeb]' : 'border-[#ff385c]/30'
+                  n.is_read ? 'border-[#e2dcd2]' : 'border-[#c4584c]/30'
                 }`}
               >
                 <TypeIcon type={n.type} />
@@ -209,29 +280,45 @@ export default function NotificationsClient({ notifications, names }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {!n.is_read && (
-                      <span className="w-2 h-2 rounded-full bg-[#ff385c] flex-shrink-0" aria-label="No leída" />
+                      <span className="w-2 h-2 rounded-full bg-[#c4584c] flex-shrink-0" aria-label="No leída" />
                     )}
-                    <p className={`text-[14px] text-[#222222] ${n.is_read ? 'font-medium' : 'font-semibold'}`}>
+                    <p className={`text-[14px] text-[#1e1c1a] ${n.is_read ? 'font-medium' : 'font-semibold'}`}>
                       {n.title}
                     </p>
+                    {n.category && CATEGORY_LABEL[n.category] && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#6b655e] bg-[#f3efe8] px-2 py-0.5 rounded-full">
+                        {CATEGORY_LABEL[n.category]}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[13px] text-[#6a6a6a] leading-relaxed mb-2">
+                  <p className="text-[13px] text-[#6b655e] leading-relaxed mb-2">
                     {humanize(n.message, names)}
                   </p>
-                  <p className="text-[12px] text-[#9a9a9a]" title={fmtFull(n.created_at)}>
+                  <p className="text-[12px] text-[#716b63]" title={fmtFull(n.created_at)}>
                     {fmtRelative(n.created_at)}
+                    {n.recipient_type === 'CLIENT' && (
+                      <span className="ml-2 text-[#6b655e]">
+                        · Enviada al cliente{n.recipient_name ? ` ${n.recipient_name}` : ''}
+                        {n.email_status === 'sent' ? ' (correo enviado)' : ''}
+                      </span>
+                    )}
+                    {n.link && (
+                      <Link href={n.link} className="ml-2 font-medium text-[#1e1c1a] underline-offset-2 hover:underline">
+                        Ver →
+                      </Link>
+                    )}
                   </p>
                 </div>
 
                 {n.is_read ? (
-                  <span className="flex-shrink-0 text-[11px] text-[#9a9a9a] font-medium bg-[#f7f7f7] px-2.5 py-1 rounded-full self-center">
+                  <span className="flex-shrink-0 text-[11px] text-[#716b63] font-medium bg-[#f3efe8] px-2.5 py-1 rounded-full self-center">
                     Leída
                   </span>
                 ) : (
                   <button
                     onClick={() => markAsRead(n.id)}
                     disabled={isLoading}
-                    className="flex-shrink-0 self-center text-[12px] font-semibold text-[#222222] border border-[#ebebeb] rounded-full px-3.5 py-1.5 hover:border-[#222222] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-shrink-0 self-center text-[12px] font-semibold text-[#1e1c1a] border border-[#e2dcd2] rounded-full px-3.5 py-1.5 hover:border-[#1e1c1a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label="Marcar notificación como leída"
                   >
                     {isLoading ? '…' : 'Marcar leída'}
@@ -249,8 +336,8 @@ export default function NotificationsClient({ notifications, names }: Props) {
           <button type="button" onClick={() => setPage(current - 1)} disabled={current === 1} className={pagerBtn}>
             ← Anterior
           </button>
-          <span className="text-[13px] text-[#6a6a6a]">
-            Página <strong className="text-[#222222]">{current}</strong> de {totalPages}
+          <span className="text-[13px] text-[#6b655e]">
+            Página <strong className="text-[#1e1c1a]">{current}</strong> de {totalPages}
           </span>
           <button type="button" onClick={() => setPage(current + 1)} disabled={current === totalPages} className={pagerBtn}>
             Siguiente →

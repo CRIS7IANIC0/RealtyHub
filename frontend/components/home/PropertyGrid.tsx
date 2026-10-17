@@ -1,12 +1,15 @@
 "use client";
 
 /* ─────────────────────────────────────────────────────────────
-   PropertyGrid — Sección con título + cuadrícula responsiva de PropertyCard
-   1 col (móvil) → 2 → 3 → 4 → 5 columnas (pantallas anchas)
+   PropertyGrid — sección con título editorial + cuadrícula de PropertyCard
+   1 col (móvil) → 2 → 3 (escritorio). Pocas columnas = fotos grandes.
    ───────────────────────────────────────────────────────────── */
 
+import ArrowIcon from "@/components/ui/ArrowIcon";
 import Link from "next/link";
 import PropertyCard from "@/components/home/PropertyCard";
+import SplitText from "@/components/ui/SplitText";
+import Tilt from "@/components/ui/Tilt";
 import type { PublicProperty } from "@/lib/property";
 
 interface PropertyGridProps {
@@ -22,8 +25,7 @@ interface PropertyGridProps {
   viewAllHref?: string;
 }
 
-const GRID =
-  "grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10";
+const GRID = "grid grid-cols-1 min-[560px]:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-14";
 
 export default function PropertyGrid({
   id,
@@ -38,48 +40,49 @@ export default function PropertyGrid({
   viewAllHref,
 }: PropertyGridProps) {
   return (
-    <section id={id} className="scroll-mt-40 md:scroll-mt-28">
-      <div className="flex items-end justify-between gap-4 mb-6">
+    <section id={id} className="scroll-mt-28">
+      <div className="reveal flex items-end justify-between gap-6 pb-6 mb-10 border-b border-[#e2dcd2]">
         <div>
-          <h2 className="text-[22px] sm:text-[26px] font-semibold tracking-[-0.4px] text-[#222222]">
-            {title}
-          </h2>
-          {subtitle && <p className="text-[14px] text-[#6a6a6a] mt-0.5">{subtitle}</p>}
+          <SplitText as="h2" parts={title} className="font-display text-[clamp(30px,4.4vw,60px)] leading-[1.04] tracking-[-0.04em] text-[#1e1c1a]" />
+          {subtitle && <p className="text-[16px] text-[#6b655e] mt-3 max-w-[48ch]">{subtitle}</p>}
         </div>
         {viewAllHref && (
           <Link
             href={viewAllHref}
-            className="shrink-0 text-[14px] font-semibold text-[#222222] underline underline-offset-4 hover:text-[#ff385c] transition-colors"
+            className="shrink-0 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1e1c1a] no-underline border-b border-[#1e1c1a] pb-0.5 hover:text-[#a64739] hover:border-[#a64739] transition-colors"
           >
-            Ver todo
+            Ver todo <ArrowIcon size={14} />
           </Link>
         )}
       </div>
 
       {isLoading ? (
         <div className={GRID}>
-          {Array.from({ length: 4 }, (_, i) => (
+          {Array.from({ length: 3 }, (_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="aspect-square rounded-[14px] bg-[#ebebeb]" />
-              <div className="h-4 w-3/4 bg-[#ebebeb] rounded mt-3" />
-              <div className="h-4 w-1/2 bg-[#ebebeb] rounded mt-2" />
+              <div className="aspect-[4/3] rounded-md bg-[#ece6dc]" />
+              <div className="h-5 w-3/4 bg-[#ece6dc] rounded mt-4" />
+              <div className="h-4 w-1/2 bg-[#ece6dc] rounded mt-2" />
             </div>
           ))}
         </div>
       ) : properties.length === 0 ? (
-        <div className="flex items-center justify-center rounded-[16px] bg-white border border-[#ebebeb] py-14 px-6 text-center">
-          <p className="text-[14px] text-[#6a6a6a] max-w-[420px]">{emptyMessage}</p>
+        <div className="rounded-md bg-[#ece6dc] py-16 px-6 text-center">
+          <p className="text-[15px] text-[#6b655e] max-w-[44ch] mx-auto">{emptyMessage}</p>
         </div>
       ) : (
         <div className={GRID}>
-          {properties.map((p) => (
-            <PropertyCard
-              key={p.id}
-              property={p}
-              isFavorite={isFavorite(p.id)}
-              onToggleFavorite={onToggleFavorite}
-              priceSuffix={priceSuffix}
-            />
+          {properties.map((p, i) => (
+            <div key={p.id} className="reveal" style={{ ["--reveal-delay" as string]: `${(i % 3) * 90}ms` }}>
+              <Tilt>
+                <PropertyCard
+                  property={p}
+                  isFavorite={isFavorite(p.id)}
+                  onToggleFavorite={onToggleFavorite}
+                  priceSuffix={priceSuffix}
+                />
+              </Tilt>
+            </div>
           ))}
         </div>
       )}

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
    ───────────────────────────────────────────────────────────── */
 
 import { GATEWAY } from "@/lib/config";
+import { authHeaders } from "@/lib/auth";
 
 export const OPERATION_TYPE_OPTIONS = [
   { value: "Venta", label: "Venta" },
@@ -75,12 +76,15 @@ export default function CreateContractModal({
   properties = [],
   leads = [],
   agents = [],
+  canMarkSigned = true,
 }: {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   properties?: PropertyOption[];
   leads?: LeadOption[];
   agents?: AgentOption[];
+  /** Sólo gerencia/administración pueden registrar un contrato ya firmado (los agentes usan la firma digital). */
+  canMarkSigned?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -156,7 +160,7 @@ export default function CreateContractModal({
     try {
       const res = await fetch(`${GATEWAY}/contracts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           property_id: trimmedProp,
           lead_id: trimmedLead,
@@ -164,7 +168,7 @@ export default function CreateContractModal({
           price: parsedPrice,
           operation_type: operationType,
           type: operationType,
-          status,
+          status: canMarkSigned ? status : "Pendiente",
           city: city.trim() || undefined,
           payment_method: paymentMethod.trim() || undefined,
           deposit: deposit ? parseFloat(deposit) : undefined,
@@ -199,8 +203,8 @@ export default function CreateContractModal({
   if (!isOpen) return null;
 
   const inputClass =
-    "w-full rounded-[8px] border border-[#ebebeb] bg-white px-4 py-3 text-[14px] text-[#222222] placeholder:text-[#b0b0b0] outline-none transition-colors focus:border-[#222222]";
-  const labelClass = "block text-[13px] font-medium text-[#222222] mb-1.5";
+    "w-full rounded-[8px] border border-[#e2dcd2] bg-white px-4 py-3 text-[14px] text-[#1e1c1a] placeholder:text-[#a39d94] outline-none transition-colors focus:border-[#1e1c1a]";
+  const labelClass = "block text-[13px] font-medium text-[#1e1c1a] mb-1.5";
 
   return (
     <div
@@ -214,19 +218,19 @@ export default function CreateContractModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#ebebeb] mb-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#e2dcd2] mb-6">
           <div>
-            <h2 className="text-[22px] font-semibold tracking-[-0.44px] text-[#222222]">
+            <h2 className="text-[22px] font-semibold tracking-[-0.44px] text-[#1e1c1a]">
               Nuevo Contrato
             </h2>
-            <p className="text-[13px] text-[#6a6a6a] mt-0.5">
+            <p className="text-[13px] text-[#6b655e] mt-0.5">
               Registra el cierre de venta o alquiler con emisión de eventos
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6a6a6a] hover:bg-[#f7f7f7] hover:text-[#222222] transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#6b655e] hover:bg-[#f3efe8] hover:text-[#1e1c1a] transition-colors cursor-pointer"
           >
             <IconX />
           </button>
@@ -234,7 +238,7 @@ export default function CreateContractModal({
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-5 rounded-[8px] bg-[#ff385c]/10 border border-[#ff385c]/20 px-4 py-3 text-[13px] font-medium text-[#ff385c]">
+          <div className="mb-5 rounded-[8px] bg-[#c4584c]/10 border border-[#c4584c]/20 px-4 py-3 text-[13px] font-medium text-[#c4584c]">
             {error}
           </div>
         )}
@@ -244,7 +248,7 @@ export default function CreateContractModal({
           <div className="mb-5 rounded-[8px] bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-start gap-2.5">
             <IconCheckCircle />
             <div className="text-[12px] text-emerald-900 leading-snug">
-              <strong className="font-semibold block">Evento RabbitMQ automático</strong>
+              <strong className="font-semibold block">Comisión y aviso automáticos</strong>
               Al registrar este contrato con estado <strong>Firmado</strong>, se emitirá automáticamente el evento <code className="bg-emerald-100 px-1 py-0.5 rounded text-[11px]">contract.signed</code> para liquidar comisiones, notificar al equipo y actualizar métricas.
             </div>
           </div>
@@ -255,7 +259,7 @@ export default function CreateContractModal({
           {/* Propiedad */}
           <div>
             <label htmlFor="contract-property-id" className={labelClass}>
-              Propiedad <span className="text-[#ff385c]">*</span>
+              Propiedad <span className="text-[#c4584c]">*</span>
             </label>
             <select
               id="contract-property-id"
@@ -277,7 +281,7 @@ export default function CreateContractModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="contract-lead-id" className={labelClass}>
-                Cliente <span className="text-[#ff385c]">*</span>
+                Cliente <span className="text-[#c4584c]">*</span>
               </label>
               <select
                 id="contract-lead-id"
@@ -296,7 +300,7 @@ export default function CreateContractModal({
 
             <div>
               <label htmlFor="contract-agent-id" className={labelClass}>
-                Agente <span className="text-[#ff385c]">*</span>
+                Agente <span className="text-[#c4584c]">*</span>
               </label>
               <select
                 id="contract-agent-id"
@@ -317,10 +321,10 @@ export default function CreateContractModal({
           {/* Price Input */}
           <div>
             <label htmlFor="contract-price" className={labelClass}>
-              Precio pactado (COP) <span className="text-[#ff385c]">*</span>
+              Precio pactado (COP) <span className="text-[#c4584c]">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#6a6a6a]">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[#6b655e]">
                 $
               </span>
               <input
@@ -356,6 +360,7 @@ export default function CreateContractModal({
               </select>
             </div>
 
+            {canMarkSigned && (
             <div>
               <label htmlFor="contract-status" className={labelClass}>
                 Estado del Contrato
@@ -365,7 +370,7 @@ export default function CreateContractModal({
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className={`${inputClass} cursor-pointer font-medium ${
-                  status === "Firmado" ? "text-emerald-700 font-semibold" : "text-[#222222]"
+                  status === "Firmado" ? "text-emerald-700 font-semibold" : "text-[#1e1c1a]"
                 }`}
               >
                 {STATUS_OPTIONS.map((opt) => (
@@ -375,6 +380,7 @@ export default function CreateContractModal({
                 ))}
               </select>
             </div>
+            )}
           </div>
 
           {/* Datos para el documento PDF */}
@@ -412,19 +418,19 @@ export default function CreateContractModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-[#ebebeb] mt-6">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-[#e2dcd2] mt-6">
             <button
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#ff385c] hover:bg-[#d90b3e] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-none"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#b04e42] hover:bg-[#a64739] text-white text-[14px] font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-none"
             >
               {submitting ? (
                 <>
