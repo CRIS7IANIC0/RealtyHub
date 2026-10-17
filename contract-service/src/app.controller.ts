@@ -29,6 +29,8 @@ function serviceUrl(env: string | undefined, fallback: string): string {
   if (clean.startsWith('http')) return clean;
   return clean.includes('.railway.internal') ? `http://${clean}` : `https://${clean}`;
 }
+// Dirección pública del frontend: el QR del PDF apunta a su página de verificación
+const FRONTEND_URL = (process.env.FRONTEND_URL ?? 'http://localhost:3002').trim().replace(/\/+$/, '');
 const PROPERTY_SVC = serviceUrl(process.env.PROPERTY_SERVICE_URL, 'http://localhost:3003');
 const LEAD_SVC = serviceUrl(process.env.LEAD_SERVICE_URL, 'http://localhost:3004');
 const USER_SVC = serviceUrl(process.env.USER_SERVICE_URL, 'http://localhost:3001');
@@ -335,6 +337,7 @@ export class AppController {
       agent: Array.isArray(users) ? users.find((u: any) => u.id === contract.agent_id) : null,
       signatures: contract.signatures.filter((x) => x.signed_at),
       documentHash: contractHash(contract),
+      verifyUrl: `${FRONTEND_URL}/verify/${contract.id}`,
     });
 
     res.set({

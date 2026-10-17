@@ -11,6 +11,7 @@
    - Equipo autenticado: métricas, "Nueva propiedad" y selector de estado.
    ───────────────────────────────────────────────────────────── */
 
+import { authHeaders, isManager } from "@/lib/auth";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -125,7 +126,7 @@ function Card({
     try {
       const res = await fetch(`${GATEWAY}/properties/${property.id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error("Error al actualizar estado");
@@ -265,6 +266,8 @@ export default function PropertiesClient({ properties }: { properties: Property[
   }, [createdTitle]);
 
   const [user, setUser] = useState<AuthUser | null>(null);
+  // Los agentes consultan el catálogo; sólo gerencia y administración lo modifican
+  const canManage = !!user && isManager(user.role);
   useEffect(() => {
     function loadUser() {
       try {
@@ -352,7 +355,7 @@ export default function PropertiesClient({ properties }: { properties: Property[
                   {filtered.length === 1 ? "propiedad" : "propiedades"}
                 </span>
               </p>
-              {user && (
+              {canManage && (
                 <button
                   onClick={() => setIsModalOpen(true)}
                   data-magnetic
@@ -492,7 +495,7 @@ export default function PropertiesClient({ properties }: { properties: Property[
                 index={i}
                 big={i === 0 && filtered.length >= 3}
                 onStatusUpdated={handleStatusUpdated}
-                isAuth={!!user}
+                isAuth={canManage}
               />
             ))}
           </div>
@@ -503,7 +506,7 @@ export default function PropertiesClient({ properties }: { properties: Property[
         <Footer dark />
       </div>
 
-      {user && (
+      {canManage && (
         <CreatePropertyModal
           isOpen={isModalOpen}
           setIsOpen={setIsModalOpen}

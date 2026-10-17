@@ -88,7 +88,7 @@ export class AppService implements OnModuleInit {
     return this.prisma.commissionAgreement.findMany({ orderBy: [{ operation_type: 'asc' }, { valid_from: 'desc' }] });
   }
 
-  async createAgreement(body: any, createdBy?: string) {
+  private parseRates(body: any) {
     const type = normalizeOperation(body?.operation_type);
     const rate = Number(body?.rate_percent);
     const agent = Number(body?.agent_pct);
@@ -102,6 +102,34 @@ export class AppService implements OnModuleInit {
     if (Math.abs(agent + office + central - 100) > 0.001) {
       throw new BadRequestException('El reparto agente + oficina + central debe sumar 100%');
     }
+    return { type, rate, agent, office, central };
+  }
+
+  async listAgentRules() {
+    return this.prisma.agentCommissionRule.findMany({ orderBy: [{ agent_id: 'asc' }, { operation_type: 'asc' }] });
+  }
+
+  /** El administrador fija (o actualiza) la comisión de un agente para un tipo de operación. */
+  async setAgentRule(body: any, updatedBy?: string) {
+    const agentId = String(body?.agent_id ?? '').trim();
+    if (!agentId) throw new BadRequestException('agent_id es obligatorio');
+    const { type, rate, agent, office, central } = this.parseRates(body);
+    const data = { rate_percent: rate, agent_pct: agent, office_pct: office, central_pct: central, updated_by: updatedBy ?? null };
+    return this.prisma.agentCommissionRule.upsert({
+      where: { agent_id_operation_type: { agent_id: agentId, operation_type: type } },
+      create: { agent_id: agentId, operation_type: type, ...data },
+      update: data,
+    });
+  }
+
+  /** Quita la comisión individual: el agente vuelve al acuerdo general. */
+  async deleteAgentRule(id: string) {
+    await this.prisma.agentCommissionRule.delete({ where: { id } }).catch(() => null);
+    return { deleted: true };
+  }
+
+  async createAgreement(body: any, createdBy?: string) {
+    const { type, rate, agent, office, central } = this.parseRates(body);
     const now = new Date();
     const [, created] = await this.prisma.$transaction([
       this.prisma.commissionAgreement.updateMany({
@@ -142,10 +170,16 @@ export class AppService implements OnModuleInit {
     const agent = Array.isArray(users) ? users.find((u: any) => u.id === agentId) : null;
     const officeId: string | null = agent?.office_id ?? null;
 
-    const agentPct = agreement.agent_pct;
-    let officePct = agreement.office_pct;
-    const split = computeSplit(price, agreement.rate_percent, agentPct, officePct);
-    let rule = `${type}: ${agreement.rate_percent}% · agente ${agentPct}% / oficina ${officePct}% / central ${agreement.central_pct}%`;
+    // Si el administrador fijó una comisión para este agente, prevalece sobre el acuerdo general
+    const individual = await this.prisma.agentCommissionRule.findUnique({
+      where: { agent_id_operation_type: { agent_id: agentId, operation_type: type } },
+    });
+    const ratePercent = individual?.rate_percent ?? agreement.rate_percent;
+    const agentPct = individual?.agent_pct ?? agreement.agent_pct;
+    let officePct = individual?.office_pct ?? agreement.office_pct;
+    const centralBase = individual?.central_pct ?? agreement.central_pct;
+    const split = computeSplit(price, ratePercent, agentPct, officePct);
+    let rule = `${individual ? 'Acuerdo individual' : 'Acuerdo general'} ${type}: ${ratePercent}% · agente ${agentPct}% / oficina ${officePct}% / central ${centralBase}%`;
     if (!officeId) {
       // Sin oficina asignada, su porción pasa a la central
       split.central += split.office;
@@ -161,7 +195,7 @@ export class AppService implements OnModuleInit {
       split_rule_applied: rule,
       operation_type: type,
       contract_price: price,
-      rate_percent: agreement.rate_percent,
+      rate_percent: ratePercent,
       agent_pct: agentPct,
       office_pct: officePct,
       central_pct: 100 - agentPct - officePct,

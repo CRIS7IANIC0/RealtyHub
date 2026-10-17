@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
    ───────────────────────────────────────────────────────────── */
 
 import { GATEWAY } from "@/lib/config";
+import { authHeaders } from "@/lib/auth";
 
 export const OPERATION_TYPE_OPTIONS = [
   { value: "Venta", label: "Venta" },
@@ -75,12 +76,15 @@ export default function CreateContractModal({
   properties = [],
   leads = [],
   agents = [],
+  canMarkSigned = true,
 }: {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   properties?: PropertyOption[];
   leads?: LeadOption[];
   agents?: AgentOption[];
+  /** Sólo gerencia/administración pueden registrar un contrato ya firmado (los agentes usan la firma digital). */
+  canMarkSigned?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -156,7 +160,7 @@ export default function CreateContractModal({
     try {
       const res = await fetch(`${GATEWAY}/contracts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           property_id: trimmedProp,
           lead_id: trimmedLead,
@@ -164,7 +168,7 @@ export default function CreateContractModal({
           price: parsedPrice,
           operation_type: operationType,
           type: operationType,
-          status,
+          status: canMarkSigned ? status : "Pendiente",
           city: city.trim() || undefined,
           payment_method: paymentMethod.trim() || undefined,
           deposit: deposit ? parseFloat(deposit) : undefined,
@@ -356,6 +360,7 @@ export default function CreateContractModal({
               </select>
             </div>
 
+            {canMarkSigned && (
             <div>
               <label htmlFor="contract-status" className={labelClass}>
                 Estado del Contrato
@@ -375,6 +380,7 @@ export default function CreateContractModal({
                 ))}
               </select>
             </div>
+            )}
           </div>
 
           {/* Datos para el documento PDF */}

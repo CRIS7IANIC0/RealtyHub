@@ -8,6 +8,7 @@
    y la página de inicio usan para clasificar los inmuebles.
    ───────────────────────────────────────────────────────────── */
 
+import { authHeaders } from "@/lib/auth";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { uploadPresigned } from "@vercel/blob/client";
@@ -230,7 +231,7 @@ export default function CreatePropertyModal({
       // 2. Hacer POST al API Gateway con images: uploadedImages
       const res = await fetch(`${GATEWAY}/properties`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),

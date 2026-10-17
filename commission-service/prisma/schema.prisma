@@ -50,3 +50,19 @@ model CommissionAgreement {
 
   @@map("commission_agreements")
 }
+
+// Comisión asignada por el administrador a un agente concreto; reemplaza al acuerdo general para ese agente.
+model AgentCommissionRule {
+  id             String   @id @default(uuid())
+  agent_id       String
+  operation_type String
+  rate_percent   Float
+  agent_pct      Float
+  office_pct     Float
+  central_pct    Float
+  updated_by     String?
+  updated_at     DateTime @default(now()) @updatedAt
+
+  @@unique([agent_id, operation_type])
+  @@map("agent_commission_rules")
+}

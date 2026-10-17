@@ -416,13 +416,15 @@ export default function UsersClient({ users }: { users: User[] }) {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-full bg-[#b04e42] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a64739] transition-colors cursor-pointer self-start sm:self-auto"
-          >
-            <IconPlus />
-            Nuevo Miembro
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 rounded-full bg-[#b04e42] px-5 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a64739] transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <IconPlus />
+              Nuevo Miembro
+            </button>
+          )}
         </div>
 
         {/* ── KPI strip ──────────────────────────────── */}

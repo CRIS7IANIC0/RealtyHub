@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Inject, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Put, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { ClientProxy, EventPattern, Payload } from '@nestjs/microservices';
 import { lastValueFrom, timeout } from 'rxjs';
 import { AppService } from './app.service';
@@ -47,6 +47,21 @@ export class AppController {
   @Post('agreements')
   async createAgreement(@Body() body: any) {
     return this.service.createAgreement(body, body?.created_by);
+  }
+
+  @Get('agent-rules')
+  async getAgentRules() {
+    return this.service.listAgentRules();
+  }
+
+  @Put('agent-rules')
+  async setAgentRule(@Body() body: any) {
+    return this.service.setAgentRule(body, body?.updated_by);
+  }
+
+  @Delete('agent-rules/:id')
+  async deleteAgentRule(@Param('id') id: string) {
+    return this.service.deleteAgentRule(id);
   }
 
   @Patch(':id/pay')

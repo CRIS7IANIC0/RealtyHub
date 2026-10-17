@@ -212,6 +212,7 @@ services:
       - PROPERTY_SERVICE_URL=http://property-service:3003
       - LEAD_SERVICE_URL=http://lead-service:3004
       - USER_SERVICE_URL=http://user-service:3001
+      - FRONTEND_URL=https://tu-app.vercel.app
     depends_on:
       - contract_db
       - rabbitmq

@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { GATEWAY } from "@/lib/config";
+import { authHeaders as sessionHeaders } from "@/lib/auth";
 import type { Agreement, Commission, OfficeSnippet, UserSnippet } from "./page";
 
 // ─── Helpers ────────────────────────────────────────────────
@@ -128,6 +129,16 @@ interface Me {
   token?: string;
 }
 
+interface AgentRule {
+  id: string;
+  agent_id: string;
+  operation_type: string;
+  rate_percent: number;
+  agent_pct: number;
+  office_pct: number;
+  central_pct: number;
+}
+
 const field =
   "w-full rounded-[8px] border border-[#cfc7ba] bg-white px-3 py-2 text-[14px] text-[#1e1c1a] outline-none focus:border-[#1e1c1a]";
 
@@ -149,6 +160,10 @@ export default function CommissionsClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Agreement | null>(null);
+  // Comisión individual: si hay agente destino, el editor guarda su regla en vez del acuerdo general
+  const [ruleTarget, setRuleTarget] = useState<{ id: string; name: string; ruleId?: string } | null>(null);
+  const [rules, setRules] = useState<AgentRule[]>([]);
+  const [rulesVersion, setRulesVersion] = useState(0);
 
   useEffect(() => {
     function loadUser() {
@@ -163,8 +178,28 @@ export default function CommissionsClient({
     return () => window.removeEventListener("realtyhub_auth_changed", loadUser);
   }, []);
 
+  useEffect(() => {
+    if (!me?.token || me.role?.toUpperCase() !== "ADMIN") return;
+    let cancelled = false;
+    async function loadRules() {
+      try {
+        const res = await fetch(`${GATEWAY}/commissions/agent-rules`, { headers: sessionHeaders({}), cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && Array.isArray(data)) setRules(data);
+      } catch {
+        // Sin conexión: se conserva lo mostrado
+      }
+    }
+    void loadRules();
+    return () => {
+      cancelled = true;
+    };
+  }, [me, rulesVersion]);
+
   const role = me?.role?.toUpperCase();
   const canManage = role === "ADMIN" || role === "GERENTE";
+  const isAdmin = role === "ADMIN";
   const isAgent = role === "AGENTE";
 
   /* Un agente sólo ve sus propias comisiones; gerencia y administración ven todas */
@@ -229,14 +264,31 @@ export default function CommissionsClient({
     }
   }
 
+  async function removeRule(ruleId: string) {
+    setBusyId(ruleId);
+    setError(null);
+    try {
+      const res = await fetch(`${GATEWAY}/commissions/agent-rules/${ruleId}`, { method: "DELETE", headers: authHeaders });
+      if (!res.ok) throw new Error(`No se pudo quitar la comisión individual (${res.status})`);
+      setEditing(null);
+      setRuleTarget(null);
+      setRulesVersion((v) => v + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo quitar la comisión individual.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function saveAgreement(a: Agreement) {
     setBusyId(a.id);
     setError(null);
     try {
-      const res = await fetch(`${GATEWAY}/commissions/agreements`, {
-        method: "POST",
+      const res = await fetch(`${GATEWAY}/commissions/${ruleTarget ? "agent-rules" : "agreements"}`, {
+        method: ruleTarget ? "PUT" : "POST",
         headers: authHeaders,
         body: JSON.stringify({
+          ...(ruleTarget ? { agent_id: ruleTarget.id } : {}),
           operation_type: a.operation_type,
           rate_percent: a.rate_percent,
           agent_pct: a.agent_pct,
@@ -247,6 +299,8 @@ export default function CommissionsClient({
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.message || `No se pudo guardar el acuerdo (${res.status})`);
       setEditing(null);
+      setRuleTarget(null);
+      setRulesVersion((v) => v + 1);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar el acuerdo.");
@@ -314,6 +368,77 @@ export default function CommissionsClient({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ── Comisión por agente (sólo administrador) ── */}
+        {isAdmin && (
+          <div className="rounded-[12px] bg-white border border-[#e2dcd2] p-5 mb-8">
+            <div className="mb-3">
+              <h2 className="text-[16px] font-semibold text-[#1e1c1a]">Comisión por agente</h2>
+              <p className="text-[12px] text-[#6b655e]">
+                Asigna a cada agente su propio porcentaje y reparto. Si no tiene uno, se usa el acuerdo general.
+              </p>
+            </div>
+            {users.filter((u) => String(u.role).toUpperCase() === "AGENTE").length === 0 ? (
+              <p className="text-[13px] text-[#6b655e] py-4">Aún no hay agentes registrados.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-[13px]">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#6b655e] border-b border-[#e2dcd2]">
+                      <th className="py-2 pr-3 font-medium">Agente</th>
+                      {["Venta", "Alquiler"].map((t) => (
+                        <th key={t} className="py-2 pr-3 font-medium">{t}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users
+                      .filter((u) => String(u.role).toUpperCase() === "AGENTE")
+                      .map((u) => (
+                        <tr key={u.id} className="border-b border-[#ece6dc] last:border-0 align-top">
+                          <td className="py-3 pr-3 font-medium text-[#1e1c1a]">{u.name ?? u.email}</td>
+                          {["Venta", "Alquiler"].map((t) => {
+                            const rule = rules.find((r) => r.agent_id === u.id && r.operation_type === t);
+                            const base = activeAgreements.find((a) => a.operation_type === t);
+                            const eff = rule ?? base;
+                            return (
+                              <td key={t} className="py-3 pr-3">
+                                <p className="text-[#1e1c1a]">
+                                  {eff ? `${eff.rate_percent}% · ${eff.agent_pct}/${eff.office_pct}/${eff.central_pct}` : "—"}
+                                </p>
+                                <p className="text-[11px] text-[#6b655e] mb-1">{rule ? "Individual" : "Acuerdo general"}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!eff) return;
+                                    setRuleTarget({ id: u.id, name: u.name ?? u.email ?? "Agente", ruleId: rule?.id });
+                                    setEditing({
+                                      id: rule?.id ?? `new-${u.id}-${t}`,
+                                      operation_type: t,
+                                      rate_percent: eff.rate_percent,
+                                      agent_pct: eff.agent_pct,
+                                      office_pct: eff.office_pct,
+                                      central_pct: eff.central_pct,
+                                      active: true,
+                                      valid_from: "",
+                                    });
+                                  }}
+                                  disabled={!eff}
+                                  className="text-[12px] font-medium text-[#1e1c1a] underline-offset-2 hover:underline cursor-pointer disabled:opacity-40"
+                                >
+                                  {rule ? "Editar" : "Asignar"}
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -500,12 +625,16 @@ export default function CommissionsClient({
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           style={{ background: "rgba(0, 0, 0, 0.56)" }}
-          onClick={() => busyId === null && setEditing(null)}
+          onClick={() => busyId === null && (setEditing(null), setRuleTarget(null))}
         >
           <div className="w-full max-w-[440px] rounded-[16px] bg-white p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-[18px] font-semibold text-[#1e1c1a] mb-1">Acuerdo comercial · {editing.operation_type}</h2>
+            <h2 className="text-[18px] font-semibold text-[#1e1c1a] mb-1">
+              {ruleTarget ? `Comisión de ${ruleTarget.name}` : "Acuerdo comercial"} · {editing.operation_type}
+            </h2>
             <p className="text-[13px] text-[#6b655e] mb-4">
-              El nuevo acuerdo aplica a los contratos firmados desde ahora. Las comisiones ya generadas conservan su regla.
+              {ruleTarget
+                ? "Aplica a los contratos que este agente cierre desde ahora. Las comisiones ya generadas conservan su regla."
+                : "El nuevo acuerdo aplica a los contratos firmados desde ahora. Las comisiones ya generadas conservan su regla."}
             </p>
             <div className="space-y-3">
               <label className="block">
@@ -553,9 +682,22 @@ export default function CommissionsClient({
               })()}
             </div>
             <div className="flex justify-end gap-3 mt-6">
+              {ruleTarget?.ruleId && (
+                <button
+                  type="button"
+                  onClick={() => removeRule(ruleTarget.ruleId!)}
+                  disabled={busyId !== null}
+                  className="mr-auto px-3 py-2.5 text-[13px] font-medium text-[#a64739] hover:underline cursor-pointer disabled:opacity-50"
+                >
+                  Volver al acuerdo general
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setEditing(null)}
+                onClick={() => {
+                  setEditing(null);
+                  setRuleTarget(null);
+                }}
                 disabled={busyId !== null}
                 className="px-5 py-2.5 rounded-full text-[14px] font-medium text-[#1e1c1a] hover:bg-[#f3efe8] transition-colors cursor-pointer disabled:opacity-50"
               >

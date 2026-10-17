@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, Headers, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Put, Delete, Body, Param, Query, Headers, Res, HttpException, HttpStatus } from '@nestjs/common';
 import type { Response as ExpressResponse } from 'express';
 import { verifyJwt } from './jwt.util';
 
@@ -41,6 +41,18 @@ function requireUser(authHeader: string | undefined, roles?: string[]): Record<s
     throw new HttpException('No tienes permisos para esta acción', HttpStatus.FORBIDDEN);
   }
   return payload;
+}
+
+// ─── Helper: ¿puede el agente ver este contrato? (sólo los de visitas que tomó o que creó) ───
+async function agentCanSeeContract(userId: string, c: { agent_id?: string; lead_id?: string; property_id?: string }) {
+  if (c.agent_id === userId) return true;
+  try {
+    const res = await fetch(`${VIEWING_SVC}/viewings`);
+    const viewings = res.ok ? await res.json() : [];
+    return Array.isArray(viewings) && viewings.some((v: any) => v.agent_id === userId && v.lead_id === c.lead_id && v.property_id === c.property_id);
+  } catch {
+    return false;
+  }
 }
 
 // ─── URLs de microservicios (configurables via variables de entorno en Railway) ───
@@ -265,7 +277,8 @@ export class AppController {
   }
 
   @Post('properties')
-  async createProperty(@Body() body: any) {
+  async createProperty(@Body() body: any, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader, ['ADMIN', 'GERENTE']);
     const res = await fetch(`${PROPERTY_SVC}/properties`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -275,7 +288,8 @@ export class AppController {
   }
 
   @Patch('properties/:id/status')
-  async updatePropertyStatus(@Param('id') id: string, @Body() body: any) {
+  async updatePropertyStatus(@Param('id') id: string, @Body() body: any, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader, ['ADMIN', 'GERENTE']);
     const res = await fetch(`${PROPERTY_SVC}/properties/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -285,7 +299,8 @@ export class AppController {
   }
 
   @Patch('properties/:id')
-  async updateProperty(@Param('id') id: string, @Body() body: any) {
+  async updateProperty(@Param('id') id: string, @Body() body: any, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader, ['ADMIN', 'GERENTE']);
     const res = await fetch(`${PROPERTY_SVC}/properties/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -388,17 +403,30 @@ export class AppController {
 
   // --- RUTAS DE CONTRATOS (CONTRACTS) ---
   @Get('contracts')
-  async getContracts() {
+  async getContracts(@Headers('authorization') authHeader?: string) {
     try {
       const res = await fetch(`${CONTRACT_SVC}/contracts`);
-      return res.json();
-    } catch {
+      const contracts = await res.json();
+      // Con sesión de agente, sólo se devuelven los contratos de sus visitas
+      const token = authHeader?.replace(/^Bearer\s+/i, '');
+      if (token && Array.isArray(contracts)) {
+        const user = verifyJwt(token);
+        if (!['ADMIN', 'GERENTE'].includes(String(user.role).toUpperCase())) {
+          const keep = await Promise.all(contracts.map((c: any) => agentCanSeeContract(user.sub, c)));
+          return contracts.filter((_: any, i: number) => keep[i]);
+        }
+      }
+      return contracts;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
       return [];
     }
   }
 
   @Patch('contracts/:id/status')
-  async updateContractStatus(@Param('id') id: string, @Body() body: any) {
+  async updateContractStatus(@Param('id') id: string, @Body() body: any, @Headers('authorization') authHeader?: string) {
+    // Los agentes cierran contratos con la firma digital; cambiar el estado a mano es de gerencia
+    requireUser(authHeader, ['ADMIN', 'GERENTE']);
     const res = await fetch(`${CONTRACT_SVC}/contracts/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -411,7 +439,15 @@ export class AppController {
   // Estado de firmas + enlaces de firma (los tokens son secretos: exige sesión)
   @Get('contracts/:id/signatures')
   async getContractSignatures(@Param('id') id: string, @Headers('authorization') authHeader?: string) {
-    requireUser(authHeader);
+    const user = requireUser(authHeader);
+    if (!['ADMIN', 'GERENTE'].includes(String(user.role).toUpperCase())) {
+      const cres = await fetch(`${CONTRACT_SVC}/contracts`);
+      const list = cres.ok ? await cres.json() : [];
+      const contract = Array.isArray(list) ? list.find((c: any) => c.id === id) : null;
+      if (!contract || !(await agentCanSeeContract(user.sub, contract))) {
+        throw new HttpException('Este contrato no pertenece a tus visitas', HttpStatus.FORBIDDEN);
+      }
+    }
     const res = await fetch(`${CONTRACT_SVC}/contracts/${id}/signatures`);
     return propagate(res);
   }
@@ -470,7 +506,14 @@ export class AppController {
   }
 
   @Post('contracts')
-  async createContract(@Body() body: any) {
+  async createContract(@Body() body: any, @Headers('authorization') authHeader?: string) {
+    const user = requireUser(authHeader);
+    if (!['ADMIN', 'GERENTE'].includes(String(user.role).toUpperCase())) {
+      // Un agente sólo contrata sobre visitas que tomó, a su nombre y siempre como Pendiente (cierra con firma digital)
+      const ok = await agentCanSeeContract(user.sub, { lead_id: body?.lead_id, property_id: body?.property_id });
+      if (!ok) throw new HttpException('Sólo puedes crear contratos de las visitas que tomaste', HttpStatus.FORBIDDEN);
+      body = { ...body, agent_id: user.sub, status: 'Pendiente' };
+    }
     try {
       const res = await fetch(`${CONTRACT_SVC}/contracts`, {
         method: 'POST',
@@ -529,6 +572,32 @@ export class AppController {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...body, created_by: user.sub }),
     });
+    return propagate(res);
+  }
+
+  // Comisión individual por agente: la fija sólo el administrador del sistema
+  @Get('commissions/agent-rules')
+  async getAgentRules(@Headers('authorization') authHeader?: string) {
+    requireUser(authHeader);
+    const res = await fetch(`${COMMISSION_SVC}/commissions/agent-rules`);
+    return propagate(res);
+  }
+
+  @Put('commissions/agent-rules')
+  async setAgentRule(@Body() body: any, @Headers('authorization') authHeader?: string) {
+    const user = requireUser(authHeader, ['ADMIN']);
+    const res = await fetch(`${COMMISSION_SVC}/commissions/agent-rules`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, updated_by: user.sub }),
+    });
+    return propagate(res);
+  }
+
+  @Delete('commissions/agent-rules/:id')
+  async deleteAgentRule(@Param('id') id: string, @Headers('authorization') authHeader?: string) {
+    requireUser(authHeader, ['ADMIN']);
+    const res = await fetch(`${COMMISSION_SVC}/commissions/agent-rules/${id}`, { method: 'DELETE' });
     return propagate(res);
   }
 

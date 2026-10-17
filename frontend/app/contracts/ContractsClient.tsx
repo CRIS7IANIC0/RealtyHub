@@ -8,13 +8,14 @@
    ───────────────────────────────────────────────────────────── */
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GATEWAY } from "@/lib/config";
 import CreateContractModal from "@/components/contracts/CreateContractModal";
 import SignaturesModal from "@/components/contracts/SignaturesModal";
 import Navbar from "@/components/Navbar";
-import type { Contract, PropertySnippet, LeadSnippet, UserSnippet } from "./page";
+import { authHeaders, getSession, isManager, type SessionUser } from "@/lib/auth";
+import type { Contract, PropertySnippet, LeadSnippet, UserSnippet, ViewingSnippet } from "./page";
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -142,17 +143,39 @@ function IconBell() {
 // ─── Componente Principal ───────────────────────────────────
 
 export default function ContractsClient({
-  contracts,
+  contracts: allContracts,
   properties = [],
   leads = [],
   users = [],
+  viewings = [],
 }: {
   contracts: Contract[];
   properties?: PropertySnippet[];
   leads?: LeadSnippet[];
   users?: UserSnippet[];
+  viewings?: ViewingSnippet[];
 }) {
   const router = useRouter();
+  const [me, setMe] = useState<SessionUser | null>(null);
+  useEffect(() => {
+    function loadUser() {
+      setMe(getSession());
+    }
+    loadUser();
+    window.addEventListener("realtyhub_auth_changed", loadUser);
+    return () => window.removeEventListener("realtyhub_auth_changed", loadUser);
+  }, []);
+
+  // Un agente sólo trabaja con las visitas que tomó: ve los contratos de esos clientes/inmuebles
+  const isAgent = !!me && !isManager(me.role);
+  const taken = viewings.filter((v) => !!me?.id && v.agent_id === me.id);
+  const contracts = isAgent
+    ? allContracts.filter(
+        (c) => c.agent_id === me?.id || taken.some((v) => v.lead_id === c.lead_id && v.property_id === c.property_id),
+      )
+    : allContracts;
+  const takenLeadIds = new Set(taken.map((v) => v.lead_id));
+  const takenPropertyIds = new Set(taken.map((v) => v.property_id));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -180,7 +203,7 @@ export default function ContractsClient({
     try {
       const res = await fetch(`${GATEWAY}/contracts/${contract.id}/status`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ status: next }),
       });
       if (!res.ok) {
@@ -519,6 +542,7 @@ export default function ContractsClient({
 
                   {/* Acciones: cambiar estado + PDF */}
                   <div className="flex items-center gap-2 mb-3">
+                    {(!isSigned || !isAgent) && (
                     <button
                       type="button"
                       onClick={() => toggleStatus(contract)}
@@ -531,6 +555,7 @@ export default function ContractsClient({
                     >
                       {isSigned ? "Marcar como pendiente" : "✍️ Firma digital"}
                     </button>
+                    )}
                     {isSigned && (
                       <button
                         type="button"
@@ -618,9 +643,10 @@ export default function ContractsClient({
       <CreateContractModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
-        properties={properties}
-        leads={leads}
-        agents={users}
+        properties={isAgent ? properties.filter((p) => takenPropertyIds.has(p.id)) : properties}
+        leads={isAgent ? leads.filter((l) => takenLeadIds.has(l.id)) : leads}
+        agents={isAgent ? users.filter((u) => u.id === me?.id) : users}
+        canMarkSigned={!isAgent}
       />
     </div>
   );
