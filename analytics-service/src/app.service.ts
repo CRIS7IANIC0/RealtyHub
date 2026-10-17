@@ -16,10 +16,15 @@ const COMMISSION_SVC = serviceUrl(process.env.COMMISSION_SERVICE_URL, 'http://lo
 async function fetchList(url: string): Promise<any[] | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`⚠️ [ANALYTICS] ${url} respondió ${res.status}`);
+      return null;
+    }
     const data = await res.json();
     return Array.isArray(data) ? data : null;
-  } catch {
+  } catch (error) {
+    // Aparece en los logs de Railway: revisa que la variable *_SERVICE_URL de este servicio apunte bien
+    console.warn(`⚠️ [ANALYTICS] No se pudo alcanzar ${url}: ${(error as any)?.cause?.code ?? (error as Error).message}`);
     return null;
   }
 }
