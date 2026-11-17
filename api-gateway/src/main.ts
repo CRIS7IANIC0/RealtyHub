@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { setupMetrics } from './metrics';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  setupMetrics(app, 'api-gateway'); // GET /metrics para Prometheus
   app.setGlobalPrefix('api/v1');
 
   // Configuración de CORS simplificada y dinámica para aceptar peticiones de Vercel

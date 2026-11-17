@@ -1,0 +1,37 @@
+# Prometheus para RealtyHub — versión SIN Docker (binario de Windows).
+# Uso:  prometheus.exe --config.file=monitoring/prometheus/prometheus.local.yml
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: realtyhub
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['localhost:3000']
+        labels: { servicio: api-gateway }
+      - targets: ['localhost:3001']
+        labels: { servicio: user-service }
+      - targets: ['localhost:3003']
+        labels: { servicio: property-service }
+      - targets: ['localhost:3004']
+        labels: { servicio: lead-service }
+      - targets: ['localhost:3005']
+        labels: { servicio: viewing-service }
+      - targets: ['localhost:3006']
+        labels: { servicio: contract-service }
+      - targets: ['localhost:3007']
+        labels: { servicio: commission-service }
+      - targets: ['localhost:3009']
+        labels: { servicio: notification-service }
+      - targets: ['localhost:3010']
+        labels: { servicio: analytics-service }
+
+  # Sondeo del sitio + resultados de JMeter en vivo (monitoring/exporter)
+  - job_name: exportador
+    static_configs:
+      - targets: ['localhost:9111']
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

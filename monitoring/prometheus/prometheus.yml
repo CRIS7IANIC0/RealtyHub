@@ -1,0 +1,37 @@
+# Prometheus para RealtyHub — versión para Docker (los servicios corren en el host).
+# Para correr Prometheus SIN Docker usa prometheus.local.yml (targets en localhost).
+global:
+  scrape_interval: 5s       # cada 5 s para ver bien las pruebas de carga
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: realtyhub
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:3000']
+        labels: { servicio: api-gateway }
+      - targets: ['host.docker.internal:3001']
+        labels: { servicio: user-service }
+      - targets: ['host.docker.internal:3003']
+        labels: { servicio: property-service }
+      - targets: ['host.docker.internal:3004']
+        labels: { servicio: lead-service }
+      - targets: ['host.docker.internal:3005']
+        labels: { servicio: viewing-service }
+      - targets: ['host.docker.internal:3006']
+        labels: { servicio: contract-service }
+      - targets: ['host.docker.internal:3007']
+        labels: { servicio: commission-service }
+      - targets: ['host.docker.internal:3009']
+        labels: { servicio: notification-service }
+      - targets: ['host.docker.internal:3010']
+        labels: { servicio: analytics-service }
+
+  # Sondeo del sitio + resultados de JMeter en vivo (monitoring/exporter)
+  - job_name: exportador
+    static_configs:
+      - targets: ['host.docker.internal:9111']
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

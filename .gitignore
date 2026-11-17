@@ -27,3 +27,6 @@ Thumbs.db
 # Postman local cache
 .postman/
 postman/
+
+# Resultados de pruebas de carga
+jmeter/results/

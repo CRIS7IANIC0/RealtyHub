@@ -1,0 +1,9 @@
+{
+  "name": "realtyhub-monitoring-exporter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Exportador Prometheus: sondeo del sitio + resultados de JMeter en vivo",
+  "main": "exporter.js",
+  "scripts": { "start": "node exporter.js" },
+  "dependencies": { "prom-client": "^15.1.3" }
+}

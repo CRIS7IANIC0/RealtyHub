@@ -1,0 +1,10 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    # En Docker: http://prometheus:9090 · Sin Docker (binarios): http://localhost:9090
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
